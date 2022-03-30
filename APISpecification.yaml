@@ -1,0 +1,144 @@
+#
+#    See the NOTICE file distributed with this work for additional information
+#    regarding copyright ownership.
+#
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
+#
+
+openapi: 3.0.1
+info:
+  title: Ensembl Web Metadata API
+  description: Metadata API for 2020.ensembl.org
+  contact:
+    email: ensembl-webteam@ebi.ac.uk
+  version: 0.0.1
+servers:
+- url: https://2020.ensembl.org
+- url: http://2020.ensembl.org
+tags:
+- name: api
+  description: Ensembl Web Metadata API
+paths:
+  /api/metadata/popular_genomes:
+    get:
+      tags:
+      - api
+      summary: Get popular genomes
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  popular_species:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PopularGenome'
+  /api/metadata/genome/info:
+    get:
+      tags:
+      - api
+      summary: Returns information about particular genome
+      description: Returns a single genome
+      parameters:
+      - name: genome_id
+        in: query
+        description: ID of genome to return
+        required: true
+        schema:
+          type: string
+          default: a7335667-93e7-11ec-a39d-005056b38ce3
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  genome_info:
+                    $ref: '#/components/schemas/GenomeInfo'
+components:
+  schemas:
+    Genome:
+      type: object
+      properties:
+        genome_id:
+          type: string
+          example: a7335667-93e7-11ec-a39d-005056b38ce3
+        assembly_name:
+          type: string
+          example: GRCh38.p13
+        common_name:
+          type: string
+          example: Human
+        scientific_name:
+          type: string
+          example: Homo sapiens
+
+    PopularGenome:
+      allOf:
+        - $ref: '#/components/schemas/Genome'
+        - properties:
+            image:
+              type: string
+              example: http://2020.ensembl.org/static/genome_images/homo_sapiens_38.svg
+            is_available:
+              type: boolean
+              example: true
+            popular_order:
+              type: integer
+              format: int32
+              example: 0
+
+    GenomeInfo:
+      allOf:
+        - $ref: '#/components/schemas/Genome'
+        - properties:
+            example_objects:
+              type: array
+              items:
+                $ref: '#/components/schemas/FocusObject'
+              example:
+                - type: 'gene'
+                  id: 'ENSG00000139618'
+                - type: 'region'
+                  id: '17:63992802-64038237'
+    FocusObject:
+      type: object
+      properties:
+        type:
+          type: string
+        id:
+          type: string
+  
+  examples:
+    missing-genome_id-param-response:
+      value:
+        message: 
+          {
+          genome_id: "Missing genome_id param in the request." 
+          }
+    missing-genome_id-value-response:
+      value:
+        message: 
+          {
+          error: "No value for genome_id"
+          }
+    invalid-genome_id-response:
+      value:
+        message: 
+          {
+          error:  "Invalid genome_id : abc"
+          }
