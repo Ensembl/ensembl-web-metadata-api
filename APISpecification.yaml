@@ -49,12 +49,12 @@ paths:
     get:
       tags:
       - api
-      summary: Returns information about particular genome
-      description: Returns a single genome
+      summary: Genome Information for the given genome_id
+      description: Information realted to genome
       parameters:
       - name: genome_id
         in: query
-        description: ID of genome to return
+        description: genome_id
         required: true
         schema:
           type: string
