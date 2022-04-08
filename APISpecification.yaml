@@ -49,8 +49,8 @@ paths:
                   $ref: '#/components/examples/nonexistent-uuid'
                 best-genome_id-exist:
                   $ref: '#/components/examples/best-genome_id-exist'
-                best-genome_id-non-existantent:
-                  $ref: '#/components/examples/best-genome_id-non-existantent'
+                best-genome_id-non-nonexistent:
+                  $ref: '#/components/examples/best-genome_id-non-nonexistent'
   /api/metadata/popular_genomes:
     get:
       tags:
@@ -195,7 +195,7 @@ components:
         genome_id: "hg38"
         valid: true
         message: ""
-    best-genome_id-non-existantent:
+    best-genome_id-non-nonexistent:
       value:
         genome_id: "dinosaur"
         valid: false
