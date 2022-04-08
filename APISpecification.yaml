@@ -28,6 +28,30 @@ tags:
 - name: api
   description: Ensembl Web Metadata API
 paths:
+  /api/metadata/genome/validate:
+    get:
+      tags:
+      - api
+      summary: Validate genome_id
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: '#/components/schemas/GenomeValidationResponse'
+              examples:
+                valid-current-uuid:
+                  $ref: '#/components/examples/valid-current-uuid'
+                valid-stale-uuid:
+                  $ref: '#/components/examples/valid-stale-uuid'
+                non-existent-uuid:
+                  $ref: '#/components/examples/nonexistent-uuid'
+                best-genome_id-exist-response:
+                  $ref: '#/components/examples/best-genome_id-exist-response'
+                best-genome_id-non-existantent-response:
+                  $ref: '#/components/examples/best-genome_id-non-existantent-response'
   /api/metadata/popular_genomes:
     get:
       tags:
@@ -142,3 +166,34 @@ components:
           {
           error:  "Invalid genome_id : abc"
           }
+    missing-genome_id-value-response:
+      value:
+        message: 
+          {
+          error: "No value for genome_id"
+          }
+    valid-current-uuid:
+      value:
+        genome_id: "a7335667-93e7-11ec-a39d-005056b38ce3"
+        valid: true
+        message: ""
+    valid-stale-uuid:
+      value:
+        genome_id: "87654321-93e7-11ec-a39d-005056b38ce3"
+        valid: true
+        message: "Stale genome uuid"
+    nonexistent-uuid:
+      value:
+        genome_id: "09876543-12e7-01ec-a99d-006543b09ce9"
+        valid: false
+        message: "UUID doesn't exist"
+    best-genome_id-exist-response:
+      value:
+        genome_id: "hg38"
+        valid: true
+        message: ""
+    best-genome_id-non-existantent-response:
+      value:
+        genome_id: "dinosaur"
+        valid: false
+        message: "genome_id doesn't exist"
