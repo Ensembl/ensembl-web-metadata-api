@@ -47,10 +47,10 @@ paths:
                   $ref: '#/components/examples/valid-stale-uuid'
                 non-existent-uuid:
                   $ref: '#/components/examples/nonexistent-uuid'
-                best-genome_id-exist-response:
-                  $ref: '#/components/examples/best-genome_id-exist-response'
-                best-genome_id-non-existantent-response:
-                  $ref: '#/components/examples/best-genome_id-non-existantent-response'
+                best-genome_id-exist:
+                  $ref: '#/components/examples/best-genome_id-exist'
+                best-genome_id-non-existantent:
+                  $ref: '#/components/examples/best-genome_id-non-existantent'
   /api/metadata/popular_genomes:
     get:
       tags:
@@ -190,12 +190,12 @@ components:
         genome_id: "09876543-12e7-01ec-a99d-006543b09ce9"
         valid: false
         message: "UUID doesn't exist"
-    best-genome_id-exist-response:
+    best-genome_id-exist:
       value:
         genome_id: "hg38"
         valid: true
         message: ""
-    best-genome_id-non-existantent-response:
+    best-genome_id-non-existantent:
       value:
         genome_id: "dinosaur"
         valid: false
