@@ -1,0 +1,186 @@
+
+openapi: 3.0.1
+info:
+  title: Ensembl Web Metadata API
+  description: Metadata API for 2020.ensembl.org
+  contact:
+    email: ensembl-webteam@ebi.ac.uk
+  version: 0.0.1
+servers:
+  - url: https://2020.ensembl.org
+  - url: http://2020.ensembl.org
+tags:
+  - name: api
+    description: Ensembl Web Metadata API
+paths:
+  /api/metadata/genome/validate:
+    get:
+      tags:
+        - api
+      summary: Validate genome_id
+      description: Information realted to genome
+      parameters:
+        - name: genome_id
+          in: query
+          description: genome_id
+          required: true
+          schema:
+            type: string
+            default: a7335667-93e7-11ec-a39d-005056b38ce3
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenomeValidationResponse'
+              examples:
+                valid-current-uuid:
+                  $ref: '#/components/examples/valid-current-uuid'
+                valid-stale-uuid:
+                  $ref: '#/components/examples/valid-stale-uuid'
+                non-existent-uuid:
+                  $ref: '#/components/examples/nonexistent-uuid'
+                best-genome_id-exist:
+                  $ref: '#/components/examples/best-genome_id-exist'
+                best-genome_id-non-nonexistent:
+                  $ref: '#/components/examples/best-genome_id-non-nonexistent'
+  /api/metadata/popular_genomes:
+    get:
+      tags:
+        - api
+      summary: Get popular genomes
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  popular_species:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PopularGenome'
+  /api/metadata/genome/info:
+    get:
+      tags:
+        - api
+      summary: Genome Information for the given genome_id
+      description: Information realted to genome
+      parameters:
+        - name: genome_id
+          in: query
+          description: genome_id
+          required: true
+          schema:
+            type: string
+            default: a7335667-93e7-11ec-a39d-005056b38ce3
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  genome_info:
+                    $ref: '#/components/schemas/GenomeInfo'
+components:
+  schemas:
+    Genome:
+      type: object
+      properties:
+        genome_id:
+          type: string
+          example: a7335667-93e7-11ec-a39d-005056b38ce3
+        assembly_name:
+          type: string
+          example: GRCh38.p13
+        common_name:
+          type: string
+          example: Human
+        scientific_name:
+          type: string
+          example: Homo sapiens
+    PopularGenome:
+      allOf:
+        - $ref: '#/components/schemas/Genome'
+        - properties:
+            image:
+              type: string
+              example: http://2020.ensembl.org/static/genome_images/homo_sapiens_38.svg
+            is_available:
+              type: boolean
+              example: true
+            popular_order:
+              type: integer
+              format: int32
+              example: 0
+    GenomeInfo:
+      allOf:
+        - $ref: '#/components/schemas/Genome'
+        - properties:
+            example_objects:
+              type: array
+              items:
+                $ref: '#/components/schemas/FocusObject'
+              example:
+                - type: gene
+                  id: ENSG00000139618
+                - type: region
+                  id: 17:63992802-64038237
+    FocusObject:
+      type: object
+      properties:
+        type:
+          type: string
+        id:
+          type: string
+    GenomeValidationResponse:
+      type: object
+      properties:
+        genome_id:
+          type: string
+        valid:
+          type: boolean
+        message:
+          type: string
+  examples:
+    missing-genome_id-param-response:
+      value:
+        message:
+          genome_id: Missing genome_id param in the request.
+    missing-genome_id-value-response:
+      value:
+        message:
+          error: No value for genome_id
+    invalid-genome_id-response:
+      value:
+        message:
+          error: 'Invalid genome_id : abc'
+    valid-current-uuid:
+      value:
+        genome_id: a7335667-93e7-11ec-a39d-005056b38ce3
+        valid: true
+        message: ''
+    valid-stale-uuid:
+      value:
+        genome_id: 87654321-93e7-11ec-a39d-005056b38ce3
+        valid: true
+        message: Stale genome uuid
+    nonexistent-uuid:
+      value:
+        genome_id: 09876543-12e7-01ec-a99d-006543b09ce9
+        valid: false
+        message: UUID doesn't exist
+    best-genome_id-exist:
+      value:
+        genome_id: hg38
+        valid: true
+        message: ''
+    best-genome_id-non-nonexistent:
+      value:
+        genome_id: dinosaur
+        valid: false
+        message: genome_id doesn't exist
