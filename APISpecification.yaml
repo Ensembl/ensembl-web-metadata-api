@@ -39,7 +39,6 @@ paths:
           content:
             application/json:
               schema:
-                type: object
                 $ref: '#/components/schemas/GenomeValidationResponse'
               examples:
                 valid-current-uuid:
@@ -146,7 +145,17 @@ components:
           type: string
         id:
           type: string
-  
+ 
+    GenomeValidationResponse:
+      type: object
+      properties:
+        genome_id:
+          type: string
+        valid: 
+          type: boolean
+        message:
+          type: string
+ 
   examples:
     missing-genome_id-param-response:
       value:
@@ -165,12 +174,6 @@ components:
         message: 
           {
           error:  "Invalid genome_id : abc"
-          }
-    missing-genome_id-value-response:
-      value:
-        message: 
-          {
-          error: "No value for genome_id"
           }
     valid-current-uuid:
       value:
