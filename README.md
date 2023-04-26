@@ -1,2 +1,3 @@
 # Ensembl Web Metadata API
-Metadata API for new-website (2020.ensembl.org)
+
+Metadata API for the new website (beta.ensembl.org)
