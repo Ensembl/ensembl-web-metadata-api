@@ -4,8 +4,8 @@ gRPC-REST bridge is a proxy server that serves [Ensembl Metadata API](https://gi
 
 ### Dependecies
 
-[Go](https://go.dev/doc/install)
-[Ensembl Metadata gRPC service](https://github.com/Ensembl/ensembl-metadata-service)
+-   [Go](https://go.dev/doc/install)
+-   [Ensembl Metadata gRPC service](https://github.com/Ensembl/ensembl-metadata-service)
 
 ### Usage
 
