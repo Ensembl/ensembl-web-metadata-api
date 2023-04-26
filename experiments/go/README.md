@@ -2,7 +2,7 @@
 
 gRPC-REST bridge is a proxy server that serves [Ensembl Metadata API](https://github.com/Ensembl/ensembl-metadata-service) gRPC API as REST API (JSON payloads in POST requests). The server is written in Go and its Ensembl API-specific modules have been generated using [gRPC JSON gateway](https://github.com/grpc-ecosystem/grpc-gateway/tree/main) protoc plugin. The generated server code is written in Go, wihch is compiled to binary executable and acts as a standalone proxy between the client and gRPC service.
 
-### Dependecies
+### Dependencies
 
 -   [Go](https://go.dev/doc/install)
 -   [Ensembl Metadata gRPC service](https://github.com/Ensembl/ensembl-metadata-service)
