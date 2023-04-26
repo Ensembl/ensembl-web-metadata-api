@@ -11,6 +11,6 @@ gRPC-REST bridge is a proxy server that serves [Ensembl Metadata API](https://gi
 
 -   Build the proxy server binary: `go build`
 -   Run the server: `rest-bridge --endpoint=<ensembl-gRPC-URL>`
-    Default Ensembl gRPC URL: `localhost:50051` (local Ensembl gRPC service, see the repo for instructions)
+    -   Default Ensembl gRPC URL: `localhost:50051` (local Ensembl gRPC service, see the [repo](https://github.com/Ensembl/ensembl-metadata-service) for setup instructions)
 -   Run a query: `curl -X POST -k https://localhost:8081/<path> -H "Content-Type: text/plain" -d '{"key": "value"}'`,
     where path and payload values come from the Ensembl Metadata protobuf definitions, e.g. `https://localhost:8081/ensembl_metadata.EnsemblMetadata/GetSpeciesInformation -d '{"genomeUuid": "3704ceb1-948d-11ec-a39d-005056b38ce3"}'`
