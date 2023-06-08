@@ -1,14 +1,13 @@
-
 openapi: 3.0.1
 info:
   title: Ensembl Web Metadata API
-  description: Metadata API for 2020.ensembl.org
+  description: Metadata API for beta.ensembl.org
   contact:
     email: ensembl-webteam@ebi.ac.uk
   version: 0.0.1
 servers:
-  - url: https://2020.ensembl.org
-  - url: http://2020.ensembl.org
+  - url: https://beta.ensembl.org
+  - url: http://beta.ensembl.org
 tags:
   - name: api
     description: Ensembl Web Metadata API
@@ -109,7 +108,7 @@ components:
         - properties:
             image:
               type: string
-              example: http://2020.ensembl.org/static/genome_images/homo_sapiens_38.svg
+              example: http://beta.ensembl.org/static/genome_images/homo_sapiens_38.svg
             is_available:
               type: boolean
               example: true
