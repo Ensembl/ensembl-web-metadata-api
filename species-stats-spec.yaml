@@ -1,4 +1,15 @@
-openapi: 3.0.0
+openapi: 3.0.3
+info:
+  title: Ensembl Web Metadata API
+  description: Metadata API for beta.ensembl.org
+  contact:
+    email: ensembl-webteam@ebi.ac.uk
+  version: 0.0.1
+servers:
+  - url: https://beta.ensembl.org
+tags:
+  - name: api
+    description: Ensembl Web Metadata API
 paths:
   /api/metadata/genome/stats:
     get:
@@ -26,8 +37,10 @@ paths:
 components:
   schemas:
     SpeciesStats:
+      type: object
       properties:
         assembly_stats:
+          type: object
           properties:
             contig_n50:
               title: SpeciesStats.assembly_stats.contig_n50
@@ -68,8 +81,8 @@ components:
             - gc_percentage
           additionalProperties: false
           title: SpeciesStats.assembly_stats
-          type: object
         coding_stats:
+          type: object
           properties:
             coding_genes:
               title: SpeciesStats.coding_stats.coding_genes
@@ -147,8 +160,8 @@ components:
             - average_intron_length
           additionalProperties: false
           title: SpeciesStats.coding_stats
-          type: object
         non_coding_stats:
+          type: object
           properties:
             non_coding_genes:
               title: SpeciesStats.non_coding_stats.non_coding_genes
@@ -213,8 +226,8 @@ components:
             - average_intron_length
           additionalProperties: false
           title: SpeciesStats.non_coding_stats
-          type: object
         pseudogene_stats:
+          type: object
           properties:
             pseudogenes:
               title: SpeciesStats.pseudogene_stats.pseudogenes
@@ -267,8 +280,8 @@ components:
             - average_intron_length
           additionalProperties: false
           title: SpeciesStats.pseudogene_stats
-          type: object
         homology_stats:
+          type: object
           properties:
             coverage:
               title: SpeciesStats.homology_stats.coverage
@@ -281,7 +294,6 @@ components:
             - coverage_explanation
           additionalProperties: false
           title: SpeciesStats.homology_stats
-          type: object
         variation_stats:
           anyOf:
             - properties:
@@ -322,7 +334,8 @@ components:
           title: SpeciesStats.variation_stats
         regulation_stats:
           anyOf:
-            - properties:
+            - type: object
+              properties:
                 enhancers:
                   title: SpeciesStats.regulation_stats.enhancers
                   type: number
@@ -334,7 +347,6 @@ components:
                 - promoters
               additionalProperties: false
               title: SpeciesStats.regulation_stats
-              type: object
             - title: SpeciesStats.regulation_stats
               nullable: true
           title: SpeciesStats.regulation_stats
@@ -348,4 +360,3 @@ components:
         - regulation_stats
       additionalProperties: false
       title: SpeciesStats
-      type: object
