@@ -11,7 +11,7 @@ tags:
   - name: api
     description: Ensembl Web Metadata API
 paths:
-  /api/metadata/genome/stats:
+  /api/metadata/genome/{genome_id}/stats:
     get:
       tags:
         - api
@@ -19,7 +19,7 @@ paths:
       description: Summary statistics for a genome
       parameters:
         - name: genome_id
-          in: query
+          in: path
           required: true
           schema:
             type: string
