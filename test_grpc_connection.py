@@ -12,9 +12,10 @@
    limitations under the License.
 """
 from app.api.resources.grpc_client import GRPCClient
+from google.protobuf.json_format import MessageToDict, MessageToJson
 
 gc = GRPCClient('localhost', 50051)
 
 genome_info = gc.get_genome("a7335667-93e7-11ec-a39d-005056b38ce3")
-
-print (genome_info)
+genome_as_json = MessageToJson(genome_info)
+print (genome_as_json)
