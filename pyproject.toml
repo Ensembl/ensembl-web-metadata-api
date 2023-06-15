@@ -11,6 +11,8 @@ fastapi = "^0.57.0"
 pydantic = "^1.5.1"
 starlette = "^0.13.4"
 loguru = "^0.5.1"
+ensembl-metadata-service = {git = "https://github.com/Ensembl/ensembl-metadata-service.git", rev = "0.0.2a2"}
+protobuf = "3.20"
 
 
 [build-system]
