@@ -1,0 +1,362 @@
+openapi: 3.0.3
+info:
+  title: Ensembl Web Metadata API
+  description: Metadata API for beta.ensembl.org
+  contact:
+    email: ensembl-webteam@ebi.ac.uk
+  version: 0.0.1
+servers:
+  - url: https://beta.ensembl.org
+tags:
+  - name: api
+    description: Ensembl Web Metadata API
+paths:
+  /api/metadata/genome/{genome_id}/stats:
+    get:
+      tags:
+        - api
+      summary: Summary statistics for a genome
+      description: Summary statistics for a genome
+      parameters:
+        - name: genome_id
+          in: path
+          required: true
+          schema:
+            type: string
+            default: a7335667-93e7-11ec-a39d-005056b38ce3
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  genome_stats:
+                    $ref: '#/components/schemas/SpeciesStats'
+components:
+  schemas:
+    SpeciesStats:
+      type: object
+      properties:
+        assembly_stats:
+          type: object
+          properties:
+            contig_n50:
+              title: SpeciesStats.assembly_stats.contig_n50
+              type: number
+            total_genome_length:
+              title: SpeciesStats.assembly_stats.total_genome_length
+              type: number
+            total_coding_sequence_length:
+              title: SpeciesStats.assembly_stats.total_coding_sequence_length
+              type: number
+            total_gap_length:
+              title: SpeciesStats.assembly_stats.total_gap_length
+              type: number
+            spanned_gaps:
+              title: SpeciesStats.assembly_stats.spanned_gaps
+              type: number
+            chromosomes:
+              title: SpeciesStats.assembly_stats.chromosomes
+              type: number
+            toplevel_sequences:
+              title: SpeciesStats.assembly_stats.toplevel_sequences
+              type: number
+            component_sequences:
+              title: SpeciesStats.assembly_stats.component_sequences
+              type: number
+            gc_percentage:
+              title: SpeciesStats.assembly_stats.gc_percentage
+              type: number
+          required:
+            - contig_n50
+            - total_genome_length
+            - total_coding_sequence_length
+            - total_gap_length
+            - spanned_gaps
+            - chromosomes
+            - toplevel_sequences
+            - component_sequences
+            - gc_percentage
+          additionalProperties: false
+          title: SpeciesStats.assembly_stats
+        coding_stats:
+          type: object
+          properties:
+            coding_genes:
+              title: SpeciesStats.coding_stats.coding_genes
+              type: number
+            average_genomic_span:
+              title: SpeciesStats.coding_stats.average_genomic_span
+              type: number
+            average_sequence_length:
+              title: SpeciesStats.coding_stats.average_sequence_length
+              type: number
+            average_cds_length:
+              title: SpeciesStats.coding_stats.average_cds_length
+              type: number
+            shortest_gene_length:
+              title: SpeciesStats.coding_stats.shortest_gene_length
+              type: number
+            longest_gene_length:
+              title: SpeciesStats.coding_stats.longest_gene_length
+              type: number
+            total_transcripts:
+              title: SpeciesStats.coding_stats.total_transcripts
+              type: number
+            coding_transcripts:
+              title: SpeciesStats.coding_stats.coding_transcripts
+              type: number
+            transcripts_per_gene:
+              title: SpeciesStats.coding_stats.transcripts_per_gene
+              type: number
+            coding_transcripts_per_gene:
+              title: SpeciesStats.coding_stats.coding_transcripts_per_gene
+              type: number
+            total_exons:
+              title: SpeciesStats.coding_stats.total_exons
+              type: number
+            total_coding_exons:
+              title: SpeciesStats.coding_stats.total_coding_exons
+              type: number
+            average_exon_length:
+              title: SpeciesStats.coding_stats.average_exon_length
+              type: number
+            average_coding_exon_length:
+              title: SpeciesStats.coding_stats.average_coding_exon_length
+              type: number
+            average_exons_per_transcript:
+              title: SpeciesStats.coding_stats.average_exons_per_transcript
+              type: number
+            average_coding_exons_per_coding_transcript:
+              title: >-
+                SpeciesStats.coding_stats.average_coding_exons_per_coding_transcript
+              type: number
+            total_introns:
+              title: SpeciesStats.coding_stats.total_introns
+              type: number
+            average_intron_length:
+              title: SpeciesStats.coding_stats.average_intron_length
+              type: number
+          required:
+            - coding_genes
+            - average_genomic_span
+            - average_sequence_length
+            - average_cds_length
+            - shortest_gene_length
+            - longest_gene_length
+            - total_transcripts
+            - coding_transcripts
+            - transcripts_per_gene
+            - coding_transcripts_per_gene
+            - total_exons
+            - total_coding_exons
+            - average_exon_length
+            - average_coding_exon_length
+            - average_exons_per_transcript
+            - average_coding_exons_per_coding_transcript
+            - total_introns
+            - average_intron_length
+          additionalProperties: false
+          title: SpeciesStats.coding_stats
+        non_coding_stats:
+          type: object
+          properties:
+            non_coding_genes:
+              title: SpeciesStats.non_coding_stats.non_coding_genes
+              type: number
+            small_non_coding_genes:
+              title: SpeciesStats.non_coding_stats.small_non_coding_genes
+              type: number
+            long_non_coding_genes:
+              title: SpeciesStats.non_coding_stats.long_non_coding_genes
+              type: number
+            misc_non_coding_genes:
+              title: SpeciesStats.non_coding_stats.misc_non_coding_genes
+              type: number
+            average_genomic_span:
+              title: SpeciesStats.non_coding_stats.average_genomic_span
+              type: number
+            average_sequence_length:
+              title: SpeciesStats.non_coding_stats.average_sequence_length
+              type: number
+            shortest_gene_length:
+              title: SpeciesStats.non_coding_stats.shortest_gene_length
+              type: number
+            longest_gene_length:
+              title: SpeciesStats.non_coding_stats.longest_gene_length
+              type: number
+            total_transcripts:
+              title: SpeciesStats.non_coding_stats.total_transcripts
+              type: number
+            transcripts_per_gene:
+              title: SpeciesStats.non_coding_stats.transcripts_per_gene
+              type: number
+            total_exons:
+              title: SpeciesStats.non_coding_stats.total_exons
+              type: number
+            average_exon_length:
+              title: SpeciesStats.non_coding_stats.average_exon_length
+              type: number
+            average_exons_per_transcript:
+              title: SpeciesStats.non_coding_stats.average_exons_per_transcript
+              type: number
+            total_introns:
+              title: SpeciesStats.non_coding_stats.total_introns
+              type: number
+            average_intron_length:
+              title: SpeciesStats.non_coding_stats.average_intron_length
+              type: number
+          required:
+            - non_coding_genes
+            - small_non_coding_genes
+            - long_non_coding_genes
+            - misc_non_coding_genes
+            - average_genomic_span
+            - average_sequence_length
+            - shortest_gene_length
+            - longest_gene_length
+            - total_transcripts
+            - transcripts_per_gene
+            - total_exons
+            - average_exon_length
+            - average_exons_per_transcript
+            - total_introns
+            - average_intron_length
+          additionalProperties: false
+          title: SpeciesStats.non_coding_stats
+        pseudogene_stats:
+          type: object
+          properties:
+            pseudogenes:
+              title: SpeciesStats.pseudogene_stats.pseudogenes
+              type: number
+            average_genomic_span:
+              title: SpeciesStats.pseudogene_stats.average_genomic_span
+              type: number
+            average_sequence_length:
+              title: SpeciesStats.pseudogene_stats.average_sequence_length
+              type: number
+            shortest_gene_length:
+              title: SpeciesStats.pseudogene_stats.shortest_gene_length
+              type: number
+            longest_gene_length:
+              title: SpeciesStats.pseudogene_stats.longest_gene_length
+              type: number
+            total_transcripts:
+              title: SpeciesStats.pseudogene_stats.total_transcripts
+              type: number
+            transcripts_per_gene:
+              title: SpeciesStats.pseudogene_stats.transcripts_per_gene
+              type: number
+            total_exons:
+              title: SpeciesStats.pseudogene_stats.total_exons
+              type: number
+            average_exon_length:
+              title: SpeciesStats.pseudogene_stats.average_exon_length
+              type: number
+            average_exons_per_transcript:
+              title: SpeciesStats.pseudogene_stats.average_exons_per_transcript
+              type: number
+            total_introns:
+              title: SpeciesStats.pseudogene_stats.total_introns
+              type: number
+            average_intron_length:
+              title: SpeciesStats.pseudogene_stats.average_intron_length
+              type: number
+          required:
+            - pseudogenes
+            - average_genomic_span
+            - average_sequence_length
+            - shortest_gene_length
+            - longest_gene_length
+            - total_transcripts
+            - transcripts_per_gene
+            - total_exons
+            - average_exon_length
+            - average_exons_per_transcript
+            - total_introns
+            - average_intron_length
+          additionalProperties: false
+          title: SpeciesStats.pseudogene_stats
+        homology_stats:
+          type: object
+          properties:
+            coverage:
+              title: SpeciesStats.homology_stats.coverage
+              type: number
+            coverage_explanation:
+              title: SpeciesStats.homology_stats.coverage_explanation
+              type: string
+          required:
+            - coverage
+            - coverage_explanation
+          additionalProperties: false
+          title: SpeciesStats.homology_stats
+        variation_stats:
+          anyOf:
+            - properties:
+                short_variants:
+                  title: SpeciesStats.variation_stats.short_variants
+                  type: number
+                structural_variants:
+                  title: SpeciesStats.variation_stats.structural_variants
+                  type: number
+                short_variants_with_phenotype_assertions:
+                  title: >-
+                    SpeciesStats.variation_stats.short_variants_with_phenotype_assertions
+                  type: number
+                short_variants_with_publications:
+                  title: >-
+                    SpeciesStats.variation_stats.short_variants_with_publications
+                  type: number
+                short_variants_frequency_studies:
+                  title: >-
+                    SpeciesStats.variation_stats.short_variants_frequency_studies
+                  type: number
+                structural_variants_with_phenotype_assertions:
+                  title: >-
+                    SpeciesStats.variation_stats.structural_variants_with_phenotype_assertions
+                  type: number
+              required:
+                - short_variants
+                - structural_variants
+                - short_variants_with_phenotype_assertions
+                - short_variants_with_publications
+                - short_variants_frequency_studies
+                - structural_variants_with_phenotype_assertions
+              additionalProperties: false
+              title: SpeciesStats.variation_stats
+              type: object
+            - title: SpeciesStats.variation_stats
+              nullable: true
+          title: SpeciesStats.variation_stats
+        regulation_stats:
+          anyOf:
+            - type: object
+              properties:
+                enhancers:
+                  title: SpeciesStats.regulation_stats.enhancers
+                  type: number
+                promoters:
+                  title: SpeciesStats.regulation_stats.promoters
+                  type: number
+              required:
+                - enhancers
+                - promoters
+              additionalProperties: false
+              title: SpeciesStats.regulation_stats
+            - title: SpeciesStats.regulation_stats
+              nullable: true
+          title: SpeciesStats.regulation_stats
+      required:
+        - assembly_stats
+        - coding_stats
+        - non_coding_stats
+        - pseudogene_stats
+        - homology_stats
+        - variation_stats
+        - regulation_stats
+      additionalProperties: false
+      title: SpeciesStats
