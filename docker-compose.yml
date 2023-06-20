@@ -26,10 +26,14 @@ services:
     environment:
       - PORT=${PORT}
       - DEBUG=${DEBUG}
+      - GRPC_HOST=host.docker.internal
+      - GRPC_PORT=50051
     container_name: metadata_api
 
+    tty: true
+    init: true
+    command: "/bin/bash"
     ports:
       - ${PORT}:${PORT}
     volumes:
       - ./app/:/app/
-
