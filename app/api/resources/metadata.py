@@ -37,7 +37,7 @@ router = APIRouter()
 GRPC_HOST=os.getenv('GRPC_HOST','localhost')
 GRPC_PORT=os.getenv('GRPC_PORT',50051)
 
-print ("connecting to gRPC server on ", GRPC_HOST, ":", GRPC_PORT)
+print ("Connecting to gRPC server on ", GRPC_HOST, ":", GRPC_PORT)
 gc = GRPCClient(GRPC_HOST, GRPC_PORT)
 
 # Is class name sensible here ? 
@@ -46,14 +46,42 @@ class GenomeStatistics:
     def __init__(self, raw_data:dict):
         self.raw_stats = raw_data
         # Extrack name, staticValue from the raw statistics
-        self.rearranged_stats = { stats_item['name']:int(float(stats_item['statisticValue'])) for stats_item in self.raw_stats }
+        self.rearranged_stats = { stats_item['name'] : int(float(stats_item['statisticValue'])) for stats_item in self.raw_stats }
 
+    def prepare_assembly_stats(self):
+        try:
+            assembly_stats = {
+                "contig_n50": self.rearranged_stats.get("contig_n50",None),
+                "total_genome_length": self.rearranged_stats.get("total_genome_length", None),
+                "total_coding_sequence_length": self.rearranged_stats.get("total_coding_sequence_length", None),
+                "total_gap_length": self.rearranged_stats.get("total_gap_length", None),
+                "spanned_gaps": self.rearranged_stats.get("spanned_gaps", None),
+                "chromosomes": self.rearranged_stats.get("chromosomes", None),
+                "toplevel_sequences": self.rearranged_stats.get("toplevel_sequences", None),
+                "component_sequences": self.rearranged_stats.get("component_sequences", None),
+                "gc_percentage": self.rearranged_stats.get("gc_percentage", None)
+                }
+            return assembly_stats
+        except Exception as e:
+            logger.log("DEBUG", e)
+
+    def prepare_stats(self):
+        try:
+            genome_stats = {
+                "assembly_stats" : self.prepare_assembly_stats()
+                }
+            return genome_stats
+        except Exception as e:
+            logger.log("DEBUG", e)
 
 @router.get("/genome/{genome_uuid}/stats", name="statistics", response_class=ORJSONResponse)
 async def get_metadata_statistics(request: Request, genome_uuid:str):
     try:
         top_level_stats = gc.get_statistics(genome_uuid)
-        return ORJSONResponse(MessageToDict(top_level_stats))
+        top_level_stats_dict = MessageToDict(top_level_stats)
+        gs = GenomeStatistics(top_level_stats_dict["statistics"])
+        genome_stats = gs.prepare_stats()
+        return ORJSONResponse(genome_stats)
     except (ClientResponseError, Exception) as e:
         logger.log("DEBUG", e)
         return response_error_handler({"EROR": e})
