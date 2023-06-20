@@ -22,12 +22,16 @@ develop = false
 
 [package.dependencies]
 grpcio = "*"
+protobuf = "3.20"
+
+[package.extras]
+service = ["greenlet (==1.1.0)", "grpcio (==1.38.1)", "grpcio-tools (==1.38.1)", "mysqlclient (==2.0.3)", "protobuf (==3.17.3)", "pymysql (==1.0.2)", "six (==1.16.0)", "sqlalchemy (==1.4.21)", "types-pymysql (==1.0.0)"]
 
 [package.source]
 type = "git"
 url = "https://github.com/Ensembl/ensembl-metadata-service.git"
-reference = "0.0.2a2"
-resolved_reference = "e442e3237aeab18570c0cc228f17a2e9a9b1ea95"
+reference = "stats-by-uuid"
+resolved_reference = "eefde2888e9a787ceb01336f89e149bbb14dfe93"
 
 [[package]]
 name = "fastapi"
@@ -252,4 +256,4 @@ dev = ["black (>=19.3b0)", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "fc5a08df651c365af92b9b828ea50f5cb78c2522eada8320863287ed0e894123"
+content-hash = "2a342061211b68646403c17c992d15126b24918c6cffd999e201bda23674ad86"
