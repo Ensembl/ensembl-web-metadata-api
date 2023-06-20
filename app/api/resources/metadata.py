@@ -17,36 +17,43 @@ limitations under the License.
 
 import logging
 
-from aiohttp import ClientResponseError
 from fastapi import APIRouter, Request, responses
 from loguru import logger
+from aiohttp import ClientResponseError
 
 from api.error_response import response_error_handler
 from core.logging import InterceptHandler
 import json
+import os
+from api.resources.grpc_client import GRPCClient 
+from google.protobuf.json_format import MessageToDict, MessageToJson
+from fastapi.responses import ORJSONResponse
+
 
 logging.getLogger().handlers = [InterceptHandler()]
 
 router = APIRouter()
 
+GRPC_HOST=os.getenv('GRPC_HOST','localhost')
+GRPC_PORT=os.getenv('GRPC_PORT',50051)
 
-@router.get("/statistics", name="statistics")
-async def get_metadata_statistics(request: Request):
-    """"""
-    sample_response = {
-        "assembly_name": "GRCh38.p13",
-        "common_name": "Human",
-        "genome_id": "a7335667-93e7-11ec-a39d-005056b38ce3",
-        "genome_tag": "grch38",
-        "image": "https://beta.ensembl.org/static/genome_images/homo_sapiens_38.svg",
-        "is_available": True,
-        "popular_order": 0,
-        "reference_genome_id": None,
-        "scientific_name": "Homo sapiens",
-    }
+print ("connecting to gRPC server on ", GRPC_HOST, ":", GRPC_PORT)
+gc = GRPCClient(GRPC_HOST, GRPC_PORT)
+
+# Is class name sensible here ? 
+# Or this should also say top_level_statistics
+class GenomeStatistics:
+    def __init__(self, raw_data:dict):
+        self.raw_stats = raw_data
+        # Extrack name, staticValue from the raw statistics
+        self.rearranged_stats = { stats_item['name']:int(float(stats_item['statisticValue'])) for stats_item in self.raw_stats }
+
+
+@router.get("/genome/{genome_uuid}/stats", name="statistics", response_class=ORJSONResponse)
+async def get_metadata_statistics(request: Request, genome_uuid:str):
     try:
-        return responses.Response(content=json.dumps(sample_response))
-
+        top_level_stats = gc.get_statistics(genome_uuid)
+        return ORJSONResponse(MessageToDict(top_level_stats))
     except (ClientResponseError, Exception) as e:
         logger.log("DEBUG", e)
         return response_error_handler({"EROR": e})
