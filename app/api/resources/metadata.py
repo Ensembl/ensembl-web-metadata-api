@@ -67,7 +67,7 @@ class GenomeStatistics:
 
     def prepare_variation_stats(self):
         try:
-            variation_stat = {
+            variation_stats = {
                 "short_variants": self.rearranged_stats.get("short_variants",None),
                 "structural_variants": self.rearranged_stats.get("structural_variants",None),
                 "short_variants_with_phenotype_assertions": self.rearranged_stats.get("short_variants_with_phenotype_assertions",None),
@@ -75,16 +75,17 @@ class GenomeStatistics:
                 "short_variants_frequency_studies": self.rearranged_stats.get("short_variants_frequency_studies",None),
                 "structural_variants_with_phenotype_assertions": self.rearranged_stats.get("structural_variants_with_phenotype_assertions",None)
                 }
-            return variation_stat
+            return variation_stats
         except Exception as e:
             logger.log("DEBUG", e)
 
     def prepare_stats(self):
         try:
-            genome_stats = {
+            genome_stats = {   "genome_stats" : {
                 "assembly_stats" : self.prepare_assembly_stats(),
                 "variation_stats" : self.prepare_variation_stats()
                 }
+            }
             return genome_stats
         except Exception as e:
             logger.log("DEBUG", e)
