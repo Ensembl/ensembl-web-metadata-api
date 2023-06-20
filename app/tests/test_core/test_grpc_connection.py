@@ -24,3 +24,9 @@ gc = GRPCClient(GRPC_HOST, GRPC_PORT)
 genome_info = gc.get_genome("a7335667-93e7-11ec-a39d-005056b38ce3")
 genome_as_json = MessageToJson(genome_info)
 print (genome_as_json)
+
+top_level_stats = gc.get_statistics("a7335667-93e7-11ec-a39d-005056b38ce3")
+top_level_stats_dict = MessageToDict(top_level_stats)
+print (top_level_stats_dict)
+
+
