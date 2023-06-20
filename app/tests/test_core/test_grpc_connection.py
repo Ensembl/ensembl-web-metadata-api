@@ -11,10 +11,15 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-from app.api.resources.grpc_client import GRPCClient
+from api.resources.grpc_client import GRPCClient
 from google.protobuf.json_format import MessageToDict, MessageToJson
+import os
 
-gc = GRPCClient('localhost', 50051)
+GRPC_HOST=os.getenv('GRPC_HOST','localhost')
+GRPC_PORT=os.getenv('GRPC_PORT',50051)
+
+print ("connecting to gRPC server on ", GRPC_HOST, ":", GRPC_PORT)
+gc = GRPCClient(GRPC_HOST, GRPC_PORT)
 
 genome_info = gc.get_genome("a7335667-93e7-11ec-a39d-005056b38ce3")
 genome_as_json = MessageToJson(genome_info)
