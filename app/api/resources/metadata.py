@@ -65,10 +65,25 @@ class GenomeStatistics:
         except Exception as e:
             logger.log("DEBUG", e)
 
+    def prepare_variation_stats(self):
+        try:
+            variation_stat = {
+                "short_variants": self.rearranged_stats.get("short_variants",None),
+                "structural_variants": self.rearranged_stats.get("structural_variants",None),
+                "short_variants_with_phenotype_assertions": self.rearranged_stats.get("short_variants_with_phenotype_assertions",None),
+                "short_variants_with_publications": self.rearranged_stats.get("short_variants_with_publications",None),
+                "short_variants_frequency_studies": self.rearranged_stats.get("short_variants_frequency_studies",None),
+                "structural_variants_with_phenotype_assertions": self.rearranged_stats.get("structural_variants_with_phenotype_assertions",None)
+                }
+            return variation_stat
+        except Exception as e:
+            logger.log("DEBUG", e)
+
     def prepare_stats(self):
         try:
             genome_stats = {
-                "assembly_stats" : self.prepare_assembly_stats()
+                "assembly_stats" : self.prepare_assembly_stats(),
+                "variation_stats" : self.prepare_variation_stats()
                 }
             return genome_stats
         except Exception as e:
