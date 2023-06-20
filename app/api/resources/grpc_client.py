@@ -25,8 +25,22 @@ class GRPCClient:
 		# Create Stub 
 		self.stub = ensembl_metadata_pb2_grpc.EnsemblMetadataStub(self.channel)
 
-	def get_statistics(genome_id:str):
-		return {}
+	def get_statistics(self, genome_uuid:str):
+        """Returns gRPC message containing statistics for given genome_uuid.
+
+        Parameters
+        ----------
+        genome_uuid : str, required
+            The genome_uuid of the genome
+        """
+
+		genome_request = ensembl_metadata_pb2.GenomeUUIDRequest(
+			genome_uuid=genome_uuid,
+			release_version=None
+			)
+		toplevel_stats_by_uuid = self.stub.GetTopLevelStatisticsByUUID(genome_request)
+
+		return toplevel_stats_by_uuid
 
 	def get_genome(self, genome_uuid:str):
 		# Create request
