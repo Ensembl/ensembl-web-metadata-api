@@ -29,4 +29,4 @@ RUN pip install poetry && \
     poetry config virtualenvs.create false && \
     poetry install --no-dev
 
-uvicorn main:app --host 0.0.0.0 --port 8014
+CMD uvicorn main:app --host 0.0.0.0 --port 8014
