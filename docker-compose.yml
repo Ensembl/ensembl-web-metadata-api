@@ -17,7 +17,6 @@
 version: '2'
 services:
   metadata_api:
-
     build: 
       context: .
       dockerfile: Dockerfile
@@ -29,10 +28,7 @@ services:
       - GRPC_HOST=host.docker.internal
       - GRPC_PORT=50051
     container_name: metadata_api
-
     tty: true
-    init: true
-    command: "/bin/bash"
     ports:
       - ${PORT}:${PORT}
     volumes:
