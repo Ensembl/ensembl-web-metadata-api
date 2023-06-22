@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metadata-api-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: metadata-api-server
+  template:
+    metadata:
+      labels:
+        app: metadata-api-server
+    spec:
+      imagePullSecrets:
+        - name: ensemblweb-pull-secret 
+      containers:
+        - name: metadata-api
+          image: dockerhub.ebi.ac.uk/ensembl-web/ensembl-web-metadata-api:89ca3fab
+          ports:
+            - containerPort: 8014
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: metadata-api-configmap
+          command: ["uvicorn"]
+          args: [
+            "--host",
+            "0.0.0.0",
+            "--port",
+            "8014",
+            "main:app"
+          ]
