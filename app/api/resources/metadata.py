@@ -44,7 +44,7 @@ grpc_client = GRPCClient(GRPC_HOST, GRPC_PORT)
 async def get_metadata_statistics(request: Request, genome_uuid: str):
     try:
         top_level_stats_dict = MessageToDict(grpc_client.get_statistics(genome_uuid))
-        compiled_data = {stats_item["name"]: int(float(stats_item["statisticValue"])) for stats_item in
+        compiled_data = {stats_item["name"]: stats_item["statisticValue"] for stats_item in
                          top_level_stats_dict["statistics"]}
 
         genome_stats = GenomeStatistics(coding_stats=compiled_data)
