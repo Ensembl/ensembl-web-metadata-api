@@ -27,8 +27,7 @@ from core.config import GRPC_HOST, GRPC_PORT
 from core.logging import InterceptHandler
 
 from api.resources.grpc_client import GRPCClient
-from google.protobuf.json_format import MessageToDict, MessageToJson
-from fastapi.responses import ORJSONResponse
+from google.protobuf.json_format import MessageToDict
 
 logging.getLogger().handlers = [InterceptHandler()]
 
@@ -43,10 +42,8 @@ grpc_client = GRPCClient(GRPC_HOST, GRPC_PORT)
 async def get_metadata_statistics(request: Request, genome_uuid: str):
     try:
         top_level_stats_dict = MessageToDict(grpc_client.get_statistics(genome_uuid))
-        compiled_data = {stats_item["name"]: stats_item["statisticValue"] for stats_item in
-                         top_level_stats_dict["statistics"]}
 
-        genome_stats = GenomeStatistics(coding_stats=compiled_data)
+        genome_stats = GenomeStatistics(_raw_data=top_level_stats_dict["statistics"])
         return responses.Response(json.dumps({"genome_stats": genome_stats.dict()}))
     except (ClientResponseError, Exception) as e:
         logger.log("INFO", e)

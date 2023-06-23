@@ -27,4 +27,14 @@ class Coding(BaseModel):
 
 
 class GenomeStatistics(BaseModel):
+    _raw_data: list
+    _compiled_data: dict
+
     coding_stats: Coding
+
+    def __init__(self, **data):
+        data["_compiled_data"] = {stats_item["name"]: stats_item["statisticValue"] for stats_item in
+                                  data["_raw_data"]}
+        data["coding_stats"] = data["_compiled_data"]
+        super().__init__(**data)
+
