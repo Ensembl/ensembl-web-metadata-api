@@ -22,7 +22,7 @@ from loguru import logger
 from aiohttp import ClientResponseError
 
 from api.error_response import response_error_handler
-from api.models.statistics import GenomeStatS
+from api.models.statistics import GenomeStatistics
 from core.config import GRPC_HOST, GRPC_PORT
 from core.logging import InterceptHandler
 
@@ -47,7 +47,7 @@ async def get_metadata_statistics(request: Request, genome_uuid: str):
         compiled_data = {stats_item["name"]: int(float(stats_item["statisticValue"])) for stats_item in
                          top_level_stats_dict["statistics"]}
 
-        genome_stats = GenomeStatS(coding_stats=compiled_data)
+        genome_stats = GenomeStatistics(coding_stats=compiled_data)
         return responses.Response(genome_stats.json())
     except (ClientResponseError, Exception) as e:
         logger.log("INFO", e)

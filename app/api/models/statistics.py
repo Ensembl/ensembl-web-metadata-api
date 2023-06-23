@@ -26,5 +26,5 @@ class Coding(BaseModel):
     average_intron_length: int = None
 
 
-class GenomeStatS(BaseModel):
+class GenomeStatistics(BaseModel):
     coding_stats: Coding
