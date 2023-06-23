@@ -47,7 +47,7 @@ async def get_metadata_statistics(request: Request, genome_uuid: str):
         compiled_data = {stats_item["name"]: int(float(stats_item["statisticValue"])) for stats_item in
                          top_level_stats_dict["statistics"]}
 
-        genome_stats = GenomeStatS(contig_stats=compiled_data)
+        genome_stats = GenomeStatS(ccoding_stats=compiled_data)
         return responses.Response(genome_stats.json())
     except (ClientResponseError, Exception) as e:
         logger.log("INFO", e)

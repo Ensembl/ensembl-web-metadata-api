@@ -5,7 +5,7 @@ from core.logging import InterceptHandler
 logging.getLogger().handlers = [InterceptHandler()]
 
 
-class Contig(BaseModel):
+class Coding(BaseModel):
     coding_genes: int = None
     average_genomic_span: int = None
     average_sequence_length: int = None
@@ -27,4 +27,4 @@ class Contig(BaseModel):
 
 
 class GenomeStatS(BaseModel):
-    contig_stats: Contig
+    coding_stats: Coding
