@@ -16,7 +16,6 @@ limitations under the License.
 """
 
 import logging
-from os import environ
 import sys
 from typing import List
 
@@ -29,7 +28,6 @@ from .logging import InterceptHandler
 VERSION = "0.0.0"
 API_PREFIX = "/api"
 
-
 config = Config(".env")
 DEBUG: bool = config("DEBUG", cast=bool, default=False)
 PROJECT_NAME: str = config("PROJECT_NAME", default="Ensembl Web Search Hub")
@@ -39,14 +37,15 @@ ALLOWED_HOSTS: List[str] = config(
     default="*",
 )
 
+# GRPC Info
+GRPC_HOST: str = config("GRPC_HOST", default="localhost")
+GRPC_PORT: int = config("GRPC_PORT", default=50051)
+
 # logging configuration
-
-
 LOGGING_LEVEL = logging.DEBUG if DEBUG else logging.INFO
 LOGGERS = ("uvicorn.asgi", "uvicorn.access")
 
 log = logging.getLogger("gunicorn.access")
-
 
 logging.getLogger().handlers = [InterceptHandler()]
 for logger_name in LOGGERS:

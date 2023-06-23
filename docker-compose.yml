@@ -32,7 +32,7 @@ services:
 
     tty: true
     init: true
-    command: "/bin/bash"
+#    command: "/bin/bash"
     ports:
       - ${PORT}:${PORT}
     volumes:
