@@ -14,7 +14,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
+import json
 import logging
 
 from fastapi import APIRouter, Request, responses
@@ -34,13 +34,12 @@ logging.getLogger().handlers = [InterceptHandler()]
 
 router = APIRouter()
 
-logger.log("INFO", "Connecting to gRPC server on " + GRPC_HOST + ":" + GRPC_PORT)
+logger.log("INFO", "Connecting to gRPC server on " + GRPC_HOST + ":" + str(GRPC_PORT))
 grpc_client = GRPCClient(GRPC_HOST, GRPC_PORT)
 
 
 @router.get(
-    "/genome/{genome_uuid}/stats", name="statistics", response_class=ORJSONResponse
-)
+    "/genome/{genome_uuid}/stats", name="statistics")
 async def get_metadata_statistics(request: Request, genome_uuid: str):
     try:
         top_level_stats_dict = MessageToDict(grpc_client.get_statistics(genome_uuid))
@@ -48,7 +47,7 @@ async def get_metadata_statistics(request: Request, genome_uuid: str):
                          top_level_stats_dict["statistics"]}
 
         genome_stats = GenomeStatistics(coding_stats=compiled_data)
-        return responses.Response(genome_stats.json())
+        return responses.Response(json.dumps({"genome_stats": genome_stats.dict()}))
     except (ClientResponseError, Exception) as e:
         logger.log("INFO", e)
         return response_error_handler({"ERROR": e})
