@@ -39,6 +39,6 @@ build:
 deploy:wp40-hl-prod:
   extends: .deploy
   variables:
-    BASE: k8s/overlays/prod
+    BASE: k8s/overlays/prod/
   environment:
-    name: wp40-hh-prod
+    name: wp40-hl-prod
