@@ -13,10 +13,7 @@
 """
 from api.resources.grpc_client import GRPCClient
 from google.protobuf.json_format import MessageToDict, MessageToJson
-import os
-
-GRPC_HOST = os.getenv("GRPC_HOST", "localhost")
-GRPC_PORT = os.getenv("GRPC_PORT", 50051)
+from core.config import GRPC_HOST, GRPC_PORT
 
 print("connecting to gRPC server on ", GRPC_HOST, ":", GRPC_PORT)
 gc = GRPCClient(GRPC_HOST, GRPC_PORT)
