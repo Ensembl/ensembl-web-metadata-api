@@ -19,7 +19,6 @@ import logging
 
 from fastapi import APIRouter, Request, responses
 from loguru import logger
-from aiohttp import ClientResponseError
 
 from api.error_response import response_error_handler
 from api.models.statistics import GenomeStatistics
@@ -45,6 +44,6 @@ async def get_metadata_statistics(request: Request, genome_uuid: str):
 
         genome_stats = GenomeStatistics(_raw_data=top_level_stats_dict["statistics"])
         return responses.Response(json.dumps({"genome_stats": genome_stats.dict()}))
-    except (ClientResponseError, Exception) as e:
+    except Exception as e:
         logger.log("INFO", e)
-        return response_error_handler({"ERROR": e})
+        return response_error_handler({"status": 500})
