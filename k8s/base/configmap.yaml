@@ -3,6 +3,6 @@ kind: ConfigMap
 metadata:
   name: metadata-api-configmap
 data:
-  DEBUG_MODE: "False"
+  DEBUG: "False"
   GRPC_HOST: ensembl-metadata-service
   GRPC_PORT: "50051"
