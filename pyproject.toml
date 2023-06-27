@@ -11,8 +11,14 @@ fastapi = "^0.57.0"
 pydantic = "^1.5.1"
 starlette = "^0.13.4"
 loguru = "^0.5.1"
-ensembl-metadata-service = {git = "https://github.com/Ensembl/ensembl-metadata-service.git", rev = "0.0.2a2"}
+ensembl-metadata-service = {git = "https://github.com/Ensembl/ensembl-metadata-service.git", rev = "0.0.2b1"}
 protobuf = "3.20"
+aiohttp = "^3.8.4"
+grpcio = "1.38.1"
+grpcio-tools = "1.38.1"
+uvicorn = "^0.22.0"
+orjson = "^3.9.1"
+black = "^23.3.0"
 
 
 [build-system]

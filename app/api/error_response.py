@@ -5,13 +5,15 @@ from starlette.status import (
     HTTP_404_NOT_FOUND,
     HTTP_406_NOT_ACCEPTABLE,
     HTTP_400_BAD_REQUEST,
-    HTTP_501_NOT_IMPLEMENTED,
+    HTTP_501_NOT_IMPLEMENTED, HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
 
 def response_error_handler(result):
     if result["status"] == 501:
         return http_501_not_implemented()
+    if result["status"] == 500:
+        return http_500_internal_server_error()
     if result["status"] == 406:
         return http_406_not_acceptable()
     if result["status"] == 400:
@@ -56,5 +58,16 @@ def http_501_not_implemented():
             "status_code": HTTP_501_NOT_IMPLEMENTED,
             "details": "Not Implemented",
         }
+
     )
     return PlainTextResponse(response_msg, status_code=HTTP_501_NOT_IMPLEMENTED)
+
+
+def http_500_internal_server_error():
+    response_msg = json.dumps(
+        {
+            "status_code": HTTP_500_INTERNAL_SERVER_ERROR,
+            "details": "Internal Server Error",
+        }
+    )
+    return PlainTextResponse(response_msg, status_code=HTTP_500_INTERNAL_SERVER_ERROR)
