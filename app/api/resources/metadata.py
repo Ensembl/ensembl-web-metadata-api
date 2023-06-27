@@ -36,8 +36,7 @@ logger.log("INFO", "Connecting to gRPC server on " + GRPC_HOST + ":" + str(GRPC_
 grpc_client = GRPCClient(GRPC_HOST, GRPC_PORT)
 
 
-@router.get(
-    "/genome/{genome_uuid}/stats", name="statistics")
+@router.get("/genome/{genome_uuid}/stats", name="statistics")
 async def get_metadata_statistics(request: Request, genome_uuid: str):
     try:
         top_level_stats_dict = MessageToDict(grpc_client.get_statistics(genome_uuid))
