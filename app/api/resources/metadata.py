@@ -43,7 +43,7 @@ async def get_metadata_statistics(request: Request, genome_uuid: str):
         top_level_stats_dict = MessageToDict(grpc_client.get_statistics(genome_uuid))
 
         genome_stats = GenomeStatistics(_raw_data=top_level_stats_dict["statistics"])
-        return responses.Response(json.dumps({"genome_stats": genome_stats.dict()}))
+        return responses.JSONResponse({"genome_stats": genome_stats.dict()})
     except Exception as e:
         logger.log("INFO", e)
         return response_error_handler({"status": 500})
