@@ -28,5 +28,7 @@ COPY poetry.lock pyproject.toml ./
 RUN pip install poetry && \
     poetry config virtualenvs.create false && \
     poetry install --no-dev
-
-CMD uvicorn main:app --host 0.0.0.0 --port 8014
+    
+# The Base image starts multiple workers by default
+# If needed you can use following command to start uvicorn
+# CMD uvicorn main:app --host 0.0.0.0 --port 8014
