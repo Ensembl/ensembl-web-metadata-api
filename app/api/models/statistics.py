@@ -26,10 +26,23 @@ class Coding(BaseModel):
     average_intron_length: float = None
 
 
+class Assembly(BaseModel):
+    contig_n50: int = None
+    total_genome_length: int = None
+    total_coding_sequence_length: int = None
+    total_gap_length: int = None
+    spanned_gaps: int = None
+    chromosomes: int = None
+    toplevel_sequences: int = None
+    component_sequences: int = None
+    gc_percentage: float = None
+
+
 class GenomeStatistics(BaseModel):
     _raw_data: list
     _compiled_data: dict
 
+    assembly_stats: Assembly
     coding_stats: Coding
 
     def __init__(self, **data):
@@ -37,5 +50,8 @@ class GenomeStatistics(BaseModel):
             stats_item["name"]: stats_item["statisticValue"]
             for stats_item in data["_raw_data"]
         }
+
+        data["assembly_stats"] = data["_compiled_data"]
         data["coding_stats"] = data["_compiled_data"]
+
         super().__init__(**data)
