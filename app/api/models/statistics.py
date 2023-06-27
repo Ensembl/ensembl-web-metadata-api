@@ -38,12 +38,22 @@ class Assembly(BaseModel):
     gc_percentage: float = None
 
 
+class Variation(BaseModel):
+    short_variants: int = None
+    structural_variants: int = None
+    short_variants_with_phenotype_assertions: int = None
+    short_variants_with_publications: int = None
+    short_variants_frequency_studies: int = None
+    structural_variants_with_phenotype_assertions: int = None
+
+
 class GenomeStatistics(BaseModel):
     _raw_data: list
     _compiled_data: dict
 
     assembly_stats: Assembly
     coding_stats: Coding
+    variation_stats: Variation
 
     def __init__(self, **data):
         data["_compiled_data"] = {
@@ -53,5 +63,6 @@ class GenomeStatistics(BaseModel):
 
         data["assembly_stats"] = data["_compiled_data"]
         data["coding_stats"] = data["_compiled_data"]
+        data["variation_stats"] = data["_compiled_data"]
 
         super().__init__(**data)
