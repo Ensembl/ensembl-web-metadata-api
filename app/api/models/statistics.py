@@ -10,10 +10,10 @@ class Coding(BaseModel):
     average_genomic_span: float = None
     average_sequence_length: float = None
     average_cds_length: float = None
-    shortest_gene_length: float = None
-    longest_gene_length: float = None
+    shortest_gene_length: int = None
+    longest_gene_length: int = None
     total_transcripts: int = None
-    coding_transcripts: float = None
+    coding_transcripts: int = None
     transcripts_per_gene: float = None
     coding_transcripts_per_gene: float = None
     total_exons: int = None
