@@ -14,21 +14,30 @@
 #    limitations under the License.
 #
 
-FROM tiangolo/uvicorn-gunicorn:python3.8
-ENV PORT 8014
-EXPOSE 8014
-RUN apt-get update && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+# Base image
+FROM python:3.9-slim
 
-COPY ./app/ /app/
+# Maintainer
+LABEL org.opencontainers.image.authors="ensembl-webteam@ebi.ac.uk"
 
+# Set Work Directory
 WORKDIR /app
 
+# Copy source code
+COPY ./app /app/
+
+# copy poetry toml
 COPY poetry.lock pyproject.toml ./
+
+# Install poetry and dependencies
 RUN pip install poetry && \
     poetry config virtualenvs.create false && \
     poetry install --no-dev
-    
-# The Base image starts multiple workers by default
-# If needed you can use following command to start uvicorn
-# CMD uvicorn main:app --host 0.0.0.0 --port 8014
+
+# Expose Ports
+ENV PORT 8014
+EXPOSE 8014
+
+# Run uvicorn server
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8014"]
+
