@@ -34,7 +34,7 @@ class Pseudogene(BaseModel):
     average_intron_length: float = Field(alias="ps_average_intron_length", default=None)
 
 
-class NoneCoding(BaseModel):
+class NonCoding(BaseModel):
     non_coding_genes: int = Field(alias="nc_non_coding_genes", default=None)
     small_non_coding_genes: int = Field(alias="nc_small_non_coding_genes", default=None)
     long_non_coding_genes: int = Field(alias="nc_long_non_coding_genes", default=None)
@@ -104,7 +104,7 @@ class GenomeStatistics(BaseModel):
     assembly_stats: Assembly
     coding_stats: Coding
     variation_stats: Variation
-    none_coding_stats: NoneCoding
+    non_coding_stats: NonCoding
     pseudogene_stats: Pseudogene
     homology_stats: Homology
     regulation_stats: Regulation
@@ -118,7 +118,7 @@ class GenomeStatistics(BaseModel):
         data["assembly_stats"] = data["_compiled_data"]
         data["coding_stats"] = data["_compiled_data"]
         data["variation_stats"] = data["_compiled_data"]
-        data["none_coding_stats"] = data["_compiled_data"]
+        data["non_coding_stats"] = data["_compiled_data"]
         data["pseudogene_stats"] = data["_compiled_data"]
         data["homology_stats"] = data["_compiled_data"]
         data["regulation_stats"] = data["_compiled_data"]
