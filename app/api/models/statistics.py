@@ -44,6 +44,7 @@ class NonCoding(BaseModel):
         alias="nc_average_sequence_length", default=None
     )
     shortest_gene_length: int = Field(alias="nc_shortest_gene_length", default=None)
+    longest_gene_length: int = Field(alias="nc_longest_gene_length", default=None)
     total_transcripts: int = Field(alias="nc_total_transcripts")
     transcripts_per_gene: float = Field(alias="nc_transcripts_per_gene", default=None)
     total_exons: int = Field(alias="nc_total_exons", default=None)
