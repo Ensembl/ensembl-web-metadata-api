@@ -1,8 +1,59 @@
 import logging
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from core.logging import InterceptHandler
 
 logging.getLogger().handlers = [InterceptHandler()]
+
+
+class Homology(BaseModel):
+    homology: float = Field(alias="homology_coverage", default=None)
+    coverage_explanation: str = None
+
+
+class Regulation(BaseModel):
+    enhancers: int = None
+    promoters: int = None
+
+
+class Pseudogene(BaseModel):
+    pseudogenes: int = Field(alias="ps_pseudogenes", default=None)
+    average_genomic_span: float = Field(alias="ps_average_genomic_span", default=None)
+    average_sequence_length: float = Field(
+        alias="ps_average_sequence_length", default=None
+    )
+    shortest_gene_length: int = Field(alias="ps_shortest_gene_length", default=None)
+    longest_gene_length: int = Field(alias="ps_longest_gene_length", default=None)
+    total_transcripts: int = Field(alias="ps_total_transcripts", default=None)
+    transcripts_per_gene: float = Field(alias="ps_transcripts_per_gene", default=None)
+    total_exons: int = Field(alias="ps_total_exons", default=None)
+    average_exon_length: float = Field(alias="ps_average_exon_length", default=None)
+    average_exons_per_transcript: float = Field(
+        alias="ps_average_exons_per_transcript", default=None
+    )
+    total_introns: int = Field(alias="ps_total_introns", default=None)
+    average_intron_length: float = Field(alias="ps_average_intron_length", default=None)
+
+
+class NonCoding(BaseModel):
+    non_coding_genes: int = Field(alias="nc_non_coding_genes", default=None)
+    small_non_coding_genes: int = Field(alias="nc_small_non_coding_genes", default=None)
+    long_non_coding_genes: int = Field(alias="nc_long_non_coding_genes", default=None)
+    misc_non_coding_genes: int = Field(alias="nc_misc_non_coding_genes", default=None)
+    average_genomic_span: float = Field(alias="nc_average_genomic_span", default=None)
+    average_sequence_length: float = Field(
+        alias="nc_average_sequence_length", default=None
+    )
+    shortest_gene_length: int = Field(alias="nc_shortest_gene_length", default=None)
+    longest_gene_length: int = Field(alias="nc_longest_gene_length", default=None)
+    total_transcripts: int = Field(alias="nc_total_transcripts")
+    transcripts_per_gene: float = Field(alias="nc_transcripts_per_gene", default=None)
+    total_exons: int = Field(alias="nc_total_exons", default=None)
+    average_exon_length: float = Field(alias="nc_average_exon_length", default=None)
+    average_exons_per_transcript: float = Field(
+        alias="nc_average_exons_per_transcript", default=None
+    )
+    total_introns: int = Field(alias="nc_total_introns", default=None)
+    average_intron_length: float = Field(alias="nc_average_intron_length", default=None)
 
 
 class Coding(BaseModel):
@@ -54,6 +105,10 @@ class GenomeStatistics(BaseModel):
     assembly_stats: Assembly
     coding_stats: Coding
     variation_stats: Variation
+    non_coding_stats: NonCoding
+    pseudogene_stats: Pseudogene
+    homology_stats: Homology
+    regulation_stats: Regulation
 
     def __init__(self, **data):
         data["_compiled_data"] = {
@@ -64,5 +119,9 @@ class GenomeStatistics(BaseModel):
         data["assembly_stats"] = data["_compiled_data"]
         data["coding_stats"] = data["_compiled_data"]
         data["variation_stats"] = data["_compiled_data"]
+        data["non_coding_stats"] = data["_compiled_data"]
+        data["pseudogene_stats"] = data["_compiled_data"]
+        data["homology_stats"] = data["_compiled_data"]
+        data["regulation_stats"] = data["_compiled_data"]
 
         super().__init__(**data)
