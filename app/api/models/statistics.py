@@ -113,6 +113,8 @@ class GenomeStatistics(BaseModel):
     def __init__(self, **data):
         data["_compiled_data"] = {
             stats_item["name"]: stats_item["statisticValue"]
+            if stats_item["statisticValue"] != "null"
+            else None
             for stats_item in data["_raw_data"]
         }
 
