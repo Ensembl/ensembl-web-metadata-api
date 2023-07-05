@@ -114,6 +114,7 @@ class GenomeStatistics(BaseModel):
         data["_compiled_data"] = {
             stats_item["name"]: stats_item["statisticValue"]
             for stats_item in data["_raw_data"]
+            if stats_item["statisticValue"] != "null"
         }
 
         data["assembly_stats"] = data["_compiled_data"]
