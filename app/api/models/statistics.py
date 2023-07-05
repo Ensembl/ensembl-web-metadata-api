@@ -112,9 +112,9 @@ class GenomeStatistics(BaseModel):
 
     def __init__(self, **data):
         data["_compiled_data"] = {
-            si["name"]: si["statisticValue"]
-            for si in data["_raw_data"]
-            if si["statisticValue"] != "null"
+            stats_item["name"]: stats_item["statisticValue"]
+            for stats_item in data["_raw_data"]
+            if stats_item["statisticValue"] != "null"
         }
 
         data["assembly_stats"] = data["_compiled_data"]
