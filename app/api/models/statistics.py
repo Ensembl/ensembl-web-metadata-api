@@ -6,7 +6,7 @@ logging.getLogger().handlers = [InterceptHandler()]
 
 
 class Homology(BaseModel):
-    homology: float = Field(alias="homology_coverage", default=None)
+    coverage: float = Field(alias="homology_coverage", default=None)
     coverage_explanation: str = None
 
 
