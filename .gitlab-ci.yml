@@ -49,3 +49,50 @@ deploy:wp40-hl-prod:
     BASE: k8s/overlays/prod/
   environment:
     name: wp40-hl-prod
+
+# Deploy jobs for new k8s cluster
+Staging:WP40:HL:
+  extends: .deploy
+  variables:
+    BASE: k8s/overlays/prod/
+  environment:
+    name: wp40-hl-staging
+  rules:
+    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "metadataAPI-k8s-deploy"'
+
+Internal:WP40:HL:
+  extends: .deploy
+  variables:
+    BASE: k8s/overlays/prod/
+  environment:
+    name: wp40-hl-internal
+  rules:
+    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "metadataAPI-k8s-deploy"'
+
+Dev:WP40:HL:
+  extends: .deploy
+  variables:
+    BASE: k8s/overlays/prod/
+  environment:
+    name: wp40-hl-dev
+  rules:
+    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "metadataAPI-k8s-deploy"'
+
+Dev:WP41:HX:
+  extends: .deploy
+  variables:
+    BASE: k8s/overlays/prod/
+  environment:
+    name: wp41-hx-dev
+  rules:
+    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "metadataAPI-k8s-deploy"'
+
+Prod:WP41:HX:
+  extends: .deploy
+  variables:
+    BASE: k8s/overlays/prod/
+  environment:
+    name: wp41-hx-prod
+  rules:
+    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "metadataAPI-k8s-deploy"'
+
