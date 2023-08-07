@@ -15,7 +15,7 @@
 #
 
 # Base image
-FROM python:3.9-slim
+FROM python:3.9
 
 # Maintainer
 LABEL org.opencontainers.image.authors="ensembl-webteam@ebi.ac.uk"
