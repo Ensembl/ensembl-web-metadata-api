@@ -24,7 +24,7 @@ variables:
     - docker logout $CI_REGISTRY
 
   rules:
-    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "metadataAPI-k8s-deploy"'
+    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "main"'
       when: always
 
 
@@ -53,7 +53,7 @@ variables:
     - kubectl apply -k ./
 
   rules:
-    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "metadataAPI-k8s-deploy"'
+    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "main"'
       when: on_success
 # Build docker image for k8s-deploy branch
 build:
