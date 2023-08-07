@@ -48,7 +48,7 @@ variables:
   script:
     - git clone https://gitlab.ebi.ac.uk/ensembl-web/ensembl-k8s-manifests.git
     - git -C ensembl-k8s-manifests/ checkout k8s123-migration
-    - cd ensembl-k8s-manifests/ensembl-web-tools-api
+    - cd ensembl-k8s-manifests/ensembl-web-metadata-api
     - kustomize edit set image DOCKER_IMAGE=${DOCKER_IMAGE}
     - kubectl apply -k ./
 
