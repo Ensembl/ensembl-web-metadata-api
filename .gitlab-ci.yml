@@ -24,7 +24,7 @@ variables:
     - docker logout $CI_REGISTRY
 
   rules:
-    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "metadataAPI-k8s-deploy"'
 
 
 .deploy:
@@ -37,13 +37,13 @@ variables:
     - kustomize build . | kubectl apply -f -
 
   rules:
-    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "metadataAPI-k8s-deploy"'
 
 # Build docker image for k8s-deploy branch
 build:
   extends: .build
 
-deploy:wp40-hl-prod:
+Prod:WP40:HL:
   extends: .deploy
   variables:
     BASE: k8s/overlays/prod/
