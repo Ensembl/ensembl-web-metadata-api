@@ -78,7 +78,7 @@ Internal:WP40:HL:
 Dev:WP40:HL:
   extends: .deploy-wp
   environment:
-    name: wp40-hl-dev
+    name: wp40-hl-development
 
 Dev:WP41:HX:
   extends: .deploy-wp
