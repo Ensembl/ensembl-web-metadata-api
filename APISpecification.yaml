@@ -34,6 +34,62 @@ paths:
                 properties:
                   genome_stats:
                     $ref: '#/components/schemas/SpeciesStats'
+  /api/metadata/popular_species:
+    get:
+      description: List of 42 groups of genomes related to popular species
+      parameters:
+        - in: query
+          name: selected_genome_ids
+          schema:
+            type: string
+            example: 'a7335667-93e7-11ec-a39d-005056b38ce3,704ceb1-948d-11ec-a39d-005056b38ce3'
+          description: List of genomes already selected by the user; required so that the response can mark which of the popular species contain already selected genomes
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  popular_species:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PopularSpecies'
+  /api/metadata/popular_species/{group_id}:
+    get:
+      description: Returns a list of genomes associated with a given popular species
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: some-id
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  group_id:
+                    type: string
+                    title: Genome id
+                    example: some-id
+                  members:
+                    type: array
+                    title: Members of the group represented by a popular species
+                    items:
+                      $ref: '#/components/schemas/GenomeAssociatedWithPopularSpecies'
+                  meta:
+                    type: object
+                    properties:
+                      total_count:
+                        type: number
+
+
 components:
   schemas:
     SpeciesStats:
@@ -360,3 +416,147 @@ components:
         - regulation_stats
       additionalProperties: false
       title: SpeciesStats
+    PopularSpecies:
+      type: object
+      properties:
+        id:
+          title: Id
+          anyOf:
+            - type: string
+            - type: number
+        name:
+          title: Name
+          type: string
+          description: Human-friendly text to show in the tooltip
+        image:
+          title: Image url
+          type: string
+          description: Url of the associated svg
+        members_count:
+          title: Members count
+          type: number
+          description: The number of genomes associated with this species
+        is_selected:
+          title: Is selected
+          type: boolean
+          description: Whether any of the genomes provided with the query is associated with this species
+      required:
+        - id
+        - name
+        - image
+        - members_count
+        - is_selected
+    GenomeAssociatedWithPopularSpecies:
+      properties:
+        genome_id:
+          title: Genome id
+          type: string
+          example: a7335667-93e7-11ec-a39d-005056b38ce3
+        genome_tag:
+          title: Genome tag
+          nullable: true
+          type: string
+          example: grch38
+        common_name:
+          title: Species common name
+          nullable: true
+          type: string
+          example: Human
+        scientific_name:
+          title: Species scientific name
+          type: string
+          example: Homo sapiens
+        type:
+          title: Group to which the organism belongs
+          $ref: '#/components/schemas/SpeciesTypeInGenome'
+          nullable: true
+        is_reference:
+          title: Is this a reference genome
+          type: boolean
+        assembly:
+          title: Assembly
+          $ref: '#/components/schemas/AssemblyInGenome'
+        coding_genes_count:
+          title: Number of coding genes in genome
+          type: number
+          example: 20446
+        contig_n50:
+          title: Contig n50
+          nullable: true
+          type: number
+          example: 56413054
+        has_variation:
+          title: Availability of variation data
+          type: boolean
+        has_regulation:
+          title: Availability of regulation data
+          type: boolean
+        annotation_provider:
+          title: Annotation provider
+          type: string
+          example: Ensembl
+        annotation_method:
+          title: Annotation method
+          type: string
+          example: Full genebuild
+        rank:
+          title: Search match rank
+          nullable: true
+          type: number
+          example: 1
+      required:
+        - genome_id
+        - genome_tag
+        - common_name
+        - scientific_name
+        - type
+        - is_reference
+        - assembly
+        - coding_genes_count
+        - contig_n50
+        - has_variation
+        - has_regulation
+        - annotation_provider
+        - annotation_method
+        - rank
+      additionalProperties: false
+      title: SpeciesSearchMatch
+      type: object
+    AssemblyInGenome:
+      properties:
+        accession_id:
+          title: Assembly accession id
+          type: string
+          example: GCA_018466855.1
+        name:
+          title: Assembly name
+          type: string
+          example: HG02559.alt.pat.f1_v2
+        url:
+          title: Assembly url
+          type: string
+          example: https://www.ebi.ac.uk/ena/browser/view/GCA_018466855.1
+      required:
+        - accession_id
+        - name
+        - url
+      additionalProperties: false
+      title: Assembly in SpeciesSearchMatch
+      type: object
+    SpeciesTypeInGenome:
+      properties:
+        kind:
+          title: Kind of the species type
+          type: string
+          example: population
+        value:
+          title: Value of the species type
+          type: string
+          example: African Caribbean In Barbados
+      required:
+        - kind
+        - value
+      additionalProperties: false
+      title: Species type in SpeciesSearchMatch
+      type: object
+
