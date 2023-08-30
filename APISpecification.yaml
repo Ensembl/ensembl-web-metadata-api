@@ -37,13 +37,6 @@ paths:
   /api/metadata/popular_species:
     get:
       description: List of 42 groups of genomes related to popular species
-      parameters:
-        - in: query
-          name: selected_genome_ids
-          schema:
-            type: string
-            example: 'a7335667-93e7-11ec-a39d-005056b38ce3,704ceb1-948d-11ec-a39d-005056b38ce3'
-          description: List of genomes already selected by the user; required so that the response can mark which of the popular species contain already selected genomes
       responses:
         '200':
           description: successful operation
@@ -345,15 +338,11 @@ components:
         members_count:
           type: number
           description: The number of genomes associated with this species
-        is_selected:
-          type: boolean
-          description: Whether any of the genomes provided with the query is associated with this species
       required:
         - id
         - name
         - image
         - members_count
-        - is_selected
     GenomeAssociatedWithPopularSpecies:
       properties:
         genome_id:
