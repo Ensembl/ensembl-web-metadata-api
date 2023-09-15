@@ -70,39 +70,6 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/PopularSpecies'
-  /api/metadata/genomes
-    get:
-      tags:
-        - api
-      description: Returns a list of genomes associated with a given popular species
-      parameters:
-        - name: species_taxonomy_id
-          in: query
-          required: true
-          schema:
-            type: string
-            example: "9606"
-      responses:
-        '200':
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  group_id:
-                    type: string
-                    example: some-id
-                  members:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/GenomeMatch'
-                  meta:
-                    type: object
-                    properties:
-                      total_count:
-                        type: number
-
 
 components:
   schemas:
@@ -366,67 +333,6 @@ components:
         - name
         - image
         - members_count
-    GenomeMatch:
-      properties:
-        genome_id:
-          type: string
-          example: a7335667-93e7-11ec-a39d-005056b38ce3
-        genome_tag:
-          nullable: true
-          type: string
-          example: grch38
-        common_name:
-          nullable: true
-          type: string
-          example: Human
-        scientific_name:
-          type: string
-          example: Homo sapiens
-        type:
-          $ref: '#/components/schemas/SpeciesTypeInGenome'
-          nullable: true
-        is_reference:
-          type: boolean
-        assembly:
-          $ref: '#/components/schemas/AssemblyInGenome'
-        coding_genes_count:
-          type: number
-          example: 20446
-        contig_n50:
-          nullable: true
-          type: number
-          example: 56413054
-        has_variation:
-          type: boolean
-        has_regulation:
-          type: boolean
-        annotation_provider:
-          type: string
-          example: Ensembl
-        annotation_method:
-          type: string
-          example: Full genebuild
-        rank:
-          nullable: true
-          type: number
-          example: 1
-      required:
-        - genome_id
-        - genome_tag
-        - common_name
-        - scientific_name
-        - type
-        - is_reference
-        - assembly
-        - coding_genes_count
-        - contig_n50
-        - has_variation
-        - has_regulation
-        - annotation_provider
-        - annotation_method
-        - rank
-      additionalProperties: false
-      type: object
     AssemblyInGenome:
       properties:
         accession_id:
