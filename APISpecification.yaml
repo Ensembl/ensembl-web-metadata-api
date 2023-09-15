@@ -70,18 +70,18 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/PopularSpecies'
-  /api/metadata/popular_species/{group_id}:
+  /api/metadata/genomes
     get:
       tags:
         - api
       description: Returns a list of genomes associated with a given popular species
       parameters:
-        - name: group_id
-          in: path
+        - name: species_taxonomy_id
+          in: query
           required: true
           schema:
             type: string
-            example: some-id
+            example: "9606"
       responses:
         '200':
           description: successful operation
@@ -96,7 +96,7 @@ paths:
                   members:
                     type: array
                     items:
-                      $ref: '#/components/schemas/GenomeAssociatedWithPopularSpecies'
+                      $ref: '#/components/schemas/GenomeMatch'
                   meta:
                     type: object
                     properties:
@@ -366,7 +366,7 @@ components:
         - name
         - image
         - members_count
-    GenomeAssociatedWithPopularSpecies:
+    GenomeMatch:
       properties:
         genome_id:
           type: string
