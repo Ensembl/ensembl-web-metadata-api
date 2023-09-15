@@ -33,9 +33,30 @@ paths:
                 type: object
                 properties:
                   genome_stats:
-                    $ref: '#/components/schemas/SpeciesStats'
+                    $ref: '#/components/schemas/GenomeStats'
+  /api/metadata/genome/{genome_id}/details:
+    get:
+      tags:
+        - api
+      description: Detailed information about a genome
+      parameters:
+        - name: genome_id
+          in: path
+          required: true
+          schema:
+            type: string
+            default: a7335667-93e7-11ec-a39d-005056b38ce3
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenomeDetails'
   /api/metadata/popular_species:
     get:
+      tags:
+        - api
       description: List of 42 groups of genomes related to popular species
       responses:
         '200':
@@ -51,6 +72,8 @@ paths:
                       $ref: '#/components/schemas/PopularSpecies'
   /api/metadata/popular_species/{group_id}:
     get:
+      tags:
+        - api
       description: Returns a list of genomes associated with a given popular species
       parameters:
         - name: group_id
@@ -83,7 +106,7 @@ paths:
 
 components:
   schemas:
-    SpeciesStats:
+    GenomeStats:
       type: object
       properties:
         assembly_stats:
@@ -421,6 +444,32 @@ components:
         - url
       additionalProperties: false
       type: object
+    AssemblyProvider:
+      type: object
+      properties:
+        name:
+          type: string
+          example: UCSC Genomics Institute
+        url:
+          type: string
+          example: https://genomics.ucsc.edu
+          nullable: true
+      required:
+        - name
+        - url
+    AnnotationProvider:
+      type: object
+      properties:
+        name:
+          type: string
+          example: UCSC Genomics Institute
+        url:
+          type: string
+          example: https://genomics.ucsc.edu
+          nullable: true
+      required:
+        - name
+        - url
     SpeciesTypeInGenome:
       properties:
         kind:
@@ -432,5 +481,89 @@ components:
       required:
         - kind
         - value
+      additionalProperties: false
+      type: object
+    GenomeDetails:
+      properties:
+        genome_id:
+          type: string
+          example: a7335667-93e7-11ec-a39d-005056b38ce3
+        genome_tag:
+          type: string
+          example: grch38
+          nullable: true
+        taxonomy_id:
+          type: string
+          example: "9606"
+          description: Identifier of the taxon that the genome belongs to.
+            May be the same as species_taxonomy_id, or different.
+        species_taxonomy_id:
+          type: string
+          example: "1"
+          description: required to be able to retrieve a list of related genomes
+        common_name:
+          type: string
+          example: human
+        scientific_name:
+          type: string
+          example: Homo sapiens
+        type:
+          $ref: '#/components/schemas/SpeciesTypeInGenome'
+          nullable: true
+        is_reference:
+          type: boolean
+        assembly:
+          $ref: '#/components/schemas/AssemblyInGenome'
+        assembly_provider:
+          $ref: '#/components/schemas/AssemblyProvider'
+        assembly_level:
+          type: string
+          example: complete genome
+        assembly_date:
+          type: string
+          description: ISO date string in the YYYY-MM format
+          example: "2019-02"
+        annotation_provider:
+          $ref: '#/components/schemas/AnnotationProvider'
+        annotation_method:
+          type: string
+          example: import
+        annotation_version:
+          type: string
+          example: GENCODE 34
+          nullable: true
+        annotation_date:
+          type: string
+          description: ISO date string in the YYYY-MM format
+          example: "2019-02"
+        image_url:
+          type: string
+          description: Link to species image, if present
+          example: http://beta.ensembl.org/static/genome_images/homo_sapiens_38.svg
+          nullable: true
+        related_genomes_count:
+          type: number
+          description: The number of genomes related to the current one via species taxonomy id.
+            May just mean the number of alternative assemblies; but may also include genomes
+            that have the same assembly, but different annotations.
+      required:
+        - genome_id
+        - genome_tag
+        - taxonomy_id
+        - species_taxonomy_id
+        - common_name
+        - scientific_name
+        - type
+        - is_reference
+        - assembly
+        - assembly_provider
+        - assembly_level
+        - assembly_date
+        - annotation_provider
+        - annotation_method
+        - annotation_version
+        - annotation_date
+        - image_url
+        - related_genomes_count
       additionalProperties: false
       type: object
