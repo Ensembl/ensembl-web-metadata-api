@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "species-search-dump"
+version = "0.1.0"
+description = ""
+authors = ["Jon Keatley <jon@ebi.ac.uk>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "species_search_dump"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pydantic = "^2.3.0"
+mysql-connector-python = "^8.1.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
