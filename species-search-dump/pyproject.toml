@@ -1,11 +1,10 @@
 [tool.poetry]
 name = "species-search-dump"
 version = "0.1.0"
-description = ""
-authors = ["Jon Keatley <jon@ebi.ac.uk>"]
-license = "MIT"
-readme = "README.md"
-packages = [{include = "species_search_dump"}]
+description = "A set of scripts to create a json dump of genomes"
+authors = ["Web team <ensembl-webteam@ebi.ac.uk>"]
+license = "Apache-2.0"
+
 
 [tool.poetry.dependencies]
 python = "^3.11"
