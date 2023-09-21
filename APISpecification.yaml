@@ -344,6 +344,7 @@ components:
         url:
           type: string
           example: https://www.ebi.ac.uk/ena/browser/view/GCA_018466855.1
+          nullable: true
       required:
         - accession_id
         - name
