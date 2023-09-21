@@ -448,9 +448,9 @@ components:
           description: Link to species image, if present
           example: http://beta.ensembl.org/static/genome_images/homo_sapiens_38.svg
           nullable: true
-        related_genomes_count:
+        number_of_genomes_in_group:
           type: number
-          description: The number of genomes related to the current one via species taxonomy id.
+          description: The number of genomes, including the current one, that share the same species taxonomy id.
             May just mean the number of alternative assemblies; but may also include genomes
             that have the same assembly, but different annotations.
       required:
