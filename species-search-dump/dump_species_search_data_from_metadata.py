@@ -98,7 +98,7 @@ query = """
 select distinct g.genome_uuid,
 o.common_name,
 o.scientific_name,
-IF(isnull(o.strain_type) or o.strain_type = '', 'Reference', o.strain_type) as strain_type,
+o.strain_type,
 o.strain,
 a.assembly_default,
 a.accession,
