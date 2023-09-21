@@ -325,17 +325,17 @@ components:
     PopularSpecies:
       type: object
       properties:
-        id:
+        species_taxonomy_id:
           anyOf:
             - type: string
             - type: number
         name:
           type: string
-          description: Human-friendly text to show in the tooltip
+          description: Human-friendly text to show in the tooltip ( common_name if exists else scientific_name )
         image:
           type: string
           description: Url of the associated svg
-        members_count:
+        genomes_count:
           type: number
           description: The number of genomes associated with this species
       required:
