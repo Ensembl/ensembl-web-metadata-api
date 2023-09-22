@@ -411,6 +411,7 @@ components:
         common_name:
           type: string
           example: human
+          nullable: true
         scientific_name:
           type: string
           example: Homo sapiens
