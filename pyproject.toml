@@ -7,11 +7,8 @@ license = "Apache-2.0"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-fastapi = "^0.57.0"
-pydantic = "^1.5.1"
-starlette = "^0.13.4"
 loguru = "^0.5.1"
-ensembl-metadata-service = {git = "https://github.com/Ensembl/ensembl-metadata-service.git", rev = "0.0.2b1"}
+ensembl-metadata-service = {git = "https://github.com/Ensembl/ensembl-metadata-service.git", rev = "0.0.6a1"}
 protobuf = "3.20"
 aiohttp = "^3.8.4"
 grpcio = "1.38.1"

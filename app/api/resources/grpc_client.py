@@ -12,8 +12,8 @@
    limitations under the License.
 """
 import grpc
-from ensembl.production.metadata import ensembl_metadata_pb2
-from ensembl.production.metadata import ensembl_metadata_pb2_grpc
+from ensembl.production.metadata.grpc import ensembl_metadata_pb2
+from ensembl.production.metadata.grpc import ensembl_metadata_pb2_grpc
 
 
 class GRPCClient:
@@ -55,3 +55,9 @@ class GRPCClient:
         response = self.stub.GetGenomeByUUID(request)
 
         return response
+
+    def get_popular_species(self):
+        popular_species_request = ensembl_metadata_pb2.OrganismsGroupRequest()
+        popular_species = self.stub.GetOrganismsGroupCount(popular_species_request)
+
+        return popular_species

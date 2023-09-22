@@ -22,6 +22,7 @@ from loguru import logger
 
 from api.error_response import response_error_handler
 from api.models.statistics import GenomeStatistics
+from api.models.popular_species import PopularSpeciesGroup
 from core.config import GRPC_HOST, GRPC_PORT
 from core.logging import InterceptHandler
 
@@ -43,6 +44,17 @@ async def get_metadata_statistics(request: Request, genome_uuid: str):
 
         genome_stats = GenomeStatistics(_raw_data=top_level_stats_dict["statistics"])
         return responses.JSONResponse({"genome_stats": genome_stats.dict()})
+    except Exception as e:
+        logger.log("INFO", e)
+        return response_error_handler({"status": 500})
+
+@router.get("/popular_species", name="popular_species")
+async def get_popular_species(request: Request):
+    try:
+        popular_species_dict = MessageToDict(grpc_client.get_popular_species())
+        popular_species = popular_species_dict['organismsGroupCount']
+        popular_species_response = PopularSpeciesGroup(popular_species=popular_species)
+        return responses.JSONResponse(popular_species_response.dict())
     except Exception as e:
         logger.log("INFO", e)
         return response_error_handler({"status": 500})
