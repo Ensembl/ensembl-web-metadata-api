@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 from core.logging import InterceptHandler
 
 logging.getLogger().handlers = [InterceptHandler()]
-
+from loguru import logger
 
 class Homology(BaseModel):
     coverage: float = Field(alias="homology_coverage", default=None)
@@ -117,9 +117,9 @@ class GenomeStatistics(BaseModel):
                 try:
                     data["_compiled_data"][stats_item["name"]]=stats_item["statisticValue"]
                 except KeyError as ke:
-                    logger.log("INFO", ke)
+                    logger.debug(ke)
         except Exception as ex:
-            logger.log("INFO", e)
+            logger.debug(ex)
         data["assembly_stats"] = data["_compiled_data"]
         data["coding_stats"] = data["_compiled_data"]
         data["variation_stats"] = data["_compiled_data"]
