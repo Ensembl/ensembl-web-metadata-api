@@ -325,8 +325,8 @@ service = ["ensembl-metadata-api @ git+https://github.com/Ensembl/ensembl-metada
 [package.source]
 type = "git"
 url = "https://github.com/Ensembl/ensembl-metadata-service.git"
-reference = "0.0.6a1"
-resolved_reference = "fdd62f6ffb4b6ad875d490316bf36983ef0ff7f1"
+reference = "hotfix/fix_build_pipline"
+resolved_reference = "9f16003924987bb71db91190cc8d093e10a35e47"
 
 [[package]]
 name = "frozenlist"
@@ -973,4 +973,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "aecf0a380d42179c5ffc4442608660c6f6398de9f2a5829380187e82a609934d"
+content-hash = "df20fb8102ee8ccd1a63602ea6bc4b1a4c1f6f9e3d3d6773483d558cd267fbdd"
