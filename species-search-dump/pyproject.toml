@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "species-search-dump"
+version = "0.1.0"
+description = "A set of scripts to create a json dump of genomes"
+authors = ["Web team <ensembl-webteam@ebi.ac.uk>"]
+license = "Apache-2.0"
+
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pydantic = "^2.3.0"
+mysql-connector-python = "^8.1.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
