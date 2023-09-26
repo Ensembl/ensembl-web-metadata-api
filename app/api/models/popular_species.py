@@ -3,10 +3,10 @@ from typing import List, Dict, Any
 
 
 class PopularSpecies(BaseModel):
-    species_taxonomy_id: int = Field(alias="speciesTaxonomyId", default=None)
+    species_taxonomy_id: int = Field(alias="speciesTaxonomyId")
     name: str = Field(alias="commonName", validation_alias=AliasChoices('commonName', 'scientificName'))
     image: str = Field(alias="image")
-    genomes_count: int = Field(alias="count", default=None)
+    genomes_count: int = Field(alias="count")
 
 class PopularSpeciesGroup(BaseModel):
     popular_species: List[PopularSpecies]
