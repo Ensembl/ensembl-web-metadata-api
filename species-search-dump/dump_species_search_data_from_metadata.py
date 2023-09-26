@@ -153,8 +153,13 @@ species_data = []
 for row in mycursor.fetchall():
     dict_row = {columns[x]:row[x] for x in range(0,len(columns))}
 
-    sd = Species(**dict_row)
-    species_data.append(sd)
+    try:
+        sd = Species(**dict_row)
+        species_data.append(sd)
+    except ValidationError as err:
+        print(f"Unable to validate {dict_row['accession']}")
+        print(err)
+        print(dict_row)
 
 species_list = SpeciesList(
 species_list=species_data,
