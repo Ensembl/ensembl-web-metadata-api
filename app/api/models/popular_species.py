@@ -18,5 +18,5 @@ class PopularSpeciesGroup(BaseModel):
     popular_species: List[PopularSpecies]
 
     def __init__(self, **data):
-        super().__init__(**data)
         PopularSpecies._base_url = data["_base_url"]
+        super().__init__(**data)
