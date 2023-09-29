@@ -117,9 +117,9 @@ class GenomeStatistics(BaseModel):
                 try:
                     data["_compiled_data"][stats_item["name"]]=stats_item["statisticValue"]
                 except KeyError as ke:
-                    logger.debug(ke)
+                    logger.debug(stats_item["name"], ke)
         except Exception as ex:
-            logger.debug(ex)
+            logger.debug("Error : ",ex)
         data["assembly_stats"] = data["_compiled_data"]
         data["coding_stats"] = data["_compiled_data"]
         data["variation_stats"] = data["_compiled_data"]
