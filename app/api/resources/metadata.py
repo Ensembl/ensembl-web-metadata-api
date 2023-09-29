@@ -52,9 +52,7 @@ async def get_popular_species(request: Request):
     try:
         popular_species_dict = MessageToDict(grpc_client.get_popular_species())
         popular_species = popular_species_dict['organismsGroupCount']
-        for species in popular_species:
-            species['image'] = '{}static/genome_images/{}.svg'.format(request.base_url, species['speciesTaxonomyId'])
-        popular_species_response = PopularSpeciesGroup(popular_species=popular_species)
+        popular_species_response = PopularSpeciesGroup(_base_url=request.base_url, popular_species=popular_species)
         return responses.JSONResponse(popular_species_response.dict())
     except Exception as e:
         logger.debug(e)
