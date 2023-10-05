@@ -554,17 +554,6 @@ components:
     RegionValidationResponse:
       type: object
       properties:
-        genome_id:
-          type: object
-          properties:
-            value:
-              type: string
-            is_valid:
-              type: boolean
-            error_code:
-              type: string
-            error_message:
-              type: string
         start:
           type: object
           properties:
