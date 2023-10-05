@@ -53,6 +53,63 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GenomeDetails'
+  /api/metadata/genome/{genome_id}/karyotype:
+    get:
+      summary: Returns a list of top-level regions included in the organism's karyotype
+      parameters:
+      - name: genome_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: 3704ceb1-948d-11ec-a39d-005056b38ce3
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Karyotype'
+        404:
+          description: Genome not found
+          content: {}
+  /api/metadata/validate_region:
+    get:
+      summary: Checks validity of user input containing a genomic region
+      parameters:
+      - name: genome_id
+        in: query
+        required: true
+        schema:
+          type: string
+          example: 3704ceb1-948d-11ec-a39d-005056b38ce3
+      - name: region
+        in: query
+        description: User input string for validation
+        required: true
+        schema:
+          type: string
+          example: 1:10000-1000000
+      responses:
+        200:
+          description: region validation information (region can be either valid or invalid)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegionValidationResponse'
+        400:
+          description: bad input; for example due to parsing error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: object
+                    example:
+                      parse: "Could not parse region 13 32,442,859-32,272,495"
   /api/metadata/popular_species:
     get:
       tags:
@@ -475,3 +532,79 @@ components:
         - related_genomes_count
       additionalProperties: false
       type: object
+    Karyotype:
+      type: array
+      items:
+        $ref: '#/components/schemas/TopLevelRegion'
+    TopLevelRegion:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "1"
+        type:
+          type: string
+          example: "chromosome"
+        length:
+          type: integer
+          example: 248956422
+        is_circular:
+          type: boolean
+          example: false
+    RegionValidationResponse:
+      type: object
+      properties:
+        start:
+          type: object
+          properties:
+            value:
+              type: integer
+              example: 32272495
+            is_valid:
+              type: boolean
+            error_code:
+              type: string
+              nullable: true
+              description: error code for programmatic response; null if the start coordinate is valid
+            error_message:
+              type: string
+              nullable: true
+              description: human-readable description of error; null if the start coordinate is valid
+        end:
+          type: object
+          properties:
+            value:
+              type: integer
+              example: 32442859
+            is_valid:
+              type: boolean
+            error_code:
+              type: string
+              nullable: true
+              description: error code for programmatic response; null if the end coordinate is valid
+            error_message:
+              type: string
+              nullable: true
+              description: human-readable description of error; null if the end coordinate is valid
+        region:
+          type: object
+          properties:
+            region_code:
+              type: string
+              example: "chromosome"
+            region_name:
+              type: string
+              example: "13"
+            is_valid:
+              type: boolean
+            error_code:
+              type: string
+              nullable: true
+              description: error code for programmatic response; null if region name is valid
+            error_message:
+              type: string
+              nullable: true
+              description: human-readable description of error; null if region name is valid
+        region_id:
+          type: string
+          example: "13:32272495-32442859"
