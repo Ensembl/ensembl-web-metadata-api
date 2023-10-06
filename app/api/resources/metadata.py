@@ -53,7 +53,7 @@ async def get_genome_karyotype(request: Request, genome_uuid: str):
     try:
         karyotypes = grpc_client.get_karyotype(genome_uuid)
         karyotype_response = Karyotypes(karyotypes=karyotypes)
-        return responses.JSONResponse(karyotype_response.dict())
+        return responses.JSONResponse(karyotype_response.dict()["karyotypes"])
     except Exception as e:
         logger.debug(e)
         return response_error_handler({"status": 500})
