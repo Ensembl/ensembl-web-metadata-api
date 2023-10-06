@@ -23,6 +23,7 @@ from loguru import logger
 from api.error_response import response_error_handler
 from api.models.statistics import GenomeStatistics
 from api.models.popular_species import PopularSpeciesGroup
+from api.models.karyotype import Karyotypes
 from core.config import GRPC_HOST, GRPC_PORT
 from core.logging import InterceptHandler
 
@@ -45,6 +46,16 @@ async def get_metadata_statistics(request: Request, genome_uuid: str):
         genome_stats = GenomeStatistics(_raw_data=top_level_stats_dict["statistics"])
         return responses.JSONResponse({"genome_stats": genome_stats.dict()})
     except Exception as e:
+        return response_error_handler({"status": 500})
+
+@router.get("/genome/{genome_uuid}/karyotype", name="karyotype")
+async def get_genome_karyotype(request: Request, genome_uuid: str):
+    try:
+        karyotypes = grpc_client.get_karyotype(genome_uuid)
+        karyotype_response = Karyotypes(karyotypes=karyotypes)
+        return responses.JSONResponse(karyotype_response.dict())
+    except Exception as e:
+        logger.debug(e)
         return response_error_handler({"status": 500})
 
 @router.get("/popular_species", name="popular_species")
