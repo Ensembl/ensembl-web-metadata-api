@@ -15,7 +15,7 @@
 #
 
 # Base image
-FROM python:3.9
+FROM python:3.9.6
 
 # Maintainer
 LABEL org.opencontainers.image.authors="ensembl-webteam@ebi.ac.uk"
@@ -25,19 +25,14 @@ WORKDIR /app
 
 # Copy source code
 COPY ./app /app/
-
-# copy poetry toml
-COPY poetry.lock pyproject.toml ./
-
-# Install poetry and dependencies
-RUN pip install poetry && \
-    poetry config virtualenvs.create false && \
-    poetry install --no-dev
+COPY requirements.txt requirements.txt
+# Install dependencies
+RUN pip install  -r requirements.txt
 
 # Expose Ports
 ENV PORT 8014
 EXPOSE 8014
 
 # Run uvicorn server
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8014"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8014", "--reload"]
 
