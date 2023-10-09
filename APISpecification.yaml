@@ -13,9 +13,9 @@ tags:
 paths:
   /api/metadata/genome/{slug}/explain:
     get:
-      description: Satisfies client's need to disambiguate a string that can be either a genome id, or a genome tag.
-        Genome ids are used to communicate whth Ensembl apis; but genome tag only serves the purpose of keeping the url
-        pretty and stable.
+      description: Satisfies client's need to disambiguate a string that is part of url pathname
+        and that can be either a genome id, or a genome tag. Genome ids are used to communicate
+        whth Ensembl apis; but genome tag only serves the purpose of keeping the url pretty and stable.
       parameters:
         - name: slug
           in: path
@@ -186,7 +186,7 @@ components:
         scientific_name:
           type: string
           example: Homo sapiens
-        assembly_accession:
+        assembly_accession_id:
           type: string
           example: GCA_000001405.28
         assembly_name:
