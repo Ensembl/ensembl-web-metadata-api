@@ -11,6 +11,28 @@ tags:
   - name: api
     description: Ensembl Web Metadata API
 paths:
+  /api/metadata/genome/{slug}/explain:
+    get:
+      description: Satisfies client's need to disambiguate a string that is part of url pathname
+        and that can be either a genome id, or a genome tag. Genome ids are used to communicate
+        whth Ensembl apis; but genome tag only serves the purpose of keeping the url pretty and stable.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+            default: grch38
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  genome_stats:
+                    $ref: '#/components/schemas/BriefGenomeDetails'
   /api/metadata/genome/{genome_id}/stats:
     get:
       tags:
@@ -53,6 +75,25 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GenomeDetails'
+  /api/metadata/genome/{genome_id}/example_objects:
+    get:
+      description: Returns a list of example objects (gene, variant, location, etc.) for a genome.
+      parameters:
+        - name: genome_id
+          in: path
+          required: true
+          schema:
+            type: string
+            default: a7335667-93e7-11ec-a39d-005056b38ce3
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExampleObject'
   /api/metadata/genome/{genome_id}/karyotype:
     get:
       summary: Returns a list of top-level regions included in the organism's karyotype
@@ -128,6 +169,43 @@ paths:
 
 components:
   schemas:
+    BriefGenomeDetails:
+      type: object
+      properties:
+        genome_id:
+          type: string
+          example: a7335667-93e7-11ec-a39d-005056b38ce3
+        genome_tag:
+          type: string
+          example: grch38
+          nullable: true
+        common_name:
+          type: string
+          example: Human
+          nullable: true
+        scientific_name:
+          type: string
+          example: Homo sapiens
+        assembly_accession_id:
+          type: string
+          example: GCA_000001405.28
+        assembly_name:
+          type: string
+          example: GRCh38.p13
+        type:
+          $ref: '#/components/schemas/SpeciesTypeInGenome'
+          nullable: true
+        is_reference:
+          type: boolean
+      required:
+        - genome_id
+        - genome_tag
+        - common_name
+        - scientific_name
+        - assembly_accession
+        - assembly_name
+        - type
+        - is_reference
     GenomeStats:
       type: object
       properties:
@@ -530,6 +608,16 @@ components:
         - related_genomes_count
       additionalProperties: false
       type: object
+    ExampleObject:
+      type: object
+      properties:
+        id:
+          type: string
+          example: ENSG00000139618
+        type:
+          type: string
+          description: Member of a controlled vocabulary. Examples include "gene", "location", "variant"
+          example: gene
     Karyotype:
       type: array
       items:
