@@ -432,9 +432,21 @@ components:
               type: number
             promoters:
               type: number
+            open_chromatin_count:
+              type: number
+              nullable: true
+            ctcf_count:
+              type: number
+              nullable: true
+            tfbs_count:
+              type: number
+              nullable: true
           required:
             - enhancers
             - promoters
+            - open_chromatin_count
+            - ctcf_count
+            - tfbs_count
           nullable: true
       required:
         - assembly_stats
