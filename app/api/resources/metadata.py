@@ -52,6 +52,10 @@ async def get_metadata_statistics(request: Request, genome_uuid: str):
 async def get_genome_karyotype(request: Request, genome_uuid: str):
     try:
         karyotypes = grpc_client.get_karyotype(genome_uuid)
+        # Temporary hack for e.coli and remov when the correct schema/data is available in metadata-database
+        if genome_uuid == "a73351f7-93e7-11ec-a39d-005056b38ce3":
+            for kt in karyotypes:
+                kt['is_circular'] = True
         karyotype_response = Karyotypes(karyotypes=karyotypes)
         return responses.JSONResponse(karyotype_response.dict()["karyotypes"])
     except Exception as e:
