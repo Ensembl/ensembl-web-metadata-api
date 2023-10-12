@@ -11,8 +11,8 @@ class Homology(BaseModel):
 
 
 class Regulation(BaseModel):
-    enhancers: int = Field(alias="promoter.count", default=None)
-    promoters: int = Field(alias="enhancer.count", default=None)
+    enhancers: int = Field(alias="regulation.promoter.count", default=None)
+    promoters: int = Field(alias="regulation.enhancer.count", default=None)
 
 
 class Pseudogene(BaseModel):
