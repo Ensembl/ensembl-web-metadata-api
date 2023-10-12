@@ -1,5 +1,5 @@
 import logging
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator, field_serializer
 from core.logging import InterceptHandler
 
 logging.getLogger().handlers = [InterceptHandler()]
@@ -88,6 +88,16 @@ class Assembly(BaseModel):
     component_sequences: int = Field(alias="assembly.component_sequences", default=None)
     gc_percentage: float = Field(alias="assembly.gc_percentage", default=None)
 
+    @validator('contig_n50', pre=True)
+    def validate_conting_n50(cls, v ) -> int:
+        if v == "NA":
+            return -1
+
+    @field_serializer('contig_n50')
+    def serialise_contig_n50(self, contig_n50: int):
+        if contig_n50 == -1:
+            return None
+        return contig_n50
 
 class Variation(BaseModel):
     short_variants: int = None
