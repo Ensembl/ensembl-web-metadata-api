@@ -23,7 +23,7 @@ from loguru import logger
 from api.error_response import response_error_handler
 from api.models.statistics import GenomeStatistics
 from api.models.popular_species import PopularSpeciesGroup
-from api.models.karyotype import Karyotypes
+from api.models.karyotype import Karyotype
 from core.config import GRPC_HOST, GRPC_PORT
 from core.logging import InterceptHandler
 
@@ -46,18 +46,19 @@ async def get_metadata_statistics(request: Request, genome_uuid: str):
         genome_stats = GenomeStatistics(_raw_data=top_level_stats_dict["statistics"])
         return responses.JSONResponse({"genome_stats": genome_stats.dict()})
     except Exception as e:
+        logger.debug(e)
         return response_error_handler({"status": 500})
 
 @router.get("/genome/{genome_uuid}/karyotype", name="karyotype")
 async def get_genome_karyotype(request: Request, genome_uuid: str):
     try:
-        karyotypes = grpc_client.get_karyotype(genome_uuid)
+        top_level_regions = grpc_client.get_top_level_regions(genome_uuid)
         # Temporary hack for e.coli and remov when the correct schema/data is available in metadata-database
         if genome_uuid == "a73351f7-93e7-11ec-a39d-005056b38ce3":
-            for kt in karyotypes:
-                kt['is_circular'] = True
-        karyotype_response = Karyotypes(karyotypes=karyotypes)
-        return responses.JSONResponse(karyotype_response.dict()["karyotypes"])
+            for tlr in top_level_regions:
+                tlr['is_circular'] = True
+        karyotype_response = Karyotype(top_level_regions=top_level_regions)
+        return responses.JSONResponse(karyotype_response.dict()["top_level_regions"])
     except Exception as e:
         logger.debug(e)
         return response_error_handler({"status": 500})
