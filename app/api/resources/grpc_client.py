@@ -11,10 +11,11 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+
 import grpc
 from ensembl.production.metadata.grpc import ensembl_metadata_pb2
 from ensembl.production.metadata.grpc import ensembl_metadata_pb2_grpc
-
+from google.protobuf.json_format import MessageToDict
 
 class GRPCClient:
     def __init__(self, host: str, port: int):
@@ -42,7 +43,6 @@ class GRPCClient:
             genome_uuid=genome_uuid, release_version=None
         )
         toplevel_stats_by_uuid = self.stub.GetTopLevelStatisticsByUUID(genome_request)
-
         return toplevel_stats_by_uuid
 
     def get_genome(self, genome_uuid: str):
@@ -61,3 +61,14 @@ class GRPCClient:
         popular_species = self.stub.GetOrganismsGroupCount(popular_species_request)
 
         return popular_species
+
+    def get_top_level_regions(self, genome_uuid: str):
+        genome_assembly_request = ensembl_metadata_pb2.GenomeAssemblySequenceRequest(
+            genome_uuid=genome_uuid,
+            chromosomal_only=True
+            )
+        top_level_regions = self.stub.GetGenomeAssemblySequence(genome_assembly_request)
+        genome_top_level_regions = []
+        for tlr in top_level_regions:
+            genome_top_level_regions.append(MessageToDict(tlr))
+        return genome_top_level_regions
