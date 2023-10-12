@@ -16,12 +16,12 @@ from pydantic import BaseModel, Field, AliasChoices, validator
 from typing import List, Dict, Any, ClassVar
 
 
-class Karyotype(BaseModel):
+class Region(BaseModel):
     name: str
     type: str = Field(default="chromosome")
     length: int
     is_circular: bool = Field(default=False)
 
-class Karyotypes(BaseModel):
-    karyotypes: List[Karyotype]
+class Karyotype(BaseModel):
+    top_level_regions: List[Region]
 
