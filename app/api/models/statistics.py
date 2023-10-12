@@ -92,6 +92,7 @@ class Assembly(BaseModel):
     def validate_conting_n50(cls, v ) -> int:
         if v == "NA":
             return -1
+        return v
 
     @field_serializer('contig_n50')
     def serialise_contig_n50(self, contig_n50: int):
