@@ -62,13 +62,13 @@ class GRPCClient:
 
         return popular_species
 
-    def get_karyotype(self, genome_uuid: str):
+    def get_top_level_regions(self, genome_uuid: str):
         genome_assembly_request = ensembl_metadata_pb2.GenomeAssemblySequenceRequest(
             genome_uuid=genome_uuid,
             chromosomal_only=True
             )
-        karyotypes = self.stub.GetGenomeAssemblySequence(genome_assembly_request)
-        genome_karyotype = []
-        for karyotype in karyotypes:
-            genome_karyotype.append(MessageToDict(karyotype))
-        return genome_karyotype
+        top_level_regions = self.stub.GetGenomeAssemblySequence(genome_assembly_request)
+        genome_top_level_regions = []
+        for tlr in top_level_regions:
+            genome_top_level_regions.append(MessageToDict(tlr))
+        return genome_top_level_regions
