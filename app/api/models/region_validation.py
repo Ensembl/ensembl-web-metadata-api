@@ -54,6 +54,7 @@ class RegionValidation(BaseModel):
             logger.debug(ex)
         return (rn,start,end)
 
+
     def _validate_region_name(self):
         try:
             if self.name:
@@ -87,11 +88,20 @@ class RegionValidation(BaseModel):
 
     def validate_region(self):
         if self.genome_uuid:
-            if self._validate_region_name():
                 return True
             else:
                 return False
         return False
+
+    def validate_region_name(self):
+        try:
+            genome_region = grpc_client.get_region(self.genome_uuid, self.name)
+            return
+        except Exception as ex:
+            return False
+
+    def validate_coords(self):
+        pass
 
     @model_serializer
     def region_validation_serliaiser(self) -> Dict[str, Any]:
@@ -101,6 +111,7 @@ class RegionValidation(BaseModel):
         serialized_region["start"] = {"error_code": None, "error_message": None}
         serialized_region["end"] = {"error_code": None, "error_message": None}
         serialized_region["location"] = None
+
 
         if self.genome_uuid:
             if self._is_valid[0] == True:
