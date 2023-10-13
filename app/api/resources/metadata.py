@@ -28,6 +28,8 @@ from core.config import GRPC_HOST, GRPC_PORT
 from core.logging import InterceptHandler
 
 from api.resources.grpc_client import GRPCClient
+from api.models.region_validation import RegionValidation
+
 from google.protobuf.json_format import MessageToDict
 
 logging.getLogger().handlers = [InterceptHandler()]
@@ -70,6 +72,16 @@ async def get_popular_species(request: Request):
         popular_species = popular_species_dict['organismsGroupCount']
         popular_species_response = PopularSpeciesGroup(_base_url=request.base_url, popular_species=popular_species)
         return responses.JSONResponse(popular_species_response.dict())
+    except Exception as e:
+        logger.debug(e)
+        return response_error_handler({"status": 500})
+
+@router.get("/validate_region", name="validate_region")
+def validate_region(request: Request, genome_uuid: str, region: str):
+    try:
+        rgv = RegionValidation(genome_uuid=genome_uuid, region_input=region)
+        rgv.validate_region()
+        return responses.JSONResponse(rgv.dict())
     except Exception as e:
         logger.debug(e)
         return response_error_handler({"status": 500})
