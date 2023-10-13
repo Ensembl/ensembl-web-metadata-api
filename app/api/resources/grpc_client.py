@@ -16,6 +16,7 @@ import grpc
 from ensembl.production.metadata.grpc import ensembl_metadata_pb2
 from ensembl.production.metadata.grpc import ensembl_metadata_pb2_grpc
 from google.protobuf.json_format import MessageToDict
+from loguru import logger
 
 class GRPCClient:
     def __init__(self, host: str, port: int):
@@ -72,3 +73,12 @@ class GRPCClient:
         for tlr in top_level_regions:
             genome_top_level_regions.append(MessageToDict(tlr))
         return genome_top_level_regions
+
+    def get_region(self, genome_uuid: str, region_name: str):
+        genome_seq_region_request = ensembl_metadata_pb2.GenomeAssemblySequenceRegionRequest(
+            genome_uuid=genome_uuid,
+            sequence_region_name=region_name,
+            chromosomal_only=False
+        )
+        genome_seq_region = self.stub.GetGenomeAssemblySequenceRegion(genome_seq_region_request)
+        return genome_seq_region
