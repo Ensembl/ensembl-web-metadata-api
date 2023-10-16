@@ -53,7 +53,7 @@ class RegionValidation(BaseModel):
         try:
             if self.name:
                 genome_region = grpc_client.get_region(self.genome_uuid, self.name)
-                logger.debug(genome_region.length)
+                logger.debug(genome_region)
                 if genome_region.ByteSize() == 0:
                     self._is_valid[0] = False
                     self._region_name_em = "Could not find region {} for {}".format(self.name, self.genome_uuid)
@@ -129,8 +129,10 @@ class RegionValidation(BaseModel):
                 serialized_region["end"]["value"] = self.end
                 serialized_region["end"]["is_valid"] = False
                 serialized_region["end"]["error_message"] = self._end_em
-            if self.name and self.start!=0 and self.end!=0:
+            if all(self._is_valid):
                 serialized_region["region_id"] = "{}:{}-{}".format(self.name, self.start, self.end)
+            else:
+                serialized_region["region_id"] = None
         else:
             serialized_region["region_id"] = None
         return serialized_region
