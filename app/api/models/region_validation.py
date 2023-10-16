@@ -56,7 +56,7 @@ class RegionValidation(BaseModel):
                 logger.debug(genome_region.length)
                 if genome_region.ByteSize() == 0:
                     self._is_valid[0] = False
-                    self._region_name_em = "Could not find region {}".format(self.name)
+                    self._region_name_em = "Could not find region {} for {}".format(self.name, self.genome_uuid)
                 else:
                     self._is_valid[0] = True
                     if self.start > 0 and self.start < genome_region.length :
@@ -114,7 +114,7 @@ class RegionValidation(BaseModel):
             else:
                 serialized_region["region"]["region_name"] = self.name
                 serialized_region["region"]["is_valid"] = False
-                serialized_region["region"]["error_message"] = "Region name is invalid"
+                serialized_region["region"]["error_message"] = self._region_name_em
             if self._is_valid[1]:
                 serialized_region["start"]["value"] = self.start
                 serialized_region["start"]["is_valid"] = True
