@@ -59,6 +59,7 @@ class RegionValidation(BaseModel):
         try:
             if self.name:
                 genome_region = grpc_client.get_region(self.genome_uuid, self.name)
+                logger.debug(genome_region)
                 if genome_region.ByteSize() == 0:
                     self._is_valid[0] = False
                     self._region_name_em = "Could not find region {} for {}".format(self.name, self.genome_uuid)
