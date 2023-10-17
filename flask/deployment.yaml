@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metadata-api-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      ensembl.web.api.name: metadata-api-server
+  template:
+    metadata:
+      labels:
+        ensembl.web.api.name: metadata-api-server
+    spec:
+      imagePullSecrets:
+        - name: ensemblweb-pull-secret 
+      containers:
+        - name: metadata-api
+          image: dockerhub.ebi.ac.uk/ensembl-web/ensembl-web-metadata-api:flask-var3
+          ports:
+            - containerPort: 8014
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: metadata-api-configmap
+          command:
+          - gunicorn
+          args:
+          - --bind
+          - 0.0.0.0:8014
+          - app:app
