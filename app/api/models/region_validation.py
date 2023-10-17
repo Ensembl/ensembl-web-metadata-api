@@ -68,7 +68,7 @@ class RegionValidation(BaseModel):
                         self._is_valid[2] = True
                     else:
                         self._is_valid[2] = False
-                        self._end_em = "end should be between 1 and {}".format(genome_region.length)
+                        self._end_em = "end should be between 1 and {} and end ({}) > start ({})".format(genome_region.length, self.end, self.start)
             else:
                 self._is_valid[0] = False
                 self._region_name_em = "Invalid region {}".format(self.name)
