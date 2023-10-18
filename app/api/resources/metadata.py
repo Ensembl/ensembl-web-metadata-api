@@ -77,9 +77,9 @@ async def get_popular_species(request: Request):
         return response_error_handler({"status": 500})
 
 @router.get("/validate_region", name="validate_region")
-def validate_region(request: Request, genome_uuid: str, region: str):
+def validate_region(request: Request, genome_id: str, region: str):
     try:
-        rgv = RegionValidation(genome_uuid=genome_uuid, region_input=region)
+        rgv = RegionValidation(genome_uuid=genome_id, region_input=region)
         rgv.validate_region()
         return responses.JSONResponse(rgv.dict())
     except Exception as e:
