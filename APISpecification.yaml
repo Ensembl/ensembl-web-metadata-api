@@ -29,10 +29,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  genome_stats:
-                    $ref: '#/components/schemas/BriefGenomeDetails'
+                $ref: '#/components/schemas/BriefGenomeDetails'
   /api/metadata/genome/{genome_id}/stats:
     get:
       tags:
@@ -114,9 +111,9 @@ paths:
         404:
           description: Genome not found
           content: {}
-  /api/metadata/validate_region:
+  /api/metadata/validate_location:
     get:
-      summary: Checks validity of user input containing a genomic region
+      summary: Checks validity of genomic location provided by user
       parameters:
       - name: genome_id
         in: query
@@ -124,20 +121,20 @@ paths:
         schema:
           type: string
           example: 3704ceb1-948d-11ec-a39d-005056b38ce3
-      - name: region
+      - name: location
         in: query
-        description: User input string for validation
+        description: Genomic location for validation
         required: true
         schema:
           type: string
           example: 1:10000-1000000
       responses:
         200:
-          description: region validation information (region can be either valid or invalid)
+          description: location validation information (location can be either valid or invalid)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RegionValidationResponse'
+                $ref: '#/components/schemas/LocationValidationResponse'
         400:
           description: bad input; for example due to parsing error
           content:
@@ -148,7 +145,7 @@ paths:
                   message:
                     type: object
                     example:
-                      parse: "Could not parse region 13 32,442,859-32,272,495"
+                      parse: "Could not parse location 13 32,442,859-32,272,495"
   /api/metadata/popular_species:
     get:
       tags:
@@ -637,7 +634,7 @@ components:
         is_circular:
           type: boolean
           example: false
-    RegionValidationResponse:
+    LocationValidationResponse:
       type: object
       properties:
         start:
@@ -675,12 +672,12 @@ components:
         region:
           type: object
           properties:
-            region_code:
-              type: string
-              example: "chromosome"
             region_name:
               type: string
               example: "13"
+              description: Name of the region as it is used at Ensembl.
+                If we support other region formats in user input (e.g. UCSC region namse, such as "chr13"),
+                then this field will normalise user input to Ensembl region name
             is_valid:
               type: boolean
             error_code:
@@ -691,6 +688,13 @@ components:
               type: string
               nullable: true
               description: human-readable description of error; null if region name is valid
-        region_id:
+        location:
           type: string
           example: "13:32272495-32442859"
+          nullable: true
+          description: >
+            Contains Ensembl-formatted location string that will make sense to the genome browser.
+            Is set to null if the location is invalid.
+            (Note that if we support other region formats in user input, such as UCSC region namse,
+            then the region segment of the location string will be normalised to Ensembl region names,
+            e.g. instead of chr13:32272495-32442859, it will say 13:32272495-32442859.)
