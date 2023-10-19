@@ -695,6 +695,6 @@ components:
           description: >
             Contains Ensembl-formatted location string that will make sense to the genome browser.
             Is set to null if the location is invalid.
-            (Note that if we support other region formats in user input, such as UCSC region namse,
+            (Note that if we support other region formats in user input, such as UCSC region name,
             then the region segment of the location string will be normalised to Ensembl region names,
             e.g. instead of chr13:32272495-32442859, it will say 13:32272495-32442859.)
