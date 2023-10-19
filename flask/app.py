@@ -55,9 +55,20 @@ def get_popular_speces():
 
 @app.route('/api/metadata/validate_region', methods=["GET"])
 def get_validate_region():
-	genome_uuid = request.args.get("genome_id")
+	genome_id = request.args.get("genome_id")
 	region = request.args.get("region")
-	metadata_request = 'https://staging-2020.ensembl.org/api/metadata/validate_region?genome_uuid={}&region={}'.format(genome_uuid,region)
+	metadata_request = 'https://staging-2020.ensembl.org/api/metadata/validate_region?genome_id={}&region={}'.format(genome_id,region)
+	response_json = requests.get(metadata_request)
+	response = app.response_class(response=response_json,
+									status=response_json.status_code,
+									mimetype='application/json')
+	return response
+
+@app.route('/api/metadata/validate_location', methods=["GET"])
+def get_validate_region():
+	genome_id = request.args.get("genome_id")
+	location = request.args.get("location")
+	metadata_request = 'https://staging-2020.ensembl.org/api/metadata/validate_location?genome_id={}&location={}'.format(genome_id,location)
 	response_json = requests.get(metadata_request)
 	response = app.response_class(response=response_json,
 									status=response_json.status_code,
