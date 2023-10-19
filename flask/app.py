@@ -65,7 +65,7 @@ def get_validate_region():
 	return response
 
 @app.route('/api/metadata/validate_location', methods=["GET"])
-def get_validate_region():
+def get_validate_location():
 	genome_id = request.args.get("genome_id")
 	location = request.args.get("location")
 	metadata_request = 'https://staging-2020.ensembl.org/api/metadata/validate_location?genome_id={}&location={}'.format(genome_id,location)
