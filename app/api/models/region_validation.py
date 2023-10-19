@@ -48,6 +48,8 @@ class RegionValidation(BaseModel):
             if len(rn_coords) == 2:
                 rn = rn_coords[0]
                 start, end = rn_coords[1].split("-")
+                start = start.replace(",","")
+                end = end.replace(",","")
         except Exception as ex:
             logger.debug(ex)
         return (rn,start,end)
