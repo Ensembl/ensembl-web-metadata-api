@@ -676,7 +676,7 @@ components:
               type: string
               example: "13"
               description: Name of the region as it is used at Ensembl.
-                If we support other region formats in user input (e.g. UCSC region namse, such as "chr13"),
+                If we support other region formats in user input (e.g. UCSC region name, such as "chr13"),
                 then this field will normalise user input to Ensembl region name
             is_valid:
               type: boolean
