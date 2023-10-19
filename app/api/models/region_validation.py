@@ -59,7 +59,6 @@ class RegionValidation(BaseModel):
         try:
             if self.name:
                 genome_region = grpc_client.get_region(self.genome_uuid, self.name)
-                logger.debug(genome_region)
                 if genome_region.ByteSize() == 0:
                     self._is_valid[0] = False
                     self._region_name_em = "Could not find region {} for {}".format(self.name, self.genome_uuid)
@@ -93,16 +92,6 @@ class RegionValidation(BaseModel):
             else:
                 return False
         return False
-
-    def validate_region_name(self):
-        try:
-            genome_region = grpc_client.get_region(self.genome_uuid, self.name)
-            return
-        except Exception as ex:
-            return False
-
-    def validate_coords(self):
-        pass
 
     @model_serializer
     def region_validation_serliaiser(self) -> Dict[str, Any]:
