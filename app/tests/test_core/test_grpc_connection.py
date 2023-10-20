@@ -14,6 +14,7 @@
 from app.api.resources.grpc_client import GRPCClient
 from google.protobuf.json_format import MessageToDict, MessageToJson
 from app.core.config import GRPC_HOST, GRPC_PORT
+from app.api.models.statistics import ExampleObjects, GenomeStatistics
 
 genome_uuid = "a7335667-93e7-11ec-a39d-005056b38ce3"
 print("connecting to gRPC server on ", GRPC_HOST, ":", GRPC_PORT)
@@ -29,3 +30,11 @@ print(top_level_stats_dict)
 
 karyotype_data = gc.get_karyotype(genome_uuid)
 print (karyotype_data)
+
+
+genome_stats = GenomeStatistics(_raw_data=top_level_stats_dict["statistics"])
+print ("Example Objects")
+print (genome_stats.model_dump(include={"example_objects": True})["example_objects"])
+
+print ("Top Level Stats")
+print (genome_stats.model_dump(exclude={"example_objects": True}))

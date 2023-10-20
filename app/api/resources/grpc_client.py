@@ -81,3 +81,7 @@ class GRPCClient:
         )
         genome_seq_region = self.stub.GetGenomeAssemblySequenceRegion(genome_seq_region_request)
         return genome_seq_region
+
+    def get_example_objects(self, genome_uuid: str):
+        stats = self.get_statistics(genome_uuid)
+        return stats

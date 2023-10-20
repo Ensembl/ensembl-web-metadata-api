@@ -1,8 +1,5 @@
 import logging
-from pydantic import BaseModel, Field, validator, field_serializer
-from core.logging import InterceptHandler
-
-logging.getLogger().handlers = [InterceptHandler()]
+from pydantic import BaseModel, Field, validator, field_serializer, model_serializer
 from loguru import logger
 
 class Homology(BaseModel):
@@ -108,6 +105,19 @@ class Variation(BaseModel):
     short_variants_frequency_studies: int = None
     structural_variants_with_phenotype_assertions: int = None
 
+class ExampleObjects(BaseModel):
+    gene: str = Field(alias="genebuild.sample_gene", default=None)
+    location: str = Field(alias="genebuild.sample_location", default=None)
+    variant: str = Field(alias="genebuild.sample_variant", default=None)
+
+    @model_serializer
+    def ser_example_objects(self) -> list[dict]:
+        eo = [
+            {"type" : "gene", "id" : self.gene},
+            {"type" : "location", "id" : self.location},
+            {"type" : "variant", "id" : self.variant},
+        ]
+        return eo
 
 class GenomeStatistics(BaseModel):
     _raw_data: list
@@ -120,6 +130,7 @@ class GenomeStatistics(BaseModel):
     pseudogene_stats: Pseudogene
     homology_stats: Homology
     regulation_stats: Regulation
+    example_objects: ExampleObjects
 
     def __init__(self, **data):
         data["_compiled_data"] = {}
@@ -138,5 +149,6 @@ class GenomeStatistics(BaseModel):
         data["pseudogene_stats"] = data["_compiled_data"]
         data["homology_stats"] = data["_compiled_data"]
         data["regulation_stats"] = data["_compiled_data"]
+        data["example_objects"] = data["_compiled_data"]
 
         super().__init__(**data)
