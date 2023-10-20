@@ -1,5 +1,6 @@
 import logging
-from pydantic import BaseModel, Field, validator, field_serializer
+from pydantic import BaseModel, Field, validator, field_serializer, root_validator
+from typing import List
 from core.logging import InterceptHandler
 
 logging.getLogger().handlers = [InterceptHandler()]
@@ -140,3 +141,36 @@ class GenomeStatistics(BaseModel):
         data["regulation_stats"] = data["_compiled_data"]
 
         super().__init__(**data)
+
+class ExampleObject(BaseModel):
+    type: str
+    id: str
+
+class ExampleObjects(BaseModel):
+    example_objects:  List[ExampleObject] = []
+
+    @root_validator(pre=True)
+    def set_region_parameters(cls, values):
+        extracted_example_objects = cls.extract_samples(values.get("example_objects"))
+        values["example_objects"] = extracted_example_objects
+        return values
+
+    def extract_samples(samples_input):
+        extracted_samples = []
+        try:
+            for stats_item in samples_input:
+                try:
+                    if stats_item["name"] == "genebuild.sample_gene":
+                        e_g = ExampleObject(type="gene", id=stats_item["statisticValue"])
+                        extracted_samples.append(e_g)
+                    if stats_item["name"] == "genebuild.sample_location":
+                        e_l = ExampleObject(type="location", id=stats_item["statisticValue"])
+                        extracted_samples.append(e_l)
+                    if stats_item["name"] == "variation.sample_variant":
+                        e_v = ExampleObject(type="variant", id=stats_item["statisticValue"])
+                        extracted_samples.append(e_v)
+                except KeyError as ke:
+                    logger.debug(stats_item["name"], ke)
+        except Exception as ex:
+            logger.debug("Error : ",ex)
+        return extracted_samples
