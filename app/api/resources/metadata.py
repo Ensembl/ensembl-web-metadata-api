@@ -96,3 +96,4 @@ def example_objects(request: Request, genome_id: str):
     except Exception as e:
         logger.debug(e)
         return response_error_handler({"status": 500})
+
