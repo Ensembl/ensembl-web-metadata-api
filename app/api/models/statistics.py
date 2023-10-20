@@ -112,11 +112,13 @@ class ExampleObjects(BaseModel):
 
     @model_serializer
     def ser_example_objects(self) -> list[dict]:
-        eo = [
-            {"type" : "gene", "id" : self.gene},
-            {"type" : "location", "id" : self.location},
-            {"type" : "variant", "id" : self.variant},
-        ]
+        eo = []
+        if self.gene:
+            eo.append({"type" : "gene", "id" : self.gene})
+        if self.location:
+            eo.append({"type" : "location", "id" : self.location})
+        if self.variant:
+            eo.append({"type" : "variant", "id" : self.variant})
         return eo
 
 class GenomeStatistics(BaseModel):
@@ -130,7 +132,7 @@ class GenomeStatistics(BaseModel):
     pseudogene_stats: Pseudogene
     homology_stats: Homology
     regulation_stats: Regulation
-    example_objects: ExampleObjects
+    example_objects: ExampleObjects = None
 
     def __init__(self, **data):
         data["_compiled_data"] = {}
