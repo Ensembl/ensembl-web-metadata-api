@@ -108,7 +108,7 @@ class Variation(BaseModel):
 class ExampleObjects(BaseModel):
     gene: str = Field(alias="genebuild.sample_gene", default=None)
     location: str = Field(alias="genebuild.sample_location", default=None)
-    variant: str = Field(alias="genebuild.sample_variant", default=None)
+    variant: str = Field(alias="variation.sample_variant", default=None)
 
     @model_serializer
     def ser_example_objects(self) -> list[dict]:
