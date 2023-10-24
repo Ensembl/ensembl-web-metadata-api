@@ -146,7 +146,7 @@ class ExampleObject(BaseModel):
     type: str
     id: str
 
-class ExampleObjects(BaseModel):
+class ExampleObjectList(BaseModel):
     example_objects:  List[ExampleObject] = []
 
     @root_validator(pre=True)
@@ -161,14 +161,14 @@ class ExampleObjects(BaseModel):
             for stats_item in samples_input:
                 try:
                     if stats_item["name"] == "genebuild.sample_gene":
-                        e_g = ExampleObject(type="gene", id=stats_item["statisticValue"])
-                        extracted_samples.append(e_g)
+                        example_gene = ExampleObject(type="gene", id=stats_item["statisticValue"])
+                        extracted_samples.append(example_gene)
                     if stats_item["name"] == "genebuild.sample_location":
-                        e_l = ExampleObject(type="location", id=stats_item["statisticValue"])
-                        extracted_samples.append(e_l)
+                        example_location = ExampleObject(type="location", id=stats_item["statisticValue"])
+                        extracted_samples.append(example_location)
                     if stats_item["name"] == "variation.sample_variant":
-                        e_v = ExampleObject(type="variant", id=stats_item["statisticValue"])
-                        extracted_samples.append(e_v)
+                        example_variant = ExampleObject(type="variant", id=stats_item["statisticValue"])
+                        extracted_samples.append(example_variant)
                 except KeyError as ke:
                     logger.debug(stats_item["name"], ke)
         except Exception as ex:

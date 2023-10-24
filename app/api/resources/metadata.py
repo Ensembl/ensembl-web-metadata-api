@@ -21,7 +21,7 @@ from fastapi import APIRouter, Request, responses
 from loguru import logger
 
 from api.error_response import response_error_handler
-from api.models.statistics import GenomeStatistics, ExampleObjects
+from api.models.statistics import GenomeStatistics, ExampleObjectList
 from api.models.popular_species import PopularSpeciesGroup
 from api.models.karyotype import Karyotype
 from core.config import GRPC_HOST, GRPC_PORT
@@ -91,7 +91,7 @@ def example_objects(request: Request, genome_id: str):
     try:
         top_level_stats_eo_dict = MessageToDict(grpc_client.get_statistics(genome_id))
 
-        objects = ExampleObjects(example_objects=top_level_stats_eo_dict["statistics"])
+        objects = ExampleObjectList(example_objects=top_level_stats_eo_dict["statistics"])
         return responses.JSONResponse(objects.dict()["example_objects"])
     except Exception as e:
         logger.debug(e)
