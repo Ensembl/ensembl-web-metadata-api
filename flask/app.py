@@ -5,7 +5,7 @@ app = Flask(__name__)
 
 @app.route('/api/metadata/genome/<genome_uuid>/stats', methods=["GET"])
 def get_statistics(genome_uuid):
-	metadata_request = 'https://beta.ensembl.org/api/metadata/genome/{}/stats'.format(genome_uuid)
+	metadata_request = 'https://staging-2020.ensembl.org/api/metadata/genome/{}/stats'.format(genome_uuid)
 	response_json = requests.get(metadata_request)
 	response = app.response_class(response=response_json,
 									status=response_json.status_code,
@@ -73,6 +73,16 @@ def get_validate_location():
 	response = app.response_class(response=response_json,
 									status=response_json.status_code,
 									mimetype='application/json')
+	return response
+
+@app.route('/api/metadata/genome/<genome_uuid>/example_objects', methods=["GET"])
+def get_example_objects(genome_uuid):
+	metadata_request = 'https://staging-2020.ensembl.org/api/metadata/genome/{}/example_objects'.format(genome_uuid)
+	response_json = requests.get(metadata_request)
+	response = app.response_class(response=response_json,
+									status=response_json.status_code,
+									mimetype='application/json')
+
 	return response
 
 if __name__ == "__main__":
