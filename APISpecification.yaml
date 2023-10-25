@@ -586,11 +586,6 @@ components:
           type: string
           description: ISO date string in the YYYY-MM format
           example: "2019-02"
-        image_url:
-          type: string
-          description: Link to species image, if present
-          example: http://beta.ensembl.org/static/genome_images/homo_sapiens_38.svg
-          nullable: true
         number_of_genomes_in_group:
           type: number
           description: The number of genomes, including the current one, that share the same species taxonomy id.
@@ -613,7 +608,6 @@ components:
         - annotation_method
         - annotation_version
         - annotation_date
-        - image_url
         - related_genomes_count
       additionalProperties: false
       type: object
