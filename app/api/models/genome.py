@@ -10,8 +10,8 @@ logging.getLogger().handlers = [InterceptHandler()]
 
 
 class Type(BaseModel):
-    kind: str = Field(alias='kind')
-    value: str = Field(alias='value')
+    kind: str
+    value: str
 
 
 class AssemblyInGenome(BaseModel):
@@ -27,13 +27,13 @@ class AssemblyInGenome(BaseModel):
 
 
 class AssemblyProvider(BaseModel):
-    name: str = Field(alias='', default=None)  # REMOVE DEFAULT
-    url: str = Field(alias='', default=None)
+    name: str
+    url: str
 
 
 class AnnotationProvider(BaseModel):
-    name: str = Field(alias='annotationProviderName', default=None)  # REMOVE DEFAULT
-    url: str = Field(alias='annotationProviderUrl', default=None)
+    name: str
+    url: str
 
 
 class GenomeDetails(BaseModel):
@@ -43,20 +43,20 @@ class GenomeDetails(BaseModel):
     species_taxonomy_id: str
     common_name: str = None
     scientific_name: str
-    type: Optional[Type] = Field(alias='type', default=None)
+    type: Optional[Type] = None
     is_reference: bool = Field(alias='isReference', default=False)
     assembly: AssemblyInGenome = None
     assembly_provider: AssemblyProvider = None
     assembly_level: str
     assembly_date: str
-    annotation_provider: AnnotationProvider = Field(alias='attributesInfo', default=None)
+    annotation_provider: AnnotationProvider = None
     annotation_method: str = Field(alias='genebuildMethod', default=None)  # REMOVE DEFAULT
     annotation_version: str = Field(alias='genebuildVersion', default=None)
     annotation_date: str = Field(alias='created')
     number_of_genomes_in_group: int = Field(alias='relatedAssembliesCount', default=1)
 
     @validator("annotation_date", pre=True)
-    def parse_birthdate(cls, value):
+    def parse_date(cls, value):
         year, month, _ = value.split("-")
         return year + '-' + month
 
@@ -69,12 +69,6 @@ class GenomeDetails(BaseModel):
         return value
 
     def __init__(self, **data):
-
-        if data.get("organism", {}).get('strainType', None):
-            data["type"] = {
-                "kind": data.get("strainType", None),
-                "value": data.get("strain", None),
-            }
         data["taxonomy_id"] = str(data.get("organism", {}).get("taxonomyId"))
         data["species_taxonomy_id"] = str(data.get("organism", {}).get("speciesTaxonomyId", None))
         data["common_name"] = data.get("organism", {}).get("commonName", None)
@@ -82,5 +76,21 @@ class GenomeDetails(BaseModel):
         data["isReference"] = data.get("assembly", {}).get('isReference', False)
         data["assembly_level"] = data.get("attributesInfo", {}).get('assemblyLevel')
         data["assembly_date"] = data.get("attributesInfo", {}).get('assemblyDate', None)
+
+        if data.get("organism", {}).get('strainType', None):
+            data["type"] = {
+                "kind": data.get("organism", {}).get("strainType", None),
+                "value": data.get("organism", {}).get("strain", None),
+            }
+        if data.get("attributesInfo", {}).get('AssemblyProviderName', None): #TODO: Update attributesInfo
+            data["assembly_provider"] = {
+                "name": data.get("attributesInfo", {}).get("AssemblyProviderName", None),
+                "url": data.get("attributesInfo", {}).get("AssemblyProviderUrl", None),
+            }
+        if data.get("attributesInfo", {}).get('annotationProviderName', None):
+            data["annotation_provider"] = {
+                "name": data.get("attributesInfo", {}).get("annotationProviderName", None),
+                "url": data.get("attributesInfo", {}).get("annotationProviderUrl", None),
+            }
 
         super().__init__(**data)
