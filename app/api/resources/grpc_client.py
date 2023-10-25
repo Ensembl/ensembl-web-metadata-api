@@ -45,10 +45,10 @@ class GRPCClient:
         toplevel_stats_by_uuid = self.stub.GetTopLevelStatisticsByUUID(genome_request)
         return toplevel_stats_by_uuid
 
-    def get_genome(self, genome_uuid: str):
+    def get_genome_details(self, genome_uuid: str):
         # Create request
         request = ensembl_metadata_pb2.GenomeUUIDRequest(
-            genome_uuid=genome_uuid, release_version=None
+            genome_uuid=genome_uuid
         )
 
         # Get response
