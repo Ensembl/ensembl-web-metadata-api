@@ -41,6 +41,11 @@ ALLOWED_HOSTS: List[str] = config(
 GRPC_HOST: str = config("GRPC_HOST", default="localhost")
 GRPC_PORT: int = config("GRPC_PORT", default=50051)
 
+# ENA URL
+ENA_ASSEMBLY_URL: str = config(
+    "ENA_ASSEMBLY_URL", default="https://www.ebi.ac.uk/ena/browser/view/"
+)
+
 # logging configuration
 LOGGING_LEVEL = logging.DEBUG if DEBUG else logging.INFO
 LOGGERS = ("uvicorn.asgi", "uvicorn.access")
