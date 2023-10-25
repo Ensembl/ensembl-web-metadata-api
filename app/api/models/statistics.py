@@ -1,5 +1,6 @@
 import logging
-from pydantic import BaseModel, Field, validator, field_serializer
+from pydantic import BaseModel, Field, validator, field_serializer, root_validator
+from typing import List
 from core.logging import InterceptHandler
 
 logging.getLogger().handlers = [InterceptHandler()]
@@ -140,3 +141,36 @@ class GenomeStatistics(BaseModel):
         data["regulation_stats"] = data["_compiled_data"]
 
         super().__init__(**data)
+
+class ExampleObject(BaseModel):
+    type: str
+    id: str
+
+class ExampleObjectList(BaseModel):
+    example_objects:  List[ExampleObject] = []
+
+    @root_validator(pre=True)
+    def set_region_parameters(cls, values):
+        extracted_example_objects = cls.extract_example_objects(values.get("example_objects"))
+        values["example_objects"] = extracted_example_objects
+        return values
+
+    def extract_example_objects(genome_attribute_list):
+        extracted_example_objects = []
+        try:
+            for genome_attribute in genome_attribute_list:
+                try:
+                    if genome_attribute["name"] == "genebuild.sample_gene":
+                        example_gene = ExampleObject(type="gene", id=genome_attribute["statisticValue"])
+                        extracted_example_objects.append(example_gene)
+                    if genome_attribute["name"] == "genebuild.sample_location":
+                        example_location = ExampleObject(type="location", id=genome_attribute["statisticValue"])
+                        extracted_example_objects.append(example_location)
+                    if genome_attribute["name"] == "variation.sample_variant":
+                        example_variant = ExampleObject(type="variant", id=genome_attribute["statisticValue"])
+                        extracted_example_objects.append(example_variant)
+                except KeyError as ke:
+                    logger.debug(genome_attribute["name"], ke)
+        except Exception as ex:
+            logger.debug("Error : ",ex)
+        return extracted_example_objects
