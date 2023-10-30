@@ -28,12 +28,12 @@ class AssemblyInGenome(BaseModel):
 
 class AssemblyProvider(BaseModel):
     name: str
-    url: str
+    url: str = None
 
 
 class AnnotationProvider(BaseModel):
     name: str
-    url: str
+    url: str = None
 
 
 class GenomeDetails(BaseModel):
@@ -42,18 +42,18 @@ class GenomeDetails(BaseModel):
         alias=AliasChoices(AliasPath('assembly', 'urlName'), AliasPath('assembly', 'tolId')), default=None)
     taxonomy_id: str = Field(alias=AliasPath('organism', 'taxonomyId'))
     species_taxonomy_id: str = Field(alias=AliasPath('organism', 'speciesTaxonomyId'))
-    common_name: str  = Field(alias=AliasPath('organism', 'commonName'), default=None)
+    common_name: str = Field(alias=AliasPath('organism', 'commonName'), default=None)
     scientific_name: str = Field(alias=AliasPath('organism', 'scientificName'))
     type: Optional[Type] = None
-    is_reference: bool = Field(alias=AliasPath('assembly', 'isReference'),default=False)
+    is_reference: bool = Field(alias=AliasPath('assembly', 'isReference'), default=False)
     assembly: AssemblyInGenome = None
     assembly_provider: AssemblyProvider = None
     assembly_level: str = Field(alias=AliasPath('attributesInfo', 'assemblyLevel'))
-    assembly_date: str = Field(alias=AliasPath('attributesInfo', 'assemblyDate'))
+    assembly_date: str = Field(alias=AliasPath('attributesInfo', 'assemblyDate'), default=None)
     annotation_provider: AnnotationProvider = None
-    annotation_method: str = Field(alias='genebuildMethod', default=None)  # REMOVE DEFAULT
+    annotation_method: str = Field(alias='genebuildMethod', default=None)
     annotation_version: str = Field(alias='genebuildVersion', default=None)
-    annotation_date: str = Field(alias='created')
+    annotation_date: str = Field(alias='created', default=None)
     number_of_genomes_in_group: int = Field(alias='relatedAssembliesCount', default=1)
 
     @validator("taxonomy_id", "species_taxonomy_id", pre=True)
@@ -71,7 +71,7 @@ class GenomeDetails(BaseModel):
                 "kind": data.get("organism", {}).get("strainType", None),
                 "value": data.get("organism", {}).get("strain", None),
             }
-        if data.get("attributesInfo", {}).get('AssemblyProviderName', None):  # TODO: Update attributesInfo
+        if data.get("attributesInfo", {}).get('AssemblyProviderName', None):
             data["assembly_provider"] = {
                 "name": data.get("attributesInfo", {}).get("AssemblyProviderName", None),
                 "url": data.get("attributesInfo", {}).get("AssemblyProviderUrl", None),
