@@ -115,5 +115,5 @@ async def explain_genome(request: Request, slug: str):
     if genome_uuid:
         genome_details_dict = MessageToDict(grpc_client.get_genome_details(genome_uuid))
         genome_details = GenomeDetails(**genome_details_dict)
-        response_dict = genome_details.model_dump(include={"genome_id":True, "genome_tag":True, "scientific_name":True, "common_name":True, "is_reference" : True, "assembly_accession_id": True, "assembly_name": True, "type": True})
+        response_dict = genome_details.model_dump(include={"genome_id":True, "genome_tag":True, "scientific_name":True, "common_name":True, "is_reference" : True, "assembly": {"name", "accession_id"}, "type": True})
     return responses.JSONResponse(response_dict)
