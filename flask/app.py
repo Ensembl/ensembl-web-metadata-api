@@ -85,5 +85,25 @@ def get_example_objects(genome_uuid):
 
 	return response
 
+@app.route('/api/metadata/genome/<genome_uuid>/details', methods=["GET"])
+def get_genome_details(genome_uuid):
+	metadata_request = 'https://staging-2020.ensembl.org/api/metadata/genome/{}/details'.format(genome_uuid)
+	response_json = requests.get(metadata_request)
+	response = app.response_class(response=response_json,
+									status=response_json.status_code,
+									mimetype='application/json')
+
+	return response
+
+@app.route('/api/metadata/genome/<slug>/explain', methods=["GET"])
+def explain_slug(slug):
+	metadata_request = 'https://staging-2020.ensembl.org/api/metadata/genome/{}/explain'.format(slug)
+	response_json = requests.get(metadata_request)
+	response = app.response_class(response=response_json,
+									status=response_json.status_code,
+									mimetype='application/json')
+
+	return response
+
 if __name__ == "__main__":
     app.run(debug=True)
