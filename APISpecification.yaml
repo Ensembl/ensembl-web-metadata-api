@@ -566,6 +566,7 @@ components:
           $ref: '#/components/schemas/AssemblyInGenome'
         assembly_provider:
           $ref: '#/components/schemas/AssemblyProvider'
+          nullable: true
         assembly_level:
           type: string
           example: complete genome
@@ -573,11 +574,14 @@ components:
           type: string
           description: ISO date string in the YYYY-MM format
           example: "2019-02"
+          nullable: true
         annotation_provider:
           $ref: '#/components/schemas/AnnotationProvider'
+          nullable: true
         annotation_method:
           type: string
           example: import
+          nullable: true
         annotation_version:
           type: string
           example: GENCODE 34
@@ -586,10 +590,6 @@ components:
           type: string
           description: ISO date string in the YYYY-MM format
           example: "2019-02"
-        image_url:
-          type: string
-          description: Link to species image, if present
-          example: http://beta.ensembl.org/static/genome_images/homo_sapiens_38.svg
           nullable: true
         number_of_genomes_in_group:
           type: number
@@ -613,7 +613,6 @@ components:
         - annotation_method
         - annotation_version
         - annotation_date
-        - image_url
         - related_genomes_count
       additionalProperties: false
       type: object

@@ -14,7 +14,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-import json
 import logging
 
 from fastapi import APIRouter, Request, responses
@@ -24,6 +23,8 @@ from api.error_response import response_error_handler
 from api.models.statistics import GenomeStatistics, ExampleObjectList
 from api.models.popular_species import PopularSpeciesGroup
 from api.models.karyotype import Karyotype
+from api.models.genome import GenomeDetails
+
 from core.config import GRPC_HOST, GRPC_PORT
 from core.logging import InterceptHandler
 
@@ -44,12 +45,12 @@ grpc_client = GRPCClient(GRPC_HOST, GRPC_PORT)
 async def get_metadata_statistics(request: Request, genome_uuid: str):
     try:
         top_level_stats_dict = MessageToDict(grpc_client.get_statistics(genome_uuid))
-
         genome_stats = GenomeStatistics(_raw_data=top_level_stats_dict["statistics"])
         return responses.JSONResponse({"genome_stats": genome_stats.dict()})
     except Exception as e:
         logger.debug(e)
         return response_error_handler({"status": 500})
+
 
 @router.get("/genome/{genome_uuid}/karyotype", name="karyotype")
 async def get_genome_karyotype(request: Request, genome_uuid: str):
@@ -65,6 +66,7 @@ async def get_genome_karyotype(request: Request, genome_uuid: str):
         logger.debug(e)
         return response_error_handler({"status": 500})
 
+
 @router.get("/popular_species", name="popular_species")
 async def get_popular_species(request: Request):
     try:
@@ -76,6 +78,7 @@ async def get_popular_species(request: Request):
         logger.debug(e)
         return response_error_handler({"status": 500})
 
+
 @router.get("/validate_location", name="validate_location")
 def validate_region(request: Request, genome_id: str, location: str):
     try:
@@ -85,6 +88,7 @@ def validate_region(request: Request, genome_id: str, location: str):
     except Exception as e:
         logger.debug(e)
         return response_error_handler({"status": 500})
+
 
 @router.get("/genome/{genome_id}/example_objects", name="example_objects")
 def example_objects(request: Request, genome_id: str):
@@ -96,3 +100,10 @@ def example_objects(request: Request, genome_id: str):
     except Exception as e:
         logger.debug(e)
         return response_error_handler({"status": 500})
+
+
+@router.get("/genome/{genome_uuid}/details", name="genome_details")
+async def get_genome_details(request: Request, genome_uuid: str):
+    genome_details_dict = MessageToDict(grpc_client.get_genome_details(genome_uuid))
+    genome_details = GenomeDetails(**genome_details_dict)
+    return responses.JSONResponse(genome_details.dict())
