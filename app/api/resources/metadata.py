@@ -112,8 +112,17 @@ async def get_genome_details(request: Request, genome_uuid: str):
 async def explain_genome(request: Request, slug: str):
     genome_uuid = grpc_client.get_genome_uuid_from_slug(slug)
     response_dict = {}
+    response_data = None
     if genome_uuid:
-        genome_details_dict = MessageToDict(grpc_client.get_genome_details(genome_uuid))
-        genome_details = GenomeDetails(**genome_details_dict)
-        response_dict = genome_details.model_dump(include={"genome_id":True, "genome_tag":True, "scientific_name":True, "common_name":True, "is_reference" : True, "assembly": {"name", "accession_id"}, "type": True})
-    return responses.JSONResponse(response_dict)
+        try:
+            genome_details_dict = MessageToDict(grpc_client.get_genome_details(genome_uuid))
+            if genome_details_dict:
+                genome_details = GenomeDetails(**genome_details_dict)
+                response_dict = genome_details.model_dump(include={"genome_id":True, "genome_tag":True, "scientific_name":True, "common_name":True, "is_reference" : True, "assembly": {"name", "accession_id"}, "type": True})
+                response_data = responses.JSONResponse(response_dict, status_code=200)
+            else:
+                not_found_response = {"message": "Could not find details for {}".format(slug)}
+                response_data = responses.JSONResponse(not_found_response, status_code=404)
+        except Exception as ex:
+            logger.log("DEBUG", ex)
+    return response_data
