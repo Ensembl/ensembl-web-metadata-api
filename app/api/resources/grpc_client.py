@@ -81,3 +81,8 @@ class GRPCClient:
         )
         genome_seq_region = self.stub.GetGenomeAssemblySequenceRegion(genome_seq_region_request)
         return genome_seq_region
+
+    def get_genome_uuid_from_slug(self, slug):
+        uuid_request = ensembl_metadata_pb2.GenomeTagRequest(genome_tag=slug)
+        genome_uuid_data = self.stub.GetGenomeUUIDByTag(uuid_request)
+        return genome_uuid_data.genome_uuid
