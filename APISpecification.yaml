@@ -566,6 +566,7 @@ components:
           $ref: '#/components/schemas/AssemblyInGenome'
         assembly_provider:
           $ref: '#/components/schemas/AssemblyProvider'
+          nullable: true
         assembly_level:
           type: string
           example: complete genome
@@ -576,6 +577,7 @@ components:
           nullable: true
         annotation_provider:
           $ref: '#/components/schemas/AnnotationProvider'
+          nullable: true
         annotation_method:
           type: string
           example: import
@@ -596,15 +598,21 @@ components:
             that have the same assembly, but different annotations.
       required:
         - genome_id
+        - genome_tag
         - taxonomy_id
         - species_taxonomy_id
+        - common_name
         - scientific_name
         - type
         - is_reference
         - assembly
         - assembly_provider
         - assembly_level
+        - assembly_date
         - annotation_provider
+        - annotation_method
+        - annotation_version
+        - annotation_date
         - related_genomes_count
       additionalProperties: false
       type: object
