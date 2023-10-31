@@ -183,12 +183,15 @@ components:
         scientific_name:
           type: string
           example: Homo sapiens
-        assembly_accession_id:
-          type: string
-          example: GCA_000001405.28
-        assembly_name:
-          type: string
-          example: GRCh38.p13
+        assembly:
+          type: object
+          properties:
+            accession_id:
+              type: string
+              example: GCA_000001405.28
+            name:
+              type: string
+              example: GRCh38.p13
         type:
           $ref: '#/components/schemas/SpeciesTypeInGenome'
           nullable: true
