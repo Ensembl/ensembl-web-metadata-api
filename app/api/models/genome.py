@@ -51,8 +51,8 @@ class GenomeDetails(BaseModel):
     assembly_level: str = Field(alias=AliasPath('attributesInfo', 'assemblyLevel'))
     assembly_date: str = Field(alias=AliasPath('attributesInfo', 'assemblyDate'), default=None)
     annotation_provider: AnnotationProvider = None
-    annotation_method: str = Field(alias='genebuildMethod', default=None)
-    annotation_version: str = Field(alias='genebuildVersion', default=None)
+    annotation_method: str = Field(alias=AliasPath('attributesInfo', 'genebuildMethod'), default=None)
+    annotation_version: str = Field(alias=AliasPath('attributesInfo', 'genebuildVersion'), default=None)
     annotation_date: str = Field(alias='created', default=None)
     number_of_genomes_in_group: int = Field(alias='relatedAssembliesCount', default=1)
 
@@ -78,8 +78,8 @@ class GenomeDetails(BaseModel):
             }
         if data.get("attributesInfo", {}).get('annotationProviderName', None):
             data["annotation_provider"] = {
-                "name": data.get("attributesInfo", {}).get("annotationProviderName", None),
-                "url": data.get("attributesInfo", {}).get("annotationProviderUrl", None),
+                "name": data.get("attributesInfo", {}).get("genebuildProviderName", None),
+                "url": data.get("attributesInfo", {}).get("genebuildProviderUrl", None),
             }
 
         super().__init__(**data)
