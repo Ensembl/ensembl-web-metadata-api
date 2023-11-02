@@ -14,7 +14,9 @@ class Homology(BaseModel):
 class Regulation(BaseModel):
     enhancers: int = Field(alias="regulation.enhancer_count", default=None)
     promoters: int = Field(alias="regulation.promoter_count", default=None)
-
+    ctcf_count: int = Field(alias="regulation.ctcf_count", default=None)
+    tfbs_count: int = Field(alias="regulation.tfbs_count", default=None)
+    open_chromatin_count: int = Field(alias="regulation.open_chromatin_count", default=None)
 
 class Pseudogene(BaseModel):
     pseudogenes: int = Field(alias="genebuild.ps_pseudogenes", default=None)
