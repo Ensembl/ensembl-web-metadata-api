@@ -76,8 +76,7 @@ class GRPCClient:
     def get_region(self, genome_uuid: str, region_name: str):
         genome_seq_region_request = ensembl_metadata_pb2.GenomeAssemblySequenceRegionRequest(
             genome_uuid=genome_uuid,
-            sequence_region_name=region_name,
-            chromosomal_only=False
+            sequence_region_name=region_name
         )
         genome_seq_region = self.stub.GetGenomeAssemblySequenceRegion(genome_seq_region_request)
         return genome_seq_region
