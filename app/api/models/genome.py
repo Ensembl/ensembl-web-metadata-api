@@ -51,7 +51,7 @@ class GenomeDetails(BaseModel):
     assembly_level: str = Field(alias=AliasPath('attributesInfo', 'assemblyLevel'))
     assembly_date: str = Field(alias=AliasPath('attributesInfo', 'assemblyDate'), default=None)
     annotation_provider: AnnotationProvider = None
-    annotation_method: str = Field(alias=AliasPath('attributesInfo', 'genebuildMethod'), default=None)
+    annotation_method: str = Field(alias=AliasPath('attributesInfo', 'genebuildMethodDisplay'), default=None)
     annotation_version: str = Field(alias=AliasPath('attributesInfo', 'genebuildVersion'), default=None)
     annotation_date: str = Field(alias='created', default=None)
     number_of_genomes_in_group: int = Field(alias='relatedAssembliesCount', default=1)
