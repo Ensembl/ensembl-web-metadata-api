@@ -93,14 +93,17 @@ def validate_region(request: Request, genome_id: str, location: str):
 @router.get("/genome/{genome_id}/example_objects", name="example_objects")
 def example_objects(request: Request, genome_id: str):
     try:
-        top_level_stats_eo_dict = MessageToDict(grpc_client.get_statistics(genome_id))
-
-        objects = ExampleObjectList(example_objects=top_level_stats_eo_dict["statistics"])
-        return responses.JSONResponse(objects.dict()["example_objects"])
-    except Exception as e:
-        logger.debug(e)
+        genome_details_dict = MessageToDict(grpc_client.get_genome_details(genome_id))
+        if genome_details_dict:
+            example_objects = ExampleObjectList(example_objects=genome_details_dict["attributesInfo"])
+            response_data = responses.JSONResponse(example_objects.dict()["example_objects"])
+        else:
+            not_found_response = {"message": "Could not find for {}".format(genome_id)}
+            response_data = responses.JSONResponse(not_found_response, status_code=404)
+    except Exception as ex:
+        logger.debug(ex)
         return response_error_handler({"status": 500})
-
+    return response_data
 
 @router.get("/genome/{genome_uuid}/details", name="genome_details")
 async def get_genome_details(request: Request, genome_uuid: str):
@@ -114,7 +117,7 @@ async def get_genome_details(request: Request, genome_uuid: str):
             not_found_response = {"message": "Could not find details for {}".format(genome_uuid)}
             response_data = responses.JSONResponse(not_found_response, status_code=404)
     except Exception as ex:
-        logger.log("DEBUG", ex)
+        logger.debug(ex)
     return response_data
 
 @router.get("/genome/{slug}/explain", name="genome_explain")
@@ -134,5 +137,5 @@ async def explain_genome(request: Request, slug: str):
             not_found_response = {"message": "Could not explain {}".format(slug)}
             response_data = responses.JSONResponse(not_found_response, status_code=404)
     except Exception as ex:
-        logger.log("DEBUG", ex)
+        logger.debug(ex)
     return response_data

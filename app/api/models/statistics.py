@@ -18,6 +18,7 @@ class Regulation(BaseModel):
     tfbs_count: int = Field(alias="regulation.tfbs_count", default=None)
     open_chromatin_count: int = Field(alias="regulation.open_chromatin_count", default=None)
 
+
 class Pseudogene(BaseModel):
     pseudogenes: int = Field(alias="genebuild.ps_pseudogenes", default=None)
     average_genomic_span: float = Field(alias="genebuild.ps_average_genomic_span", default=None)
@@ -157,22 +158,15 @@ class ExampleObjectList(BaseModel):
         values["example_objects"] = extracted_example_objects
         return values
 
-    def extract_example_objects(genome_attribute_list):
+    def extract_example_objects(genome_attributes):
         extracted_example_objects = []
         try:
-            for genome_attribute in genome_attribute_list:
-                try:
-                    if genome_attribute["name"] == "genebuild.sample_gene":
-                        example_gene = ExampleObject(type="gene", id=genome_attribute["statisticValue"])
-                        extracted_example_objects.append(example_gene)
-                    if genome_attribute["name"] == "genebuild.sample_location":
-                        example_location = ExampleObject(type="location", id=genome_attribute["statisticValue"])
-                        extracted_example_objects.append(example_location)
-                    if genome_attribute["name"] == "variation.sample_variant":
-                        example_variant = ExampleObject(type="variant", id=genome_attribute["statisticValue"])
-                        extracted_example_objects.append(example_variant)
-                except KeyError as ke:
-                    logger.debug(genome_attribute["name"], ke)
+            example_gene = ExampleObject(type="gene", id=genome_attributes["genebuildSampleGene"])
+            extracted_example_objects.append(example_gene)
+            example_location = ExampleObject(type="location", id=genome_attributes["genebuildSampleLocation"])
+            extracted_example_objects.append(example_location)
+            example_variant = ExampleObject(type="variant", id=genome_attributes["variationSampleVariant"])
+            extracted_example_objects.append(example_variant)
         except Exception as ex:
-            logger.debug("Error : ",ex)
+            logger.debug(ex)
         return extracted_example_objects

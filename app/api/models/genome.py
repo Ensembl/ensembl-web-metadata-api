@@ -73,10 +73,10 @@ class GenomeDetails(BaseModel):
             }
         if data.get("attributesInfo", {}).get('AssemblyProviderName', None):
             data["assembly_provider"] = {
-                "name": data.get("attributesInfo", {}).get("AssemblyProviderName", None),
-                "url": data.get("attributesInfo", {}).get("AssemblyProviderUrl", None),
+                "name": data.get("attributesInfo", {}).get("assemblyProviderName", None),
+                "url": data.get("attributesInfo", {}).get("assemblyProviderUrl", None),
             }
-        if data.get("attributesInfo", {}).get('annotationProviderName', None):
+        if data.get("attributesInfo", {}).get('genebuildProviderName', None):
             data["annotation_provider"] = {
                 "name": data.get("attributesInfo", {}).get("genebuildProviderName", None),
                 "url": data.get("attributesInfo", {}).get("genebuildProviderUrl", None),
