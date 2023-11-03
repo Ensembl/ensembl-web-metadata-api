@@ -18,7 +18,7 @@ from typing import List, Dict, Any, ClassVar
 
 class PopularSpecies(BaseModel):
     _base_url: str = ClassVar[str]
-    species_taxonomy_id: int = Field(alias="speciesTaxonomyId")
+    species_taxonomy_id: str = Field(alias="speciesTaxonomyId")
     name: str = Field(alias="commonName", validation_alias=AliasChoices('commonName', 'scientificName'))
     image: str = Field(alias="speciesTaxonomyId")
     genomes_count: int = Field(alias="count")
@@ -26,6 +26,10 @@ class PopularSpecies(BaseModel):
     @validator('image', pre=True)
     def generate_image_url(cls, v ) -> str:
         return '{}static/genome_images/{}.svg'.format(cls._base_url, v)
+
+    @validator("species_taxonomy_id", pre=True)
+    def concert_int_to_str(cls, value):
+        return str(value)
 
 class PopularSpeciesGroup(BaseModel):
     _base_url: str
