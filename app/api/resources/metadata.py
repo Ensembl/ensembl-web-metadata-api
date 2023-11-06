@@ -56,6 +56,7 @@ async def get_metadata_statistics(request: Request, genome_uuid: str):
 async def get_genome_karyotype(request: Request, genome_uuid: str):
     try:
         top_level_regions = grpc_client.get_top_level_regions(genome_uuid)
+        
         # Temporary hack for e.coli and remov when the correct schema/data is available in metadata-database
         if genome_uuid == "a73351f7-93e7-11ec-a39d-005056b38ce3":
             for tlr in top_level_regions:
@@ -131,7 +132,7 @@ async def explain_genome(request: Request, slug: str):
         genome_details_dict = MessageToDict(grpc_client.get_genome_details(genome_uuid))
         if genome_details_dict:
             genome_details = GenomeDetails(**genome_details_dict)
-            response_dict = genome_details.model_dump(include={"genome_id":True, "genome_tag":True, "scientific_name":True, "common_name":True, "is_reference" : True, "assembly": {"name", "accession_id"}, "type": True})
+            response_dict = genome_details.model_dump(include={"genome_id":True, "genome_tag":True, "scientific_name":True, "species_taxonomy_id": True, "common_name":True, "is_reference" : True, "assembly": {"name", "accession_id"}, "type": True})
             response_data = responses.JSONResponse(response_dict, status_code=200)
         else:
             not_found_response = {"message": "Could not explain {}".format(slug)}
