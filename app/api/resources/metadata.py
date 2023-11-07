@@ -90,6 +90,17 @@ def validate_region(request: Request, genome_id: str, location: str):
         logger.debug(e)
         return response_error_handler({"status": 500})
 
+@router.get("/genome/{genome_id}/region/{region_name}", name="region_info")
+def get_region_info(request: Request, genome_id: str, region_name: str):
+    try:
+        location_input= "{}:0-0".format(region_name)
+        rgv = RegionValidation(genome_uuid=genome_id, location_input=location_input)
+        rgv.get_region_info(region_name)
+        return responses.JSONResponse(rgv.model_dump())
+    except Exception as e:
+        logger.debug(e)
+        return response_error_handler({"status": 500})
+
 
 @router.get("/genome/{genome_id}/example_objects", name="example_objects")
 def example_objects(request: Request, genome_id: str):
@@ -123,9 +134,10 @@ async def get_genome_details(request: Request, genome_uuid: str):
 
 @router.get("/genome/{slug}/explain", name="genome_explain")
 async def explain_genome(request: Request, slug: str):
-    genome_uuid = grpc_client.get_genome_uuid_from_tag(slug)
     response_dict = {}
-    response_data = None
+    not_found_response = {"message": "Could not explain {}".format(slug)}
+    response_data = responses.JSONResponse(not_found_response, status_code=404)
+    genome_uuid = grpc_client.get_genome_uuid_from_tag(slug)
     if not genome_uuid:
         genome_uuid = slug
     try:
@@ -134,9 +146,6 @@ async def explain_genome(request: Request, slug: str):
             genome_details = GenomeDetails(**genome_details_dict)
             response_dict = genome_details.model_dump(include={"genome_id":True, "genome_tag":True, "scientific_name":True, "species_taxonomy_id": True, "common_name":True, "is_reference" : True, "assembly": {"name", "accession_id"}, "type": True})
             response_data = responses.JSONResponse(response_dict, status_code=200)
-        else:
-            not_found_response = {"message": "Could not explain {}".format(slug)}
-            response_data = responses.JSONResponse(not_found_response, status_code=404)
     except Exception as ex:
         logger.debug(ex)
     return response_data
