@@ -119,7 +119,8 @@ def example_objects(request: Request, genome_id: str):
 
 @router.get("/genome/{genome_uuid}/details", name="genome_details")
 async def get_genome_details(request: Request, genome_uuid: str):
-    response_data = None
+    not_found_response = {"message": "Could not find details for {}".format(genome_uuid)}
+    response_data = responses.JSONResponse(not_found_response, status_code=404)
     try:
         genome_details_dict = MessageToDict(grpc_client.get_genome_details(genome_uuid))
         if genome_details_dict:

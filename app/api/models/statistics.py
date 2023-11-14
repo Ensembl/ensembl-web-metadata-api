@@ -105,13 +105,12 @@ class Assembly(BaseModel):
         return contig_n50
 
 class Variation(BaseModel):
-    short_variants: int = None
-    structural_variants: int = None
-    short_variants_with_phenotype_assertions: int = None
-    short_variants_with_publications: int = None
-    short_variants_frequency_studies: int = None
-    structural_variants_with_phenotype_assertions: int = None
-
+    short_variants: int = Field(alias="variation.short_variants", default=None)
+    structural_variants: int = Field(alias="variation.structural_variants", default=None)
+    short_variants_with_phenotype_assertions: int = Field(alias="variation.structural_variants", default=None)
+    short_variants_with_publications: int = Field(alias="variation.short_variants_with_publications", default=None)
+    short_variants_frequency_studies: int = Field(alias="variation.short_variants_frequency_studies", default=None)
+    structural_variants_with_phenotype_assertions: int = Field(alias="variation.structural_variants_with_phenotype_assertions", default=None)
 
 class GenomeStatistics(BaseModel):
     _raw_data: list

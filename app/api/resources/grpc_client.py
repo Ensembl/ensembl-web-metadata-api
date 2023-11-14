@@ -16,6 +16,7 @@ import grpc
 from ensembl.production.metadata.grpc import ensembl_metadata_pb2
 from ensembl.production.metadata.grpc import ensembl_metadata_pb2_grpc
 from google.protobuf.json_format import MessageToDict
+from loguru import logger
 
 class GRPCClient:
     def __init__(self, host: str, port: int):

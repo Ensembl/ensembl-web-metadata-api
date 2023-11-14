@@ -1,18 +1,18 @@
 import logging
 from typing import Optional
 
-from pydantic import BaseModel, Field, validator, AliasChoices, AliasPath
+from pydantic import BaseModel, Field, validator, AliasChoices, AliasPath, field_serializer
 
 from core.logging import InterceptHandler
 from core.config import ENA_ASSEMBLY_URL
 
 logging.getLogger().handlers = [InterceptHandler()]
+from loguru import logger
 
 
 class Type(BaseModel):
     kind: str
     value: str
-
 
 class AssemblyInGenome(BaseModel):
     accession_id: str = Field(alias='accession')
@@ -25,16 +25,25 @@ class AssemblyInGenome(BaseModel):
             return ENA_ASSEMBLY_URL + value
         return None
 
-
 class AssemblyProvider(BaseModel):
     name: str
-    url: str = None
+    url: str = Field(alias='url',default="")
 
+    @field_serializer('url')
+    def serialize_url(self, url: str):
+        if url == "":
+            return None
+        return url
 
 class AnnotationProvider(BaseModel):
     name: str
-    url: str = None
+    url: str = Field(alias='url',default="")
 
+    @field_serializer('url')
+    def serialize_url(self, url: str):
+        if url == "":
+            return None
+        return url
 
 class GenomeDetails(BaseModel):
     genome_id: str = Field(alias='genomeUuid')
@@ -69,17 +78,17 @@ class GenomeDetails(BaseModel):
         if data.get("organism", {}).get('strainType', None):
             data["type"] = {
                 "kind": data.get("organism", {}).get("strainType", None),
-                "value": data.get("organism", {}).get("strain", None),
+                "value": data.get("organism", {}).get("strain", ""),
             }
         if data.get("attributesInfo", {}).get('AssemblyProviderName', None):
             data["assembly_provider"] = {
                 "name": data.get("attributesInfo", {}).get("assemblyProviderName", None),
-                "url": data.get("attributesInfo", {}).get("assemblyProviderUrl", None),
+                "url": data.get("attributesInfo", {}).get("assemblyProviderUrl", ""),
             }
         if data.get("attributesInfo", {}).get('genebuildProviderName', None):
             data["annotation_provider"] = {
                 "name": data.get("attributesInfo", {}).get("genebuildProviderName", None),
-                "url": data.get("attributesInfo", {}).get("genebuildProviderUrl", None),
+                "url": data.get("attributesInfo", {}).get("genebuildProviderUrl", ""),
             }
 
         super().__init__(**data)
