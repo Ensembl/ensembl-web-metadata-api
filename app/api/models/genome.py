@@ -14,6 +14,13 @@ class Type(BaseModel):
     kind: str
     value: str
 
+    @field_serializer('value')
+    def serialize_url(self, value: str):
+        if value == "":
+            return None
+        return value
+
+
 class AssemblyInGenome(BaseModel):
     accession_id: str = Field(alias='accession')
     name: str = Field(alias='name')
@@ -77,7 +84,7 @@ class GenomeDetails(BaseModel):
     def __init__(self, **data):
         if data.get("organism", {}).get('strainType', None):
             data["type"] = {
-                "kind": data.get("organism", {}).get("strainType", None),
+                "kind": data.get("organism", {}).get("strainType", ""),
                 "value": data.get("organism", {}).get("strain", ""),
             }
         if data.get("attributesInfo", {}).get('AssemblyProviderName', None):
