@@ -399,6 +399,7 @@ components:
             reference_species_name:
               type: string
               description: Scientific name of the species against which homology was calculated
+              example: Homo sapiens
           required:
             - coverage
             - reference_species_name
