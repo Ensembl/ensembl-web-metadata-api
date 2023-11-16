@@ -396,11 +396,12 @@ components:
           properties:
             coverage:
               type: number
-            coverage_explanation:
+            reference_species_name:
               type: string
+              description: Scientific name of the species against which homology was calculated
           required:
             - coverage
-            - coverage_explanation
+            - reference_species_name
           additionalProperties: false
         variation_stats:
           properties:
