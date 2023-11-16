@@ -214,22 +214,30 @@ components:
           properties:
             contig_n50:
               type: number
+              nullable: true
             total_genome_length:
               type: number
+              nullable: true
             total_coding_sequence_length:
               type: number
+              nullable: true
             total_gap_length:
               type: number
+              nullable: true
             spanned_gaps:
               type: number
+              nullable: true
             chromosomes:
               type: number
             toplevel_sequences:
               type: number
+              nullable: true
             component_sequences:
               type: number
+              nullable: true
             gc_percentage:
               type: number
+              nullable: true
           required:
             - contig_n50
             - total_genome_length
@@ -248,38 +256,55 @@ components:
               type: number
             average_genomic_span:
               type: number
+              nullable: true
             average_sequence_length:
               type: number
+              nullable: true
             average_cds_length:
               type: number
+              nullable: true
             shortest_gene_length:
               type: number
+              nullable: true
             longest_gene_length:
               type: number
+              nullable: true
             total_transcripts:
               type: number
+              nullable: true
             coding_transcripts:
               type: number
+              nullable: true
             transcripts_per_gene:
               type: number
+              nullable: true
             coding_transcripts_per_gene:
               type: number
+              nullable: true
             total_exons:
               type: number
+              nullable: true
             total_coding_exons:
               type: number
+              nullable: true
             average_exon_length:
               type: number
+              nullable: true
             average_coding_exon_length:
               type: number
+              nullable: true
             average_exons_per_transcript:
               type: number
+              nullable: true
             average_coding_exons_per_coding_transcript:
               type: number
+              nullable: true
             total_introns:
               type: number
+              nullable: true
             average_intron_length:
               type: number
+              nullable: true
           required:
             - coding_genes
             - average_genomic_span
@@ -307,32 +332,46 @@ components:
               type: number
             small_non_coding_genes:
               type: number
+              nullable: true
             long_non_coding_genes:
               type: number
+              nullable: true
             misc_non_coding_genes:
               type: number
+              nullable: true
             average_genomic_span:
               type: number
+              nullable: true
             average_sequence_length:
               type: number
+              nullable: true
             shortest_gene_length:
               type: number
+              nullable: true
             longest_gene_length:
               type: number
+              nullable: true
             total_transcripts:
               type: number
+              nullable: true
             transcripts_per_gene:
               type: number
+              nullable: true
             total_exons:
               type: number
+              nullable: true
             average_exon_length:
               type: number
+              nullable: true
             average_exons_per_transcript:
               type: number
+              nullable: true
             total_introns:
               type: number
+              nullable: true
             average_intron_length:
               type: number
+              nullable: true
           required:
             - non_coding_genes
             - small_non_coding_genes
@@ -357,26 +396,37 @@ components:
               type: number
             average_genomic_span:
               type: number
+              nullable: true
             average_sequence_length:
               type: number
+              nullable: true
             shortest_gene_length:
               type: number
+              nullable: true
             longest_gene_length:
               type: number
+              nullable: true
             total_transcripts:
               type: number
+              nullable: true
             transcripts_per_gene:
               type: number
+              nullable: true
             total_exons:
               type: number
+              nullable: true
             average_exon_length:
               type: number
+              nullable: true
             average_exons_per_transcript:
               type: number
+              nullable: true
             total_introns:
               type: number
+              nullable: true
             average_intron_length:
               type: number
+              nullable: true
           required:
             - pseudogenes
             - average_genomic_span
