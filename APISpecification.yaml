@@ -111,6 +111,29 @@ paths:
         404:
           description: Genome not found
           content: {}
+  /api/metadata/genome/{genome_id}/regions/{region_id}:
+    get:
+      summary: Returns brief information about a genomic region
+      parameters:
+      - name: genome_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: 3704ceb1-948d-11ec-a39d-005056b38ce3
+      - name: region_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: "13"
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopLevelRegion'
   /api/metadata/validate_location:
     get:
       summary: Checks validity of genomic location provided by user
