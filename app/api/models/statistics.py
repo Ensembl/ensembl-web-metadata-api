@@ -7,9 +7,21 @@ logging.getLogger().handlers = [InterceptHandler()]
 from loguru import logger
 
 class Homology(BaseModel):
-    coverage: float = Field(alias="homology_coverage", default=None)
-    coverage_explanation: str = None
+    coverage: float = Field(alias="compara.homology_coverage ", default=None)
+    reference_species_name: str = Field(alias="compara.homology_reference_species ", default=None)
 
+    @validator('reference_species_name', pre=True)
+    def validate_na_values(cls, v ) -> str:
+        rsn = ""
+        if v:
+            rsn = v
+        return rsn
+
+    @field_serializer('reference_species_name')
+    def serialize_refernce_species(self, value: str):
+        if value == "":
+            return None
+        return value
 
 class Regulation(BaseModel):
     enhancers: int = Field(alias="regulation.enhancer_count", default=None)
