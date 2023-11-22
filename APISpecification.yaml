@@ -229,6 +229,7 @@ components:
               nullable: true
             chromosomes:
               type: number
+              nullable: true
             toplevel_sequences:
               type: number
               nullable: true
@@ -254,6 +255,7 @@ components:
           properties:
             coding_genes:
               type: number
+              nullable: true
             average_genomic_span:
               type: number
               nullable: true
@@ -330,6 +332,7 @@ components:
           properties:
             non_coding_genes:
               type: number
+              nullable: true
             small_non_coding_genes:
               type: number
               nullable: true
@@ -394,6 +397,7 @@ components:
           properties:
             pseudogenes:
               type: number
+              nullable: true
             average_genomic_span:
               type: number
               nullable: true
@@ -450,6 +454,7 @@ components:
               type: string
               description: Scientific name of the species against which homology was calculated
               example: Homo sapiens
+              nullable: true
           required:
             - coverage
             - reference_species_name
@@ -458,16 +463,22 @@ components:
           properties:
             short_variants:
               type: number
+              nullable: true
             structural_variants:
               type: number
+              nullable: true
             short_variants_with_phenotype_assertions:
               type: number
+              nullable: true
             short_variants_with_publications:
               type: number
+              nullable: true
             short_variants_frequency_studies:
               type: number
+              nullable: true
             structural_variants_with_phenotype_assertions:
               type: number
+              nullable: true
           required:
             - short_variants
             - structural_variants
@@ -482,8 +493,10 @@ components:
           properties:
             enhancers:
               type: number
+              nullable: true
             promoters:
               type: number
+              nullable: true
             open_chromatin_count:
               type: number
               nullable: true
