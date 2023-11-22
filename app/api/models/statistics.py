@@ -49,7 +49,7 @@ class NonCoding(BaseModel):
     )
     shortest_gene_length: int = Field(alias="genebuild.nc_shortest_gene_length", default=None)
     longest_gene_length: int = Field(alias="genebuild.nc_longest_gene_length", default=None)
-    total_transcripts: int = Field(alias="genebuild.nc_total_transcripts")
+    total_transcripts: int = Field(alias="genebuild.nc_total_transcripts", default=None)
     transcripts_per_gene: float = Field(alias="genebuild.nc_transcripts_per_gene", default=None)
     total_exons: int = Field(alias="genebuild.nc_total_exons", default=None)
     average_exon_length: float = Field(alias="genebuild.nc_average_exon_length", default=None)
@@ -92,17 +92,17 @@ class Assembly(BaseModel):
     component_sequences: int = Field(alias="assembly.component_sequences", default=None)
     gc_percentage: float = Field(alias="assembly.gc_percentage", default=None)
 
-    @validator('contig_n50', pre=True)
-    def validate_conting_n50(cls, v ) -> int:
+    @validator('contig_n50','component_sequences', pre=True)
+    def validate_na_values(cls, v ) -> int:
         if v == "NA":
             return -1
         return v
 
-    @field_serializer('contig_n50')
-    def serialise_contig_n50(self, contig_n50: int):
-        if contig_n50 == -1:
+    @field_serializer('contig_n50','component_sequences')
+    def serialise_contig_n50(self, v: int):
+        if v == -1:
             return None
-        return contig_n50
+        return v
 
 class Variation(BaseModel):
     short_variants: int = Field(alias="variation.short_variants", default=None)
