@@ -131,6 +131,7 @@ async def get_genome_details(request: Request, genome_uuid: str):
             response_data = responses.JSONResponse(not_found_response, status_code=404)
     except Exception as ex:
         logger.debug(ex)
+        return response_error_handler({"status": 500})
     return response_data
 
 @router.get("/genome/{slug}/explain", name="genome_explain")
@@ -149,4 +150,5 @@ async def explain_genome(request: Request, slug: str):
             response_data = responses.JSONResponse(response_dict, status_code=200)
     except Exception as ex:
         logger.debug(ex)
+        return response_error_handler({"status": 500})
     return response_data
