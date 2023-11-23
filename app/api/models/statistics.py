@@ -1,5 +1,5 @@
 import logging
-from pydantic import BaseModel, Field, validator, field_serializer, root_validator
+from pydantic import BaseModel, Field, validator, field_serializer, root_validator, AliasChoices
 from typing import List
 from core.logging import InterceptHandler
 
@@ -7,15 +7,15 @@ logging.getLogger().handlers = [InterceptHandler()]
 from loguru import logger
 
 class Homology(BaseModel):
-    coverage: float = Field(alias="compara.homology_coverage ", default=None)
-    reference_species_name: str = Field(alias="compara.homology_reference_species ", default=None)
+    coverage: float = Field(alias=AliasChoices("compara.homology_coverage","compara.homology_coverage "), default=None)
+    reference_species_name: str = Field(alias=AliasChoices("compara.homology_reference_species", "compara.homology_reference_species "), default=None)
 
     @validator('reference_species_name', pre=True)
     def validate_na_values(cls, v ) -> str:
-        rsn = ""
+        sanitized_reference_species_name = ""
         if v:
-            rsn = v
-        return rsn
+            sanitized_reference_species_name = v
+        return sanitized_reference_species_name
 
     @field_serializer('reference_species_name')
     def serialize_refernce_species(self, value: str):
