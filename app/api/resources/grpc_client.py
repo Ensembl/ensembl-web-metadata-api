@@ -72,6 +72,8 @@ class GRPCClient:
         genome_top_level_regions = []
         for tlr in top_level_regions:
             genome_top_level_regions.append(MessageToDict(tlr))
+        # Sort region by reank
+        genome_top_level_regions.sort(key=lambda region: region["rank"])
         return genome_top_level_regions
 
     def get_region(self, genome_uuid: str, region_name: str):
