@@ -25,7 +25,7 @@ class PopularSpecies(BaseModel):
 
     @validator('image', pre=True)
     def generate_image_url(cls, v ) -> str:
-        return '{}static/genome_images/{}.svg'.format(cls._base_url, v)
+        return '//{}/static/genome_images/{}.svg'.format(cls._base_url, v)
 
     @validator("species_taxonomy_id", pre=True)
     def concert_int_to_str(cls, value):
