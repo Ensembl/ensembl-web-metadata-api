@@ -18,7 +18,7 @@ grpcio-tools = "1.38.1"
 uvicorn = "^0.22.0"
 orjson = "^3.9.1"
 black = "^23.3.0"
-ensembl-metadata-service = {git = "https://github.com/Ensembl/ensembl-metadata-service.git", rev = "main"}
+ensembl-metadata-api = {git = "https://github.com/Ensembl/ensembl-metadata-api.git", rev = "main"}
 
 
 [build-system]
