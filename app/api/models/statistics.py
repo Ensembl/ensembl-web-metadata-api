@@ -1,94 +1,165 @@
 import logging
-from pydantic import BaseModel, Field, validator, field_serializer, root_validator, AliasChoices
+from pydantic import (
+    BaseModel,
+    Field,
+    validator,
+    field_serializer,
+    root_validator,
+    AliasChoices,
+)
 from typing import List
 from core.logging import InterceptHandler
 
 logging.getLogger().handlers = [InterceptHandler()]
 from loguru import logger
 
-class Homology(BaseModel):
-    coverage: float = Field(alias=AliasChoices("compara.homology_coverage","compara.homology_coverage "), default=None)
-    reference_species_name: str = Field(alias=AliasChoices("compara.homology_reference_species", "compara.homology_reference_species "), default=None)
 
-    @validator('reference_species_name', pre=True)
-    def validate_na_values(cls, v ) -> str:
+class Homology(BaseModel):
+    coverage: float = Field(
+        alias=AliasChoices("compara.homology_coverage", "compara.homology_coverage "),
+        default=None,
+    )
+    reference_species_name: str = Field(
+        alias=AliasChoices(
+            "compara.homology_reference_species", "compara.homology_reference_species "
+        ),
+        default=None,
+    )
+
+    @validator("reference_species_name", pre=True)
+    def validate_na_values(cls, v) -> str:
         sanitized_reference_species_name = ""
         if v:
             sanitized_reference_species_name = v
         return sanitized_reference_species_name
 
-    @field_serializer('reference_species_name')
+    @field_serializer("reference_species_name")
     def serialize_refernce_species(self, value: str):
         if value == "":
             return None
         return value
+
 
 class Regulation(BaseModel):
     enhancers: int = Field(alias="regulation.enhancer_count", default=None)
     promoters: int = Field(alias="regulation.promoter_count", default=None)
     ctcf_count: int = Field(alias="regulation.ctcf_count", default=None)
     tfbs_count: int = Field(alias="regulation.tfbs_count", default=None)
-    open_chromatin_count: int = Field(alias="regulation.open_chromatin_count", default=None)
+    open_chromatin_count: int = Field(
+        alias="regulation.open_chromatin_count", default=None
+    )
 
 
 class Pseudogene(BaseModel):
     pseudogenes: int = Field(alias="genebuild.ps_pseudogenes", default=None)
-    average_genomic_span: float = Field(alias="genebuild.ps_average_genomic_span", default=None)
+    average_genomic_span: float = Field(
+        alias="genebuild.ps_average_genomic_span", default=None
+    )
     average_sequence_length: float = Field(
         alias="genebuild.ps_average_sequence_length", default=None
     )
-    shortest_gene_length: int = Field(alias="genebuild.ps_shortest_gene_length", default=None)
-    longest_gene_length: int = Field(alias="genebuild.ps_longest_gene_length", default=None)
+    shortest_gene_length: int = Field(
+        alias="genebuild.ps_shortest_gene_length", default=None
+    )
+    longest_gene_length: int = Field(
+        alias="genebuild.ps_longest_gene_length", default=None
+    )
     total_transcripts: int = Field(alias="genebuild.ps_total_transcripts", default=None)
-    transcripts_per_gene: float = Field(alias="genebuild.ps_transcripts_per_gene", default=None)
+    transcripts_per_gene: float = Field(
+        alias="genebuild.ps_transcripts_per_gene", default=None
+    )
     total_exons: int = Field(alias="genebuild.ps_total_exons", default=None)
-    average_exon_length: float = Field(alias="genebuild.ps_average_exon_length", default=None)
+    average_exon_length: float = Field(
+        alias="genebuild.ps_average_exon_length", default=None
+    )
     average_exons_per_transcript: float = Field(
         alias="genebuild.ps_average_exons_per_transcript", default=None
     )
     total_introns: int = Field(alias="genebuild.ps_total_introns", default=None)
-    average_intron_length: float = Field(alias="genebuild.ps_average_intron_length", default=None)
+    average_intron_length: float = Field(
+        alias="genebuild.ps_average_intron_length", default=None
+    )
 
 
 class NonCoding(BaseModel):
     non_coding_genes: int = Field(alias="genebuild.nc_non_coding_genes", default=None)
-    small_non_coding_genes: int = Field(alias="genebuild.nc_small_non_coding_genes", default=None)
-    long_non_coding_genes: int = Field(alias="genebuild.nc_long_non_coding_genes", default=None)
-    misc_non_coding_genes: int = Field(alias="genebuild.nc_misc_non_coding_genes", default=None)
-    average_genomic_span: float = Field(alias="genebuild.nc_average_genomic_span", default=None)
+    small_non_coding_genes: int = Field(
+        alias="genebuild.nc_small_non_coding_genes", default=None
+    )
+    long_non_coding_genes: int = Field(
+        alias="genebuild.nc_long_non_coding_genes", default=None
+    )
+    misc_non_coding_genes: int = Field(
+        alias="genebuild.nc_misc_non_coding_genes", default=None
+    )
+    average_genomic_span: float = Field(
+        alias="genebuild.nc_average_genomic_span", default=None
+    )
     average_sequence_length: float = Field(
         alias="genebuild.nc_average_sequence_length", default=None
     )
-    shortest_gene_length: int = Field(alias="genebuild.nc_shortest_gene_length", default=None)
-    longest_gene_length: int = Field(alias="genebuild.nc_longest_gene_length", default=None)
+    shortest_gene_length: int = Field(
+        alias="genebuild.nc_shortest_gene_length", default=None
+    )
+    longest_gene_length: int = Field(
+        alias="genebuild.nc_longest_gene_length", default=None
+    )
     total_transcripts: int = Field(alias="genebuild.nc_total_transcripts", default=None)
-    transcripts_per_gene: float = Field(alias="genebuild.nc_transcripts_per_gene", default=None)
+    transcripts_per_gene: float = Field(
+        alias="genebuild.nc_transcripts_per_gene", default=None
+    )
     total_exons: int = Field(alias="genebuild.nc_total_exons", default=None)
-    average_exon_length: float = Field(alias="genebuild.nc_average_exon_length", default=None)
+    average_exon_length: float = Field(
+        alias="genebuild.nc_average_exon_length", default=None
+    )
     average_exons_per_transcript: float = Field(
         alias="genebuild.nc_average_exons_per_transcript", default=None
     )
     total_introns: int = Field(alias="genebuild.nc_total_introns", default=None)
-    average_intron_length: float = Field(alias="genebuild.nc_average_intron_length", default=None)
+    average_intron_length: float = Field(
+        alias="genebuild.nc_average_intron_length", default=None
+    )
 
 
 class Coding(BaseModel):
     coding_genes: int = Field(alias="genebuild.coding_genes", default=None)
-    average_genomic_span: float = Field(alias="genebuild.average_genomic_span", default=None)
-    average_sequence_length: float = Field(alias="genebuild.average_sequence_length", default=None)
-    average_cds_length: float = Field(alias="genebuild.average_cds_length", default=None)
-    shortest_gene_length: int = Field(alias="genebuild.shortest_gene_length", default=None)
-    longest_gene_length: int = Field(alias="genebuild.longest_gene_length", default=None)
+    average_genomic_span: float = Field(
+        alias="genebuild.average_genomic_span", default=None
+    )
+    average_sequence_length: float = Field(
+        alias="genebuild.average_sequence_length", default=None
+    )
+    average_cds_length: float = Field(
+        alias="genebuild.average_cds_length", default=None
+    )
+    shortest_gene_length: int = Field(
+        alias="genebuild.shortest_gene_length", default=None
+    )
+    longest_gene_length: int = Field(
+        alias="genebuild.longest_gene_length", default=None
+    )
     total_transcripts: int = Field(alias="genebuild.total_transcripts", default=None)
     coding_transcripts: int = Field(alias="genebuild.coding_transcripts", default=None)
-    transcripts_per_gene: float = Field(alias="genebuild.transcripts_per_gene", default=None)
-    coding_transcripts_per_gene: float = Field(alias="genebuild.coding_transcripts_per_gene", default=None)
+    transcripts_per_gene: float = Field(
+        alias="genebuild.transcripts_per_gene", default=None
+    )
+    coding_transcripts_per_gene: float = Field(
+        alias="genebuild.coding_transcripts_per_gene", default=None
+    )
     total_exons: int = Field(alias="genebuild.total_exons", default=None)
     total_coding_exons: int = Field(alias="genebuild.total_coding_exons", default=None)
-    average_exon_length: float = Field(alias="genebuild.average_exon_length", default=None)
-    average_coding_exon_length: float = Field(alias="genebuild.average_coding_exon_length", default=None)
-    average_exons_per_transcript: float = Field(alias="genebuild.average_coding_exons_per_trans", default=None)
-    average_coding_exons_per_coding_transcript: float = Field(alias="genebuild.average_coding_exons_per_trans", default=None)
+    average_exon_length: float = Field(
+        alias="genebuild.average_exon_length", default=None
+    )
+    average_coding_exon_length: float = Field(
+        alias="genebuild.average_coding_exon_length", default=None
+    )
+    average_exons_per_transcript: float = Field(
+        alias="genebuild.average_coding_exons_per_trans", default=None
+    )
+    average_coding_exons_per_coding_transcript: float = Field(
+        alias="genebuild.average_coding_exons_per_trans", default=None
+    )
     total_introns: int = Field(alias="genebuild.total_introns", default=None)
     average_intron_length: float = Field(alias="genebuild.", default=None)
 
@@ -96,7 +167,9 @@ class Coding(BaseModel):
 class Assembly(BaseModel):
     contig_n50: int = Field(alias="assembly.contig_n50", default=None)
     total_genome_length: int = Field(alias="assembly.total_genome_length", default=None)
-    total_coding_sequence_length: int = Field(alias="assembly.total_coding_sequence_length", default=None)
+    total_coding_sequence_length: int = Field(
+        alias="assembly.total_coding_sequence_length", default=None
+    )
     total_gap_length: int = Field(alias="assembly.total_gap_length", default=None)
     spanned_gaps: int = Field(alias="assembly.spanned_gaps", default=None)
     chromosomes: int = Field(alias="assembly.chromosomes", default=None)
@@ -104,25 +177,37 @@ class Assembly(BaseModel):
     component_sequences: int = Field(alias="assembly.component_sequences", default=None)
     gc_percentage: float = Field(alias="assembly.gc_percentage", default=None)
 
-    @validator('contig_n50','component_sequences', pre=True)
-    def validate_na_values(cls, v ) -> int:
+    @validator("contig_n50", "component_sequences", pre=True)
+    def validate_na_values(cls, v) -> int:
         if v == "NA":
             return -1
         return v
 
-    @field_serializer('contig_n50','component_sequences')
+    @field_serializer("contig_n50", "component_sequences")
     def serialise_contig_n50(self, v: int):
         if v == -1:
             return None
         return v
 
+
 class Variation(BaseModel):
     short_variants: int = Field(alias="variation.short_variants", default=None)
-    structural_variants: int = Field(alias="variation.structural_variants", default=None)
-    short_variants_with_phenotype_assertions: int = Field(alias="variation.structural_variants", default=None)
-    short_variants_with_publications: int = Field(alias="variation.short_variants_with_publications", default=None)
-    short_variants_frequency_studies: int = Field(alias="variation.short_variants_frequency_studies", default=None)
-    structural_variants_with_phenotype_assertions: int = Field(alias="variation.structural_variants_with_phenotype_assertions", default=None)
+    structural_variants: int = Field(
+        alias="variation.structural_variants", default=None
+    )
+    short_variants_with_phenotype_assertions: int = Field(
+        alias="variation.structural_variants", default=None
+    )
+    short_variants_with_publications: int = Field(
+        alias="variation.short_variants_with_publications", default=None
+    )
+    short_variants_frequency_studies: int = Field(
+        alias="variation.short_variants_frequency_studies", default=None
+    )
+    structural_variants_with_phenotype_assertions: int = Field(
+        alias="variation.structural_variants_with_phenotype_assertions", default=None
+    )
+
 
 class GenomeStatistics(BaseModel):
     _raw_data: list
@@ -141,11 +226,13 @@ class GenomeStatistics(BaseModel):
         try:
             for stats_item in data["_raw_data"]:
                 try:
-                    data["_compiled_data"][stats_item["name"]]=stats_item["statisticValue"]
+                    data["_compiled_data"][stats_item["name"]] = stats_item[
+                        "statisticValue"
+                    ]
                 except KeyError as ke:
                     logger.debug(stats_item["name"], ke)
         except Exception as ex:
-            logger.debug("Error : ",ex)
+            logger.debug("Error : ", ex)
         data["assembly_stats"] = data["_compiled_data"]
         data["coding_stats"] = data["_compiled_data"]
         data["variation_stats"] = data["_compiled_data"]
@@ -156,27 +243,37 @@ class GenomeStatistics(BaseModel):
 
         super().__init__(**data)
 
+
 class ExampleObject(BaseModel):
     type: str
     id: str
 
+
 class ExampleObjectList(BaseModel):
-    example_objects:  List[ExampleObject] = []
+    example_objects: List[ExampleObject] = []
 
     @root_validator(pre=True)
     def set_region_parameters(cls, values):
-        extracted_example_objects = cls.extract_example_objects(values.get("example_objects"))
+        extracted_example_objects = cls.extract_example_objects(
+            values.get("example_objects")
+        )
         values["example_objects"] = extracted_example_objects
         return values
 
     def extract_example_objects(genome_attributes):
         extracted_example_objects = []
         try:
-            example_gene = ExampleObject(type="gene", id=genome_attributes["genebuildSampleGene"])
+            example_gene = ExampleObject(
+                type="gene", id=genome_attributes["genebuildSampleGene"]
+            )
             extracted_example_objects.append(example_gene)
-            example_location = ExampleObject(type="location", id=genome_attributes["genebuildSampleLocation"])
+            example_location = ExampleObject(
+                type="location", id=genome_attributes["genebuildSampleLocation"]
+            )
             extracted_example_objects.append(example_location)
-            example_variant = ExampleObject(type="variant", id=genome_attributes["variationSampleVariant"])
+            example_variant = ExampleObject(
+                type="variant", id=genome_attributes["variationSampleVariant"]
+            )
             extracted_example_objects.append(example_variant)
         except Exception as ex:
             logger.debug(ex)

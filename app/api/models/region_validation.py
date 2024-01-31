@@ -62,7 +62,9 @@ class RegionValidation(BaseModel):
                     self.end = genome_region.length
                 if genome_region.ByteSize() == 0:
                     self._is_valid[0] = False
-                    self._region_name_error = "Could not find region {} for {}".format(self.name, self.genome_uuid)
+                    self._region_name_error = "Could not find region {} for {}".format(
+                        self.name, self.genome_uuid
+                    )
                 else:
                     self._is_valid[0] = True
 
@@ -70,13 +72,16 @@ class RegionValidation(BaseModel):
                         self._is_valid[1] = True
                     else:
                         self._is_valid[1] = False
-                        self._start_error = "start should be between 1 and {}".format(genome_region.length)
+                        self._start_error = "start should be between 1 and {}".format(
+                            genome_region.length
+                        )
                     if (self.end <= genome_region.length) and (self.end > self.start):
                         self._is_valid[2] = True
                     else:
                         self._is_valid[2] = False
                         self._end_error = "end should be between 1 and {} and end ({}) > start ({})".format(
-                            genome_region.length, self.end, self.start)
+                            genome_region.length, self.end, self.start
+                        )
                     if genome_region.chromosomal:
                         self._region_code = "chromosome"
                     else:
@@ -98,10 +103,12 @@ class RegionValidation(BaseModel):
 
     @model_serializer
     def region_validation_serliaiser(self) -> Dict[str, Any]:
-        serialized_region = {"region": {"error_code": None, "error_message": None},
-                             "start": {"error_code": None, "error_message": None},
-                             "end": {"error_code": None, "error_message": None},
-                             "location": None}
+        serialized_region = {
+            "region": {"error_code": None, "error_message": None},
+            "start": {"error_code": None, "error_message": None},
+            "end": {"error_code": None, "error_message": None},
+            "location": None,
+        }
 
         if self.genome_uuid:
             if self._is_valid[0]:
@@ -126,7 +133,9 @@ class RegionValidation(BaseModel):
                 serialized_region["end"]["is_valid"] = False
                 serialized_region["end"]["error_message"] = self._end_error
             if all(self._is_valid):
-                serialized_region["location"] = "{}:{}-{}".format(self.name, self.start, self.end)
+                serialized_region["location"] = "{}:{}-{}".format(
+                    self.name, self.start, self.end
+                )
             else:
                 serialized_region["location"] = None
         else:
