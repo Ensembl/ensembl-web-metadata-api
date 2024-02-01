@@ -1,5 +1,6 @@
 # Stages for the CI/CD job
 stages:
+  - setup
   - build
   - deploy
 
@@ -83,6 +84,18 @@ Dev:WP51:HL:
     - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "review-on-newk8s"'
       when: on_success
 
+Setup:Review:
+  stage: setup
+  environment:
+    name: wp51-hl-development
+  script:
+    - kubectl create namespace ${CI_COMMIT_REF_SLUG} --dry-run=client -o yaml | kubectl apply -f -
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push" && 
+          $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000" && 
+          $CI_COMMIT_REF_NAME !~  "/^nodeploy\/.*$/"
+      when: always
+
 Review:WP51:HL:
   extends: .deploy-wp
   environment:
@@ -92,13 +105,6 @@ Review:WP51:HL:
   rules:
     - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH != "main"'
       when: on_success
-  before_script:
-    - kubectl create namespace ${CI_COMMIT_REF_SLUG} --dry-run=client -o yaml | kubectl apply -f -
-
-Dev:WP41:HX:
-  extends: .deploy-wp
-  environment:
-    name: wp41-hx-development
 
 Prod:WP41:HX:
   extends: .deploy-wp
