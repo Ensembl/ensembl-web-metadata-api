@@ -75,11 +75,6 @@ Internal:WP40:HL:
   environment:
     name: wp40-hl-internal
 
-Dev:WP40:HL:
-  extends: .deploy-wp
-  environment:
-    name: wp40-hl-development
-
 Dev:WP51:HL:
   extends: .deploy-wp
   environment:
@@ -87,6 +82,18 @@ Dev:WP51:HL:
   rules:
     - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "review-on-newk8s"'
       when: on_success
+
+Review:WP51:HL:
+  extends: .deploy-wp
+  environment:
+    name: wp51-hl-development
+    kubernetes:
+      namespace: ${CI_COMMIT_REF_SLUG}
+  rules:
+    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH != "main"'
+      when: on_success
+  before_script:
+    - kubectl create namespace ${CI_COMMIT_REF_SLUG}
 
 Dev:WP41:HX:
   extends: .deploy-wp
