@@ -22,6 +22,6 @@ class Region(BaseModel):
     length: int
     is_circular: bool = Field(default=False)
 
+
 class Karyotype(BaseModel):
     top_level_regions: List[Region]
-

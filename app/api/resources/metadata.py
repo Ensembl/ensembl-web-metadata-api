@@ -56,11 +56,11 @@ async def get_metadata_statistics(request: Request, genome_uuid: str):
 async def get_genome_karyotype(request: Request, genome_uuid: str):
     try:
         top_level_regions = grpc_client.get_top_level_regions(genome_uuid)
-        
+
         # Temporary hack for e.coli and remov when the correct schema/data is available in metadata-database
         if genome_uuid == "a73351f7-93e7-11ec-a39d-005056b38ce3":
             for tlr in top_level_regions:
-                tlr['is_circular'] = True
+                tlr["is_circular"] = True
         karyotype_response = Karyotype(top_level_regions=top_level_regions)
         return responses.JSONResponse(karyotype_response.dict()["top_level_regions"])
     except Exception as e:
@@ -72,8 +72,10 @@ async def get_genome_karyotype(request: Request, genome_uuid: str):
 async def get_popular_species(request: Request):
     try:
         popular_species_dict = MessageToDict(grpc_client.get_popular_species())
-        popular_species = popular_species_dict['organismsGroupCount']
-        popular_species_response = PopularSpeciesGroup(_base_url=request.headers["host"], popular_species=popular_species)
+        popular_species = popular_species_dict["organismsGroupCount"]
+        popular_species_response = PopularSpeciesGroup(
+            _base_url=request.headers["host"], popular_species=popular_species
+        )
         return responses.JSONResponse(popular_species_response.dict())
     except Exception as e:
         logger.debug(e)
@@ -90,10 +92,11 @@ def validate_region(request: Request, genome_id: str, location: str):
         logger.debug(e)
         return response_error_handler({"status": 500})
 
+
 @router.get("/genome/{genome_id}/region/{region_name}", name="region_info")
 def get_region_info(request: Request, genome_id: str, region_name: str):
     try:
-        location_input= "{}:0-0".format(region_name)
+        location_input = "{}:0-0".format(region_name)
         rgv = RegionValidation(genome_uuid=genome_id, location_input=location_input)
         rgv.get_region_info(region_name)
         return responses.JSONResponse(rgv.model_dump())
@@ -107,8 +110,12 @@ def example_objects(request: Request, genome_id: str):
     try:
         genome_details_dict = MessageToDict(grpc_client.get_genome_details(genome_id))
         if genome_details_dict:
-            example_objects = ExampleObjectList(example_objects=genome_details_dict["attributesInfo"])
-            response_data = responses.JSONResponse(example_objects.dict()["example_objects"])
+            example_objects = ExampleObjectList(
+                example_objects=genome_details_dict["attributesInfo"]
+            )
+            response_data = responses.JSONResponse(
+                example_objects.dict()["example_objects"]
+            )
         else:
             not_found_response = {"message": "Could not find for {}".format(genome_id)}
             response_data = responses.JSONResponse(not_found_response, status_code=404)
@@ -117,9 +124,12 @@ def example_objects(request: Request, genome_id: str):
         return response_error_handler({"status": 500})
     return response_data
 
+
 @router.get("/genome/{genome_uuid}/details", name="genome_details")
 async def get_genome_details(request: Request, genome_uuid: str):
-    not_found_response = {"message": "Could not find details for {}".format(genome_uuid)}
+    not_found_response = {
+        "message": "Could not find details for {}".format(genome_uuid)
+    }
     response_data = responses.JSONResponse(not_found_response, status_code=404)
     try:
         genome_details_dict = MessageToDict(grpc_client.get_genome_details(genome_uuid))
@@ -127,12 +137,15 @@ async def get_genome_details(request: Request, genome_uuid: str):
             genome_details = GenomeDetails(**genome_details_dict)
             response_data = responses.JSONResponse(genome_details.dict())
         else:
-            not_found_response = {"message": "Could not find details for {}".format(genome_uuid)}
+            not_found_response = {
+                "message": "Could not find details for {}".format(genome_uuid)
+            }
             response_data = responses.JSONResponse(not_found_response, status_code=404)
     except Exception as ex:
         logger.debug(ex)
         return response_error_handler({"status": 500})
     return response_data
+
 
 @router.get("/genome/{slug}/explain", name="genome_explain")
 async def explain_genome(request: Request, slug: str):
@@ -146,7 +159,18 @@ async def explain_genome(request: Request, slug: str):
         genome_details_dict = MessageToDict(grpc_client.get_genome_details(genome_uuid))
         if genome_details_dict:
             genome_details = GenomeDetails(**genome_details_dict)
-            response_dict = genome_details.model_dump(include={"genome_id":True, "genome_tag":True, "scientific_name":True, "species_taxonomy_id": True, "common_name":True, "is_reference" : True, "assembly": {"name", "accession_id"}, "type": True})
+            response_dict = genome_details.model_dump(
+                include={
+                    "genome_id": True,
+                    "genome_tag": True,
+                    "scientific_name": True,
+                    "species_taxonomy_id": True,
+                    "common_name": True,
+                    "is_reference": True,
+                    "assembly": {"name", "accession_id"},
+                    "type": True,
+                }
+            )
             response_data = responses.JSONResponse(response_dict, status_code=200)
     except Exception as ex:
         logger.debug(ex)

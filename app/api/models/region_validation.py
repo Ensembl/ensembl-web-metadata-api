@@ -12,9 +12,8 @@
    limitations under the License.
 """
 
-from pydantic import BaseModel, validator, model_serializer, Field, root_validator
-from typing import List, Dict, Any
-from google.protobuf.json_format import MessageToDict
+from pydantic import BaseModel, model_serializer, Field, root_validator
+from typing import Dict, Any, Optional
 from loguru import logger
 from core.config import GRPC_HOST, GRPC_PORT
 from api.resources.grpc_client import GRPCClient
@@ -26,13 +25,13 @@ class RegionValidation(BaseModel):
     location_input: str
     genome_uuid: str = None
     name: str = Field(alias="name", default="")
-    start: int = Field(alias="start", default=0)
-    end: int = Field(alias="end", default=0)
+    start: int = Field(alias="start", default=1)
+    end: Optional[int] = Field(alias="end", default=None)
     _region_code: str = None
     _is_valid: [bool, bool, bool] = [False, False, False]
-    _region_name_em : str = None
-    _start_em : str = None
-    _end_em : str = None
+    _region_name_error: str = None
+    _start_error: str = None
+    _end_error: str = None
 
     @root_validator(pre=True)
     def set_region_parameters(cls, values):
@@ -40,50 +39,59 @@ class RegionValidation(BaseModel):
         values["name"], values["start"], values["end"] = parsed_region
         return values
 
-    def parse_location_input(rgn_input):
-        rn, start, end = "", 0, 0
-        logger.debug(rgn_input)
+    @staticmethod
+    def parse_location_input(region_input):
+        region, start, end = "", 1, None
         try:
-            rn_coords = rgn_input.split(":")
-            if len(rn_coords) == 2:
-                rn = rn_coords[0]
-                start, end = rn_coords[1].split("-")
-                start = start.replace(",","")
-                end = end.replace(",","")
+            region_coordinates = region_input.split(":")
+            region = region_coordinates[0]
+            start, end = region_coordinates[1].split("-")
+            start = start.replace(",", "")
+            end = end.replace(",", "")
+        except IndexError:
+            pass
         except Exception as ex:
             logger.debug(ex)
-        return (rn,start,end)
+        return region, start, end
 
     def _validate_region_name(self):
         try:
             if self.name:
                 genome_region = grpc_client.get_region(self.genome_uuid, self.name)
+                if self.end is None:
+                    self.end = genome_region.length
                 if genome_region.ByteSize() == 0:
                     self._is_valid[0] = False
-                    self._region_name_em = "Could not find region {} for {}".format(self.name, self.genome_uuid)
+                    self._region_name_error = "Could not find region {} for {}".format(
+                        self.name, self.genome_uuid
+                    )
                 else:
                     self._is_valid[0] = True
-                    if self.start > 0 and self.start < genome_region.length :
+
+                    if (self.start > 0) and (self.start < genome_region.length):
                         self._is_valid[1] = True
                     else:
                         self._is_valid[1] = False
-                        self._start_em = "start should be between 1 and {}".format(genome_region.length)
-                    if self.end <= genome_region.length and self.end > self.start:
+                        self._start_error = "start should be between 1 and {}".format(
+                            genome_region.length
+                        )
+                    if (self.end <= genome_region.length) and (self.end > self.start):
                         self._is_valid[2] = True
                     else:
                         self._is_valid[2] = False
-                        self._end_em = "end should be between 1 and {} and end ({}) > start ({})".format(genome_region.length, self.end, self.start)
+                        self._end_error = "end should be between 1 and {} and end ({}) > start ({})".format(
+                            genome_region.length, self.end, self.start
+                        )
                     if genome_region.chromosomal:
                         self._region_code = "chromosome"
                     else:
                         self._region_code = "non-chormosome"
             else:
                 self._is_valid[0] = False
-                self._region_name_em = "Invalid region".format(self.location_input)
+                self._region_name_error = "Invalid region".format(self.location_input)
         except Exception as ex:
             logger.debug(ex)
             return False
-
 
     def validate_region(self):
         if self.genome_uuid:
@@ -95,37 +103,39 @@ class RegionValidation(BaseModel):
 
     @model_serializer
     def region_validation_serliaiser(self) -> Dict[str, Any]:
-        default_response = {"error_code": None, "error_message": None}
-        serialized_region = {}
-        serialized_region["region"] = {"error_code": None, "error_message": None}
-        serialized_region["start"] = {"error_code": None, "error_message": None}
-        serialized_region["end"] = {"error_code": None, "error_message": None}
-        serialized_region["location"] = None
+        serialized_region = {
+            "region": {"error_code": None, "error_message": None},
+            "start": {"error_code": None, "error_message": None},
+            "end": {"error_code": None, "error_message": None},
+            "location": None,
+        }
 
         if self.genome_uuid:
-            if self._is_valid[0] == True:
+            if self._is_valid[0]:
                 serialized_region["region"]["region_name"] = self.name
                 serialized_region["region"]["is_valid"] = True
             else:
                 serialized_region["region"]["region_name"] = self.name
                 serialized_region["region"]["is_valid"] = False
-                serialized_region["region"]["error_message"] = self._region_name_em
+                serialized_region["region"]["error_message"] = self._region_name_error
             if self._is_valid[1]:
                 serialized_region["start"]["value"] = self.start
                 serialized_region["start"]["is_valid"] = True
             else:
                 serialized_region["start"]["value"] = self.start
                 serialized_region["start"]["is_valid"] = False
-                serialized_region["start"]["error_message"] = self._start_em
+                serialized_region["start"]["error_message"] = self._start_error
             if self._is_valid[2]:
                 serialized_region["end"]["value"] = self.end
                 serialized_region["end"]["is_valid"] = True
             else:
                 serialized_region["end"]["value"] = self.end
                 serialized_region["end"]["is_valid"] = False
-                serialized_region["end"]["error_message"] = self._end_em
+                serialized_region["end"]["error_message"] = self._end_error
             if all(self._is_valid):
-                serialized_region["location"] = "{}:{}-{}".format(self.name, self.start, self.end)
+                serialized_region["location"] = "{}:{}-{}".format(
+                    self.name, self.start, self.end
+                )
             else:
                 serialized_region["location"] = None
         else:
