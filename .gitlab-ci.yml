@@ -93,7 +93,7 @@ Review:WP51:HL:
     - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH != "main"'
       when: on_success
   before_script:
-    - kubectl create namespace ${CI_COMMIT_REF_SLUG}
+    - kubectl create namespace ${CI_COMMIT_REF_SLUG} --dry-run=client -o yaml | kubectl apply -f -
 
 Dev:WP41:HX:
   extends: .deploy-wp
