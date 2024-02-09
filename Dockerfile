@@ -15,7 +15,7 @@
 #
 
 # Base image
-FROM python:3.9.6
+FROM python:3.11
 
 # Maintainer
 LABEL org.opencontainers.image.authors="ensembl-webteam@ebi.ac.uk"
