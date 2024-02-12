@@ -111,6 +111,55 @@ paths:
         404:
           description: Genome not found
           content: {}
+  /api/metadata/genome/{genome_id}/ftplinks:
+    get:
+      summary: Returns a list of FTP download links for the specified genome
+      parameters:
+      - name: genome_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: 3704ceb1-948d-11ec-a39d-005056b38ce3
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FTPLink'
+        404:
+          description: Genome not found
+          content: {}
+  /api/metadata/genome/{genome_id}/checksum/{region_id}:
+    get:
+      summary: Returns a checksum for the specified top-level region
+      parameters:
+        - name: genome_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 3704ceb1-948d-11ec-a39d-005056b38ce3
+        - name: region_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "13"
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+                example: 428d56c3fc01ad3a8db49830fb587625
+        404:
+          description: Region not found
+          content: {}
   /api/metadata/validate_location:
     get:
       summary: Checks validity of genomic location provided by user
@@ -777,3 +826,23 @@ components:
             (Note that if we support other region formats in user input, such as UCSC region name,
             then the region segment of the location string will be normalised to Ensembl region names,
             e.g. instead of chr13:32272495-32442859, it will say 13:32272495-32442859.)
+    FTPLink:
+      type: object
+      properties:
+        dataset:
+          type: string
+          enum:
+            - genebuild
+            - assembly
+            - homologies
+            - regulation
+            - variation
+        url:
+          type: string
+          example: https://ftp.ebi.ac.uk/pub/databases/ensembl/organisms/Homo_sapiens/GCA_000001405.29/ensembl/genome
+      required:
+        - dataset
+        - url
+      additionalProperties: false
+      description: FTP link to a dataset directory for a genome
+            
