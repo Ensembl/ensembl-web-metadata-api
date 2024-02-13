@@ -24,6 +24,7 @@ from api.models.statistics import GenomeStatistics, ExampleObjectList
 from api.models.popular_species import PopularSpeciesGroup
 from api.models.karyotype import Karyotype
 from api.models.genome import GenomeDetails
+from api.models.ftplinks import FTPLinks
 
 from core.config import GRPC_HOST, GRPC_PORT
 from core.logging import InterceptHandler
@@ -146,6 +147,15 @@ async def get_genome_details(request: Request, genome_uuid: str):
         return response_error_handler({"status": 500})
     return response_data
 
+@router.get("/genome/{genome_uuid}/ftplinks", name="genome_ftplinks")
+async def get_genome_ftplinks(request: Request, genome_uuid: str):
+    try:
+        ftplinks_dict = MessageToDict(grpc_client.get_ftplinks(genome_uuid))
+        ftplinks = FTPLinks(**ftplinks_dict)
+        return responses.JSONResponse(ftplinks.dict().get("links", []))
+    except Exception as ex:
+        logger.debug(ex)
+        return response_error_handler({"status": 500})
 
 @router.get("/genome/{slug}/explain", name="genome_explain")
 async def explain_genome(request: Request, slug: str):
