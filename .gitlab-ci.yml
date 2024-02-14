@@ -93,7 +93,7 @@ Setup:Review:
     name: wp51-hl-development
   script:
     - kubectl create namespace ${CI_COMMIT_REF_SLUG} --dry-run=client -o yaml | kubectl apply -f -
-    - kubectl create configmap metadata-api-configmap --from-env-file=.env.sample --dry-run-=client -o yaml | kubectl apply -f -
+    - kubectl create configmap metadata-api-configmap --from-env-file=.env.sample --dry-run=client -o yaml | kubectl apply -f -
   rules:
     - if: $CI_PIPELINE_SOURCE == "push" && 
           $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000" && 
