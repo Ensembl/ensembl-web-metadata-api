@@ -118,7 +118,7 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: "Could not find for a7335667-93e7-11ec-a39d-005056b38ce3"
+                    example: "Could not find example objects for a7335667-93e7-11ec-a39d-005056b38ce3"
         '500':
           $ref: '#/components/responses/500InternalServerError'
   /api/metadata/genome/{genome_id}/karyotype:
@@ -870,7 +870,7 @@ components:
       description: FTP link to a dataset directory for a genome
   responses:
     404NotFound:
-      description: The scpecified resource was not found
+      description: The specified resource was not found
       content:
         text/plain:
           schema:

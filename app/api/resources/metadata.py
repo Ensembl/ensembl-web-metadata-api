@@ -106,7 +106,7 @@ def example_objects(request: Request, genome_id: str):
                 example_objects.dict()["example_objects"]
             )
         else:
-            not_found_response = {"message": "Could not find for {}".format(genome_id)}
+            not_found_response = {"message": "Could not find example objects for {}".format(genome_id)}
             response_data = responses.JSONResponse(not_found_response, status_code=404)
     except Exception as ex:
         logger.debug(ex)
