@@ -80,16 +80,22 @@ Dev:WP51:HL:
   extends: .deploy-wp
   environment:
     name: wp51-hl-development
+    kubernetes:
+      namespace: ensembl-dev
   rules:
     - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "review-on-newk8s"'
       when: on_success
 
 Setup:Review:
   stage: setup
+  image: dockerhub.ebi.ac.uk/ensembl-web/deploy-tools:latest
   environment:
     name: wp51-hl-development
   script:
     - kubectl create namespace ${CI_COMMIT_REF_SLUG} --dry-run=client -o yaml | kubectl apply -f -
+    - git clone  --depth 1 https://gitlab.ebi.ac.uk/ensembl-web/newsite-api-config-setup.git
+    - cd newsite-api-config-setup/dev/hl/
+    - kubectl create configmap metadata-api-configmap --from-env-file=metadata-api.config --dry-run-=client -o yaml | kubectl apply -f -
   rules:
     - if: $CI_PIPELINE_SOURCE == "push" && 
           $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000" && 
