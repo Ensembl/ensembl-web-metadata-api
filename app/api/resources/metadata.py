@@ -47,7 +47,7 @@ async def get_metadata_statistics(request: Request, genome_uuid: str):
     try:
         top_level_stats_dict = MessageToDict(grpc_client.get_statistics(genome_uuid))
         genome_stats = GenomeStatistics(_raw_data=top_level_stats_dict["statistics"])
-        return responses.JSONResponse({"genome_stats": genome_stats.dict()})
+        return responses.JSONResponse({"genome_stats": genome_stats.model_dump()})
     except Exception as e:
         logger.debug(e)
         return response_error_handler({"status": 500})
@@ -63,7 +63,7 @@ async def get_genome_karyotype(request: Request, genome_uuid: str):
             for tlr in top_level_regions:
                 tlr["is_circular"] = True
         karyotype_response = Karyotype(top_level_regions=top_level_regions)
-        return responses.JSONResponse(karyotype_response.dict()["top_level_regions"])
+        return responses.JSONResponse(karyotype_response.model_dump()["top_level_regions"])
     except Exception as e:
         logger.debug(e)
         return response_error_handler({"status": 500})
@@ -77,7 +77,7 @@ async def get_popular_species(request: Request):
         popular_species_response = PopularSpeciesGroup(
             _base_url=request.headers["host"], popular_species=popular_species
         )
-        return responses.JSONResponse(popular_species_response.dict())
+        return responses.JSONResponse(popular_species_response.model_dump())
     except Exception as e:
         logger.debug(e)
         return response_error_handler({"status": 500})
@@ -88,7 +88,7 @@ def validate_region(request: Request, genome_id: str, location: str):
     try:
         rgv = RegionValidation(genome_uuid=genome_id, location_input=location)
         rgv.validate_region()
-        return responses.JSONResponse(rgv.dict())
+        return responses.JSONResponse(rgv.model_dump())
     except Exception as e:
         logger.debug(e)
         return response_error_handler({"status": 500})
@@ -103,7 +103,7 @@ def example_objects(request: Request, genome_id: str):
                 example_objects=genome_details_dict["attributesInfo"]
             )
             response_data = responses.JSONResponse(
-                example_objects.dict()["example_objects"]
+                example_objects.model_dump()["example_objects"]
             )
         else:
             not_found_response = {"message": "Could not find example objects for {}".format(genome_id)}
@@ -124,7 +124,7 @@ async def get_genome_details(request: Request, genome_uuid: str):
         genome_details_dict = MessageToDict(grpc_client.get_genome_details(genome_uuid))
         if genome_details_dict:
             genome_details = GenomeDetails(**genome_details_dict)
-            response_data = responses.JSONResponse(genome_details.dict())
+            response_data = responses.JSONResponse(genome_details.model_dump())
         else:
             not_found_response = {
                 "message": "Could not find details for {}".format(genome_uuid)
@@ -140,7 +140,7 @@ async def get_genome_ftplinks(request: Request, genome_uuid: str):
     try:
         ftplinks_dict = MessageToDict(grpc_client.get_ftplinks(genome_uuid))
         ftplinks = FTPLinks(**ftplinks_dict)
-        return responses.JSONResponse(ftplinks.dict().get("links", []))
+        return responses.JSONResponse(ftplinks.model_dump().get("links", []))
     except Exception as ex:
         logger.debug(ex)
         return response_error_handler({"status": 500})

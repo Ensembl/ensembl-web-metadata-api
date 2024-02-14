@@ -12,8 +12,7 @@
    limitations under the License.
 """
 
-from pydantic import BaseModel, Field, AliasChoices, validator
-from typing import List, Dict, Any, ClassVar
+from pydantic import BaseModel, Field
 
 
 class Region(BaseModel):
@@ -24,4 +23,4 @@ class Region(BaseModel):
 
 
 class Karyotype(BaseModel):
-    top_level_regions: List[Region]
+    top_level_regions: list[Region]

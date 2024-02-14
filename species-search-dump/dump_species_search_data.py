@@ -1,8 +1,6 @@
 import mysql.connector
-from pydantic import BaseModel, Field, model_serializer, FieldValidationInfo, ValidationError, field_validator
-from typing import List, Dict, Any
-import json
-from json import JSONEncoder
+from pydantic import BaseModel, Field, model_serializer, ValidationError, field_validator
+from typing import Any
 
 
 class Species(BaseModel):
@@ -23,7 +21,7 @@ class Species(BaseModel):
     annotation_provider: str = Field(alias="annotation.provider_name", default=None)
 
     @model_serializer
-    def serialise_species_model(self) -> Dict[str, Any]:
+    def serialise_species_model(self) -> dict[str, Any]:
         species_json = [
             {"name": field_name, "value": field_value}
             for field_name, field_value in self
@@ -38,14 +36,14 @@ class Species(BaseModel):
         return v
 
 class SpeciesList(BaseModel):
-    species_list: List[Species]
+    species_list: list[Species]
     name: str
     release: str
     # release_date: str
     entry_count: int
 
     @model_serializer
-    def ser_model(self) -> Dict[str, Any]:
+    def ser_model(self) -> dict[str, Any]:
         species_search_data = {}
         species_search_data["name"] = self.name
         species_search_data["release"] = self.release
