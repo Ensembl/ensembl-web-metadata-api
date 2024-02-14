@@ -25,11 +25,15 @@ paths:
             default: grch38
       responses:
         '200':
-          description: successful operation
+          description: Successful operation
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/BriefGenomeDetails'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
   /api/metadata/genome/{genome_id}/stats:
     get:
       tags:
@@ -45,7 +49,7 @@ paths:
             default: a7335667-93e7-11ec-a39d-005056b38ce3
       responses:
         '200':
-          description: successful operation
+          description: Successful operation
           content:
             application/json:
               schema:
@@ -53,6 +57,8 @@ paths:
                 properties:
                   genome_stats:
                     $ref: '#/components/schemas/GenomeStats'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
   /api/metadata/genome/{genome_id}/details:
     get:
       tags:
@@ -67,11 +73,23 @@ paths:
             default: a7335667-93e7-11ec-a39d-005056b38ce3
       responses:
         '200':
-          description: successful operation
+          description: Successful operation
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GenomeDetails'
+        '404':
+          description: Genome not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Could not find details for a7335667-93e7-11ec-a39d-005056b38ce3"
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
   /api/metadata/genome/{genome_id}/example_objects:
     get:
       description: Returns a list of example objects (gene, variant, location, etc.) for a genome.
@@ -91,6 +109,18 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ExampleObject'
+        '404':
+          description: Genome not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Could not find for a7335667-93e7-11ec-a39d-005056b38ce3"
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
   /api/metadata/genome/{genome_id}/karyotype:
     get:
       summary: Returns a list of top-level regions included in the organism's karyotype
@@ -102,15 +132,14 @@ paths:
           type: string
           example: 3704ceb1-948d-11ec-a39d-005056b38ce3
       responses:
-        200:
+        '200':
           description: successful operation
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Karyotype'
-        404:
-          description: Genome not found
-          content: {}
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
   /api/metadata/genome/{genome_id}/ftplinks:
     get:
       summary: Returns a list of FTP download links for the specified genome
@@ -122,7 +151,7 @@ paths:
           type: string
           example: 3704ceb1-948d-11ec-a39d-005056b38ce3
       responses:
-        200:
+        '200':
           description: Successful operation
           content:
             application/json:
@@ -130,9 +159,8 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/FTPLink'
-        404:
-          description: Genome not found
-          content: {}
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
   /api/metadata/genome/{genome_id}/checksum/{region_id}:
     get:
       summary: Returns a checksum for the specified top-level region
@@ -150,16 +178,18 @@ paths:
             type: string
             example: "13"
       responses:
-        200:
+        '200':
           description: Successful operation
           content:
             text/plain:
               schema:
                 type: string
                 example: 428d56c3fc01ad3a8db49830fb587625
-        404:
+        '404':
           description: Region not found
           content: {}
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
   /api/metadata/validate_location:
     get:
       summary: Checks validity of genomic location provided by user
@@ -178,23 +208,14 @@ paths:
           type: string
           example: 1:10000-1000000
       responses:
-        200:
+        '200':
           description: location validation information (location can be either valid or invalid)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/LocationValidationResponse'
-        400:
-          description: bad input; for example due to parsing error
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: object
-                    example:
-                      parse: "Could not parse location 13 32,442,859-32,272,495"
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
   /api/metadata/popular_species:
     get:
       tags:
@@ -212,6 +233,8 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/PopularSpecies'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
 
 components:
   schemas:
@@ -845,4 +868,20 @@ components:
         - url
       additionalProperties: false
       description: FTP link to a dataset directory for a genome
+  responses:
+    404NotFound:
+      description: The scpecified resource was not found
+      content:
+        text/plain:
+          schema:
+            type: string
+            example: '{"status_code": 404, "details": "Not Found"}'
+    500InternalServerError:
+      description: Internal server error
+      content:
+        text/plain:
+          schema:
+            type: string
+            example: '{"status_code": 500, "details": "Internal Server Error"}'
+
             

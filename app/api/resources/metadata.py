@@ -94,18 +94,6 @@ def validate_region(request: Request, genome_id: str, location: str):
         return response_error_handler({"status": 500})
 
 
-@router.get("/genome/{genome_id}/region/{region_name}", name="region_info")
-def get_region_info(request: Request, genome_id: str, region_name: str):
-    try:
-        location_input = "{}:0-0".format(region_name)
-        rgv = RegionValidation(genome_uuid=genome_id, location_input=location_input)
-        rgv.get_region_info(region_name)
-        return responses.JSONResponse(rgv.model_dump())
-    except Exception as e:
-        logger.debug(e)
-        return response_error_handler({"status": 500})
-
-
 @router.get("/genome/{genome_id}/example_objects", name="example_objects")
 def example_objects(request: Request, genome_id: str):
     try:
