@@ -28,21 +28,7 @@ variables:
     - if: '$CI_DEPLOY_FREEZE == null'
       when: always
 
-
 .deploy:
-  stage: deploy
-  image: dockerhub.ebi.ac.uk/ensembl-web/deploy-tools:latest
-
-  script:
-    - cd ${BASE}
-    - kustomize edit set image DOCKER_IMAGE=${DOCKER_IMAGE}
-    - kustomize build . | kubectl apply -f -
-
-  rules:
-    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "main"'
-      when: always
-
-.deploy-wp:
   stage: deploy
   image: dockerhub.ebi.ac.uk/ensembl-web/deploy-tools:latest
 
@@ -61,31 +47,33 @@ build:
   extends: .build
 
 Prod:WP40:HL:
-  extends: .deploy-wp
+  extends: .deploy
   environment:
     name: wp40-hl-prod
 
 # Deploy jobs for new k8s cluster
 Staging:WP40:HL:
-  extends: .deploy-wp
+  extends: .deploy
   environment:
     name: wp40-hl-staging
 
 Internal:WP40:HL:
-  extends: .deploy-wp
+  extends: .deploy
   environment:
     name: wp40-hl-internal
 
+# Deployment for dev-2020.ensembl.org
 Dev:WP51:HL:
-  extends: .deploy-wp
+  extends: .deploy
   environment:
     name: wp51-hl-development
     kubernetes:
       namespace: ensembl-dev
   rules:
-    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "review-on-newk8s"'
+    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "main"'
       when: on_success
 
+# Setup Review app in its own namespace named by branch name (CI_COMMIT_REF_SLUG)
 Setup:Review:
   stage: setup
   image: dockerhub.ebi.ac.uk/ensembl-web/deploy-tools:latest
@@ -101,17 +89,17 @@ Setup:Review:
       when: always
 
 Review:WP51:HL:
-  extends: .deploy-wp
+  extends: .deploy
   environment:
     name: wp51-hl-development
     kubernetes:
       namespace: ${CI_COMMIT_REF_SLUG}
   rules:
-    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH != "main"'
+    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH != "dev"  && $CI_COMMIT_BRANCH != "main"'
       when: on_success
 
 Prod:WP41:HX:
-  extends: .deploy-wp
+  extends: .deploy
   environment:
     name: wp41-hx-prod
 
