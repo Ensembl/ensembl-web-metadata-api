@@ -46,6 +46,11 @@ ENA_ASSEMBLY_URL: str = config(
     "ENA_ASSEMBLY_URL", default="https://www.ebi.ac.uk/ena/browser/view/"
 )
 
+# Base URL for FTP download links
+FTP_BASE_URL: str = config(
+    "FTP_BASE_URL", default="https://ftp.ebi.ac.uk/pub/databases/ensembl/organisms/"
+)
+
 # logging configuration
 LOGGING_LEVEL = logging.DEBUG if DEBUG else logging.INFO
 LOGGERS = ("uvicorn.asgi", "uvicorn.access")

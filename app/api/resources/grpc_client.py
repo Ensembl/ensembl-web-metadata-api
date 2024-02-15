@@ -91,3 +91,7 @@ class GRPCClient:
         if genome_uuid_data.genome_uuid:
             return genome_uuid_data.genome_uuid
         return None
+    
+    def get_ftplinks(self, genome_uuid: str):
+        ftp_links_request = ensembl_metadata_pb2.FTPLinksRequest(genome_uuid=genome_uuid, dataset_type="all")
+        return self.stub.GetFTPLinks(ftp_links_request)
