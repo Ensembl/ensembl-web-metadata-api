@@ -55,7 +55,8 @@ variables:
   rules:
     - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "main"'
       when: on_success
-# Build docker image for k8s-deploy branch
+
+# Build docker image for all branches
 build:
   extends: .build
 
