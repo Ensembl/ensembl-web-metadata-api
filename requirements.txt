@@ -1,7 +1,7 @@
 annotated-types==0.5.0
 anyio==3.7.1
 click==8.1.7
-ensembl-metadata-api @ git+https://github.com/Ensembl/ensembl-metadata-api.git@2.0.0.dev3
+ensembl-metadata-api @ git+https://github.com/Ensembl/ensembl-metadata-api.git@2.0.0.dev4
 exceptiongroup==1.2.0
 fastapi==0.103.1
 grpcio==1.60.0
