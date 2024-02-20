@@ -17,7 +17,7 @@ limitations under the License.
 import logging
 
 from fastapi import APIRouter, Request, responses
-from loguru import logger:
+from loguru import logger
 from pydantic import ValidationError
 
 from api.error_response import response_error_handler
