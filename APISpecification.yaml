@@ -133,7 +133,7 @@ paths:
         404:
           description: Genome not found
           content: {}
-  /api/metadata/genome/{genome_id}/checksum/{region_id}:
+  /api/metadata/genome/{genome_id}/checksum/{region_name}:
     get:
       summary: Returns a checksum for the specified top-level region
       parameters:
@@ -143,7 +143,7 @@ paths:
           schema:
             type: string
             example: 3704ceb1-948d-11ec-a39d-005056b38ce3
-        - name: region_id
+        - name: region_name
           in: path
           required: true
           schema:

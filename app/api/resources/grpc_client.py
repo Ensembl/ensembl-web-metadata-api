@@ -95,3 +95,7 @@ class GRPCClient:
     def get_ftplinks(self, genome_uuid: str):
         ftp_links_request = ensembl_metadata_pb2.FTPLinksRequest(genome_uuid=genome_uuid, dataset_type="all")
         return self.stub.GetFTPLinks(ftp_links_request)
+
+    def get_region_checksum(self, genome_uuid: str, region_name: str):
+        region_checksum = ensembl_metadata_pb2.GenomeAssemblySequenceRegionRequest(genome_uuid=genome_uuid, sequence_region_name=region_name)
+        return self.stub.GetGenomeAssemblySequenceRegion(region_checksum)

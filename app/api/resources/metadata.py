@@ -18,8 +18,10 @@ import logging
 
 from fastapi import APIRouter, Request, responses
 from loguru import logger
+from pydantic import ValidationError
 
 from api.error_response import response_error_handler
+from api.models.checksums import Checksum
 from api.models.statistics import GenomeStatistics, ExampleObjectList
 from api.models.popular_species import PopularSpeciesGroup
 from api.models.karyotype import Karyotype
@@ -147,6 +149,7 @@ async def get_genome_details(request: Request, genome_uuid: str):
         return response_error_handler({"status": 500})
     return response_data
 
+
 @router.get("/genome/{genome_uuid}/ftplinks", name="genome_ftplinks")
 async def get_genome_ftplinks(request: Request, genome_uuid: str):
     try:
@@ -156,6 +159,7 @@ async def get_genome_ftplinks(request: Request, genome_uuid: str):
     except Exception as ex:
         logger.debug(ex)
         return response_error_handler({"status": 500})
+
 
 @router.get("/genome/{slug}/explain", name="genome_explain")
 async def explain_genome(request: Request, slug: str):
@@ -186,3 +190,18 @@ async def explain_genome(request: Request, slug: str):
         logger.debug(ex)
         return response_error_handler({"status": 500})
     return response_data
+
+
+@router.get("/genome/{genome_uuid}/checksum/{region_name}", name="region_checksum")
+async def get_genome_ftplinks(request: Request, genome_uuid: str, region_name: str):
+    try:
+        region_checksum_dict = MessageToDict(grpc_client.get_region_checksum(genome_uuid=genome_uuid, region_name=region_name))
+        region_checksum = Checksum(**region_checksum_dict)
+        return responses.PlainTextResponse(region_checksum.md5)
+    except ValidationError as e:
+        error_type = e.errors()[0]['type']
+        if error_type.index('missing') == 0:
+            return response_error_handler({"status": 404})
+    except Exception as ex:
+        logger.debug(ex)
+        return response_error_handler({"status": 500})
