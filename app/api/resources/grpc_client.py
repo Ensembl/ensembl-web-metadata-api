@@ -13,24 +13,28 @@
 """
 
 import grpc
-from ensembl.production.metadata.grpc import ensembl_metadata_pb2
-from ensembl.production.metadata.grpc import ensembl_metadata_pb2_grpc
+from google.protobuf.descriptor_pool import DescriptorPool
 from google.protobuf.json_format import MessageToDict
+import grpc
+from google.protobuf.message_factory import MessageFactory
+from grpc_reflection.v1alpha.proto_reflection_descriptor_database import ProtoReflectionDescriptorDatabase
+from yagrc import reflector as yagrc_reflector
+
 from loguru import logger
 
 
 class GRPCClient:
+
     def __init__(self, host: str, port: int):
-        self.host = host
-        self.port = port
         # Create Channel
-        self.channel = grpc.insecure_channel(
-            "{}:{}".format(self.host, self.port),
+        channel = grpc.insecure_channel(
+            "{}:{}".format(host, port),
             options=(("grpc.enable_http_proxy", 0),),
         )
-
-        # Create Stub
-        self.stub = ensembl_metadata_pb2_grpc.EnsemblMetadataStub(self.channel)
+        self.reflector = yagrc_reflector.GrpcReflectionClient()
+        self.reflector.load_protocols(channel, symbols=["ensembl_metadata.EnsemblMetadata"])
+        stub_class = self.reflector.service_stub_class("ensembl_metadata.EnsemblMetadata")
+        self.stub = stub_class(channel)
 
     def get_statistics(self, genome_uuid: str):
         """Returns gRPC message containing statistics for given genome_uuid.
@@ -40,8 +44,8 @@ class GRPCClient:
         genome_uuid : str, required
                 The genome_uuid of the genome
         """
-
-        genome_request = ensembl_metadata_pb2.GenomeUUIDRequest(
+        request_class = self.reflector.message_class("ensembl_metadata.GenomeUUIDRequest")
+        genome_request = request_class(
             genome_uuid=genome_uuid, release_version=None
         )
         toplevel_stats_by_uuid = self.stub.GetTopLevelStatisticsByUUID(genome_request)
@@ -49,7 +53,8 @@ class GRPCClient:
 
     def get_genome_details(self, genome_uuid: str):
         # Create request
-        request = ensembl_metadata_pb2.GenomeUUIDRequest(genome_uuid=genome_uuid)
+        request_class = self.reflector.message_class("ensembl_metadata.GenomeUUIDRequest")
+        request = request_class(genome_uuid=genome_uuid)
 
         # Get response
         response = self.stub.GetGenomeByUUID(request)
@@ -57,14 +62,16 @@ class GRPCClient:
         return response
 
     def get_popular_species(self):
-        popular_species_request = ensembl_metadata_pb2.OrganismsGroupRequest()
-        popular_species = self.stub.GetOrganismsGroupCount(popular_species_request)
+        request_class = self.reflector.message_class("ensembl_metadata.OrganismsGroupRequest")
+        popular_species = self.stub.GetOrganismsGroupCount(request_class())
 
         return popular_species
 
     def get_top_level_regions(self, genome_uuid: str):
-        genome_assembly_request = ensembl_metadata_pb2.AssemblyRegionRequest(
-            genome_uuid=genome_uuid, chromosomal_only=True
+        request_class = self.reflector.message_class("ensembl_metadata.AssemblyRegionRequest")
+        genome_assembly_request = request_class(
+            genome_uuid=genome_uuid,
+            chromosomal_only=True
         )
         top_level_regions = self.stub.GetAssemblyRegion(genome_assembly_request)
         genome_top_level_regions = []
@@ -75,27 +82,28 @@ class GRPCClient:
         return genome_top_level_regions
 
     def get_region(self, genome_uuid: str, region_name: str):
-        genome_seq_region_request = (
-            ensembl_metadata_pb2.GenomeAssemblySequenceRegionRequest(
-                genome_uuid=genome_uuid, sequence_region_name=region_name
-            )
+        request_class = self.reflector.message_class("ensembl_metadata.GenomeAssemblySequenceRegionRequest")
+        genome_seq_region_request = request_class(
+            genome_uuid=genome_uuid,
+            sequence_region_name=region_name
         )
-        genome_seq_region = self.stub.GetGenomeAssemblySequenceRegion(
-            genome_seq_region_request
-        )
+        genome_seq_region = self.stub.GetGenomeAssemblySequenceRegion(genome_seq_region_request)
         return genome_seq_region
 
     def get_genome_uuid_from_tag(self, tag):
-        uuid_request = ensembl_metadata_pb2.GenomeTagRequest(genome_tag=tag)
+        request_class = self.reflector.message_class("ensembl_metadata.GenomeTagRequest")
+        uuid_request = request_class(genome_tag=tag)
         genome_uuid_data = self.stub.GetGenomeUUIDByTag(uuid_request)
         if genome_uuid_data.genome_uuid:
             return genome_uuid_data.genome_uuid
         return None
-    
+
     def get_ftplinks(self, genome_uuid: str):
-        ftp_links_request = ensembl_metadata_pb2.FTPLinksRequest(genome_uuid=genome_uuid, dataset_type="all")
+        request_class = self.reflector.message_class("ensembl_metadata.FTPLinksRequest")
+        ftp_links_request = request_class(genome_uuid=genome_uuid, dataset_type="all")
         return self.stub.GetFTPLinks(ftp_links_request)
 
     def get_region_checksum(self, genome_uuid: str, region_name: str):
-        region_checksum = ensembl_metadata_pb2.GenomeAssemblySequenceRegionRequest(genome_uuid=genome_uuid, sequence_region_name=region_name)
+        request_class = self.reflector.message_class("ensembl_metadata.GenomeAssemblySequenceRegionRequest")
+        region_checksum = request_class(genome_uuid=genome_uuid, sequence_region_name=region_name)
         return self.stub.GetGenomeAssemblySequenceRegion(region_checksum)
