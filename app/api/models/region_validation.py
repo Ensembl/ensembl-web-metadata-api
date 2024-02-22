@@ -25,8 +25,8 @@ class RegionValidation(BaseModel):
     location_input: str
     genome_uuid: str = None
     name: str = Field(alias="name", default="")
-    start: int = Field(alias="start", default=1)
-    end: Optional[int] = Field(alias="end", default=None)
+    start: str = Field(alias="start", default="1")
+    end: Optional[str] = Field(alias="end", default=None)
     _region_code: str = None
     _is_valid: [bool, bool, bool] = [False, False, False]
     _region_name_error: str = None
@@ -41,14 +41,14 @@ class RegionValidation(BaseModel):
 
     @staticmethod
     def parse_location_input(region_input):
-        region, start, end = "", 1, None
+        region, start, end = "", "1", None
         try:
             region_coordinates = region_input.split(":")
             region = region_coordinates[0]
             start, end = region_coordinates[1].split("-")
             start = start.replace(",", "")
             end = end.replace(",", "")
-        except IndexError:
+        except IndexError as ie:
             pass
         except Exception as ex:
             logger.debug(ex)
@@ -67,21 +67,33 @@ class RegionValidation(BaseModel):
                     )
                 else:
                     self._is_valid[0] = True
-
-                    if (self.start > 0) and (self.start < genome_region.length):
-                        self._is_valid[1] = True
-                    else:
+                    try:
+                        start_value = int(self.start)
+                        if (start_value > 0) and (start_value < genome_region.length):
+                            self._is_valid[1] = True
+                        else:
+                            self._is_valid[1] = False
+                            self._start_error = "start should be between 1 and {}".format(
+                                genome_region.length
+                            )
+                    except ValueError as ve:
                         self._is_valid[1] = False
-                        self._start_error = "start should be between 1 and {}".format(
-                            genome_region.length
-                        )
-                    if (self.end <= genome_region.length) and (self.end > self.start):
-                        self._is_valid[2] = True
-                    else:
+                        self._start_error = "start {} is invalid".format(self.start)
+
+                    try:
+                        end_value = int(self.end)
+                        if self._is_valid[1]:
+                            if (end_value <= genome_region.length) and (end_value > start_value):
+                                self._is_valid[2] = True
+                            else:
+                                self._is_valid[2] = False
+                                self._end_error = "end should be between 1 and {} and end ({}) > start ({})".format(
+                                    genome_region.length, self.end, self.start
+                                )
+                    except ValueError as ve:
                         self._is_valid[2] = False
-                        self._end_error = "end should be between 1 and {} and end ({}) > start ({})".format(
-                            genome_region.length, self.end, self.start
-                        )
+                        self._end_error = "end {} is invalid".format(self.end)
+
                     if genome_region.chromosomal:
                         self._region_code = "chromosome"
                     else:
@@ -119,14 +131,14 @@ class RegionValidation(BaseModel):
                 serialized_region["region"]["is_valid"] = False
                 serialized_region["region"]["error_message"] = self._region_name_error
             if self._is_valid[1]:
-                serialized_region["start"]["value"] = self.start
+                serialized_region["start"]["value"] = int(self.start)
                 serialized_region["start"]["is_valid"] = True
             else:
                 serialized_region["start"]["value"] = self.start
                 serialized_region["start"]["is_valid"] = False
                 serialized_region["start"]["error_message"] = self._start_error
             if self._is_valid[2]:
-                serialized_region["end"]["value"] = self.end
+                serialized_region["end"]["value"] = int(self.end)
                 serialized_region["end"]["is_valid"] = True
             else:
                 serialized_region["end"]["value"] = self.end
