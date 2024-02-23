@@ -48,7 +48,7 @@ class RegionValidation(BaseModel):
             start, end = region_coordinates[1].split("-")
             start = start.replace(",", "")
             end = end.replace(",", "")
-        except IndexError as ie:
+        except IndexError:
             pass
         except Exception as ex:
             logger.debug(ex)
