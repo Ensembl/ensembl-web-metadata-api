@@ -55,8 +55,8 @@ class RegionValidation(BaseModel):
         return region, start, end
 
     def _validate_region_name(self):
-        try:
-            if self.name:
+        if self.name:
+            try:
                 genome_region = grpc_client.get_region(self.genome_uuid, self.name)
                 if self.end is None:
                     self.end = genome_region.length
@@ -65,45 +65,48 @@ class RegionValidation(BaseModel):
                     self._region_name_error = "Could not find region {} for {}".format(
                         self.name, self.genome_uuid
                     )
+                    return False
                 else:
                     self._is_valid[0] = True
-                    try:
-                        start_value = int(self.start)
-                        if (start_value > 0) and (start_value < genome_region.length):
-                            self._is_valid[1] = True
-                        else:
-                            self._is_valid[1] = False
-                            self._start_error = "start should be between 1 and {}".format(
-                                genome_region.length
-                            )
-                    except ValueError as ve:
-                        self._is_valid[1] = False
-                        self._start_error = "start {} is invalid".format(self.start)
-
-                    try:
-                        end_value = int(self.end)
-                        if self._is_valid[1]:
-                            if (end_value <= genome_region.length) and (end_value > start_value):
-                                self._is_valid[2] = True
-                            else:
-                                self._is_valid[2] = False
-                                self._end_error = "end should be between 1 and {} and end ({}) > start ({})".format(
-                                    genome_region.length, self.end, self.start
-                                )
-                    except ValueError as ve:
-                        self._is_valid[2] = False
-                        self._end_error = "end {} is invalid".format(self.end)
-
                     if genome_region.chromosomal:
                         self._region_code = "chromosome"
                     else:
                         self._region_code = "non-chormosome"
-            else:
-                self._is_valid[0] = False
-                self._region_name_error = "Invalid region".format(self.location_input)
-        except Exception as ex:
-            logger.debug(ex)
-            return False
+            except Exception as ex:
+                logger.debug(ex)
+                return False
+
+            try:
+                start_value = int(self.start)
+                if (start_value > 0) and (start_value < genome_region.length):
+                    self._is_valid[1] = True
+                else:
+                    self._is_valid[1] = False
+                    self._start_error = "start should be between 1 and {}".format(
+                        genome_region.length
+                    )
+            except ValueError as ve:
+                self._is_valid[1] = False
+                self._start_error = "start {} is invalid".format(self.start)
+
+            try:
+                end_value = int(self.end)
+                if self._is_valid[1]:
+                    if (end_value <= genome_region.length) and (end_value > start_value):
+                        self._is_valid[2] = True
+                    else:
+                        self._is_valid[2] = False
+                        self._end_error = "end should be between 1 and {} and end ({}) > start ({})".format(
+                            genome_region.length, self.end, self.start
+                        )
+            except ValueError as ve:
+                self._is_valid[2] = False
+                self._end_error = "end {} is invalid".format(self.end)
+        else:
+            self._is_valid[0] = False
+            self._region_name_error = "Invalid region".format(self.location_input)
+
+        return all(self._is_valid)
 
     def validate_region(self):
         if self.genome_uuid:
