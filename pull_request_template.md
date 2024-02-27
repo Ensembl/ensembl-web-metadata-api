@@ -9,15 +9,14 @@ _Using one or more sentences, describe the proposed changes and the reason for m
 ### Review App URL(s) 
 http://__BRANCH_NAME_HERE__.review.ensembl.org
 
-
 ### Knowledge Base
 <!--
-_If there is any new concept which are being implemented then provide link(s) to the Knowledge base (Link to Documentation, Blog etc )_
+_If the PR introduces new concept, then provide link(s) to the Knowledge base ( Documentation, Blog etc )_
 -->
 
 ### Example(s)
 <!--
-_Bacckedn we mostly work with APIs so add request/response of the API call or How to navigate in front end app (How one can view particular track which uses the changes in the PR) etc . or anything relevant information which allows reviewer to view your changes in action_
+_Any details that will help reviewers to review the PR, such as  (but not limited to ) expected request/response, instruction for viewing the changes via the web client, or any other relevant information._
 -->
 
 ### Dependencies 
