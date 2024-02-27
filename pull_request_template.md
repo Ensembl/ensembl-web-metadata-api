@@ -21,8 +21,8 @@ _Any details that will help reviewers to review the PR, such as  (but not limite
 
 ### Checklist
 
-[] Black formatting
-[] Tests
+- [ ] Black formatting
+- [ ] Tests
 
 ### Dependencies 
 <!--
