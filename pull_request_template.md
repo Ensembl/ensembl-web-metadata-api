@@ -19,6 +19,11 @@ _If the PR introduces new concept, then provide link(s) to the Knowledge base ( 
 _Any details that will help reviewers to review the PR, such as  (but not limited to ) expected request/response, instruction for viewing the changes via the web client, or any other relevant information._
 -->
 
+### Checklist
+
+[] Black formatting
+[] Tests
+
 ### Dependencies 
 <!--
 _Does it need anything else before the PR gets merged. May be data update, k8s config update, PR in another repository_
