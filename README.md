@@ -6,7 +6,6 @@ Metadata API for new Ensembl website (https://beta.ensembl.org)
 git clone https://github.com/Ensembl/ensembl-web-metadata-api
 cd ensembl-web-metadata-api
 vi .env #add values for PORT, GRPC_HOST, GRPC_PORT
-source .env
 docker-compose -f docker-compose.yml up
 ```
 
