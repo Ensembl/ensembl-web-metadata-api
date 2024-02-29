@@ -36,6 +36,8 @@ from api.models.region_validation import RegionValidation
 
 from google.protobuf.json_format import MessageToDict
 
+from opentelemetry import trace
+
 logging.getLogger().handlers = [InterceptHandler()]
 
 router = APIRouter()
@@ -130,6 +132,8 @@ def example_objects(request: Request, genome_id: str):
 
 @router.get("/genome/{genome_uuid}/details", name="genome_details")
 async def get_genome_details(request: Request, genome_uuid: str):
+    span = trace.get_current_span()
+    span.set_attribute("genome_uuid", genome_uuid)
     not_found_response = {
         "message": "Could not find details for {}".format(genome_uuid)
     }
