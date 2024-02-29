@@ -16,6 +16,16 @@ import grpc
 from google.protobuf.json_format import MessageToDict
 from yagrc import reflector as yagrc_reflector
 
+from opentelemetry import trace
+from opentelemetry.instrumentation.grpc import GrpcInstrumentorClient
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import (
+    ConsoleSpanExporter,
+    SimpleSpanProcessor,
+)
+
+grpc_client_instrumentor = GrpcInstrumentorClient()
+grpc_client_instrumentor.instrument()
 
 class GRPCClient:
 

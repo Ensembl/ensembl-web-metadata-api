@@ -21,6 +21,14 @@ from starlette.middleware.cors import CORSMiddleware
 from api.resources.routes import router
 from core.config import API_PREFIX, ALLOWED_HOSTS, VERSION, PROJECT_NAME, DEBUG
 
+from opentelemetry import trace
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import (
+    BatchSpanProcessor,
+    ConsoleSpanExporter,
+)
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 
 def get_application() -> FastAPI:
     application = FastAPI(title=PROJECT_NAME, debug=DEBUG, version=VERSION)
@@ -37,5 +45,17 @@ def get_application() -> FastAPI:
 
     return application
 
+provider = TracerProvider(
+        resource=Resource.create({SERVICE_NAME: "web-metadata-api"})
+    )
+processor = BatchSpanProcessor(ConsoleSpanExporter())
+provider.add_span_processor(processor)
+
+# Sets the global default tracer provider
+trace.set_tracer_provider(provider)
+
+# Creates a tracer from the global tracer provider
+tracer = trace.get_tracer("web-metadata-api-tracer")
 
 app = get_application()
+FastAPIInstrumentor.instrument_app(app)
