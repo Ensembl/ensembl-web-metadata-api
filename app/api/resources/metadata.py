@@ -51,7 +51,7 @@ async def get_metadata_statistics(request: Request, genome_uuid: str):
         genome_stats = GenomeStatistics(_raw_data=top_level_stats_dict["statistics"])
         return responses.JSONResponse({"genome_stats": genome_stats.dict()})
     except Exception as e:
-        logger.debug(e)
+        logger.exception(e)
         return response_error_handler({"status": 500})
 
 
