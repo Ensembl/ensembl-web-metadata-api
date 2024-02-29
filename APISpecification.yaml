@@ -171,7 +171,7 @@ paths:
           schema:
             type: string
             example: 3704ceb1-948d-11ec-a39d-005056b38ce3
-        - name: region_id
+        - name: region_name
           in: path
           required: true
           schema:
@@ -625,7 +625,7 @@ components:
           example: HG02559.alt.pat.f1_v2
         url:
           type: string
-          example: https://www.ebi.ac.uk/ena/browser/view/GCA_018466855.1
+          example: https://identifiers.org/insdc.gca/GCA_018466855.1
           nullable: true
       required:
         - accession_id

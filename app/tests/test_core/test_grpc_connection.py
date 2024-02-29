@@ -19,13 +19,13 @@ genome_uuid = "a7335667-93e7-11ec-a39d-005056b38ce3"
 print("connecting to gRPC server on ", GRPC_HOST, ":", GRPC_PORT)
 gc = GRPCClient(GRPC_HOST, GRPC_PORT)
 
-genome_info = gc.get_genome(genome_uuid)
+genome_info = gc.get_genome_details(genome_uuid)
 genome_as_json = MessageToJson(genome_info)
 print(genome_as_json)
 
 top_level_stats = gc.get_statistics(genome_uuid)
 top_level_stats_dict = MessageToDict(top_level_stats)
 print(top_level_stats_dict)
-
-karyotype_data = gc.get_karyotype(genome_uuid)
-print (karyotype_data)
+# TODO see if still a method to call
+# karyotype_data = gc.get_karyotype(genome_uuid)
+# print (karyotype_data)

@@ -11,7 +11,7 @@ from pydantic import (
 )
 
 from core.logging import InterceptHandler
-from core.config import ENA_ASSEMBLY_URL
+from core.config import ASSEMBLY_URLS
 
 logging.getLogger().handlers = [InterceptHandler()]
 from loguru import logger
@@ -35,8 +35,10 @@ class AssemblyInGenome(BaseModel):
 
     @validator("url", always=True)
     def generate_url(cls, value):
-        if value and "GCA" in value:
-            return ENA_ASSEMBLY_URL + value
+        if value.startswith("GCA"):
+            return ASSEMBLY_URLS['GCA'] + value
+        if value.startswith("GCF"):
+            return ASSEMBLY_URLS['GCF'] + value
         return None
 
 
