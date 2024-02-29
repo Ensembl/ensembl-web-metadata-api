@@ -41,7 +41,7 @@ ALLOWED_HOSTS: List[str] = config(
 GRPC_HOST: str = config("GRPC_HOST", default="localhost")
 GRPC_PORT: int = config("GRPC_PORT", default=50051)
 
-# ENA URL
+# IDENTIFIERS_ORG URL
 IDENTIFIERS_ORG_BASE_URL: str = config(
     "IDENTIFIERS_ORG_BASE_URL", default="https://identifiers.org/"
 )
