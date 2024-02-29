@@ -41,10 +41,15 @@ ALLOWED_HOSTS: List[str] = config(
 GRPC_HOST: str = config("GRPC_HOST", default="localhost")
 GRPC_PORT: int = config("GRPC_PORT", default=50051)
 
-# ENA URL
-ENA_ASSEMBLY_URL: str = config(
-    "ENA_ASSEMBLY_URL", default="https://www.ebi.ac.uk/ena/browser/view/"
+# IDENTIFIERS_ORG URL
+IDENTIFIERS_ORG_BASE_URL: str = config(
+    "IDENTIFIERS_ORG_BASE_URL", default="https://identifiers.org/"
 )
+
+ASSEMBLY_URLS = {}
+
+ASSEMBLY_URLS['GCA'] = IDENTIFIERS_ORG_BASE_URL + "insdc.gca/"
+ASSEMBLY_URLS['GCF'] = IDENTIFIERS_ORG_BASE_URL + "refseq.gcf/"
 
 # Base URL for FTP download links
 FTP_BASE_URL: str = config(
