@@ -1,11 +1,9 @@
-from typing import List, Dict, Any
-from json import JSONEncoder
-import json
+from typing import Any
 import sys
 import configparser
 
 import mysql.connector
-from pydantic import BaseModel, Field, model_serializer, FieldValidationInfo, ValidationError, field_validator, model_validator
+from pydantic import BaseModel, Field, model_serializer, ValidationError, field_validator, model_validator
 
 class DefaultOnNoneModel(BaseModel):
     def __init__(self, **data):
@@ -40,7 +38,7 @@ class Species(DefaultOnNoneModel):
     rank:int = Field(default="0")
     
     @model_serializer
-    def serialise_species_model(self) -> Dict[str, Any]:
+    def serialise_species_model(self) -> dict[str, Any]:
         species_json = [
             {"name": field_name, "value": field_value}
             for field_name, field_value in self
@@ -64,14 +62,14 @@ class Species(DefaultOnNoneModel):
         return self
 
 class SpeciesList(BaseModel):
-    species_list: List[Species]
+    species_list: list[Species]
     name: str
     release: str
     # release_date: str
     entry_count: int
 
     @model_serializer
-    def ser_model(self) -> Dict[str, Any]:
+    def ser_model(self) -> dict[str, Any]:
         species_search_data = {}
         species_search_data["name"] = self.name
         species_search_data["release"] = self.release

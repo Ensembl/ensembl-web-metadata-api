@@ -13,7 +13,7 @@
 """
 
 from pydantic import BaseModel, model_serializer, Field, root_validator
-from typing import Dict, Any, Optional
+from typing import Any, Optional
 from loguru import logger
 from core.config import GRPC_HOST, GRPC_PORT
 from api.resources.grpc_client import GRPCClient
@@ -28,7 +28,7 @@ class RegionValidation(BaseModel):
     start: str = Field(alias="start", default="1")
     end: Optional[str] = Field(alias="end", default=None)
     _region_code: str = None
-    _is_valid: [bool, bool, bool] = [False, False, False]
+    _is_valid: list[bool] = [False, False, False]
     _region_name_error: str = None
     _start_error: str = None
     _end_error: str = None
@@ -117,7 +117,7 @@ class RegionValidation(BaseModel):
         return False
 
     @model_serializer
-    def region_validation_serliaiser(self) -> Dict[str, Any]:
+    def region_validation_serliaiser(self) -> dict[str, Any]:
         serialized_region = {
             "region": {"error_code": None, "error_message": None},
             "start": {"error_code": None, "error_message": None},

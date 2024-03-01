@@ -13,7 +13,7 @@
 """
 
 from pydantic import BaseModel, Field, AliasChoices, validator
-from typing import List, Dict, Any, ClassVar
+from typing import ClassVar
 
 
 class PopularSpecies(BaseModel):
@@ -37,7 +37,7 @@ class PopularSpecies(BaseModel):
 
 class PopularSpeciesGroup(BaseModel):
     _base_url: str
-    popular_species: List[PopularSpecies]
+    popular_species: list[PopularSpecies]
 
     def __init__(self, **data):
         PopularSpecies._base_url = data["_base_url"]

@@ -7,7 +7,6 @@ from pydantic import (
     root_validator,
     AliasChoices,
 )
-from typing import List
 from core.logging import InterceptHandler
 
 logging.getLogger().handlers = [InterceptHandler()]
@@ -250,7 +249,7 @@ class ExampleObject(BaseModel):
 
 
 class ExampleObjectList(BaseModel):
-    example_objects: List[ExampleObject] = []
+    example_objects: list[ExampleObject] = []
 
     @root_validator(pre=True)
     def set_region_parameters(cls, values):
