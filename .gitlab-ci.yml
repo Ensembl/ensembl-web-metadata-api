@@ -67,7 +67,7 @@ Prod:
 Staging:
   extends: 
     - .deploy
-    - .depoy_rules
+    - .deploy_rules
   environment:
     name: staging
   variables:
