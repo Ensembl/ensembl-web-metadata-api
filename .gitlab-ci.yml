@@ -31,7 +31,9 @@ variables:
 .deploy:
   stage: deploy
   image: dockerhub.ebi.ac.uk/ensembl-web/deploy-tools:latest
-
+  before_script:
+    - kubectl config use-context ${AGENT}
+    - kubectl config set-context --current --namespace=${NS}  
   script:
     - git clone https://gitlab.ebi.ac.uk/ensembl-web/ensembl-k8s-manifests.git
     - git -C ensembl-k8s-manifests/ checkout k8s123-migration
@@ -39,6 +41,8 @@ variables:
     - kustomize edit set image DOCKER_IMAGE=${DOCKER_IMAGE}
     - kubectl apply -k ./
 
+  
+.deploy_rules:
   rules:
     - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "main"'
       when: on_success
@@ -47,32 +51,56 @@ variables:
 build:
   extends: .build
 
-Prod:WP40:HL:
-  extends: .deploy
+# Prod:WP40:HL:
+Prod:
+  extends:
+    - .deploy
+    - .deploy_rules
   environment:
-    name: wp40-hl-prod
+    name: production
+  variables:
+    AGENT: ${PROD_AGENT}
+    NS: ${PROS_NS}
 
 # Deploy jobs for new k8s cluster
-Staging:WP40:HL:
-  extends: .deploy
+#Staging:WP40:HL:
+Staging:
+  extends: 
+    - .deploy
+    - .depoy_rules
   environment:
-    name: wp40-hl-staging
+    name: staging
+  variables:
+    AGENT: ${STAGING_AGENT}
+    NS: ${STAGING_NS}
 
-Internal:WP40:HL:
-  extends: .deploy
+#Internal:WP40:HL:
+Internal:
+  extends:
+    - .deploy
+    - .deploy_rules
   environment:
-    name: wp40-hl-internal
+    name: internal
+  variables:
+    AGENT: ${INTERNAL_AGENT}
+    NS: ${INTERMAL_NS}
 
 # Deployment for dev-2020.ensembl.org
-Dev:WP51:HL:
-  extends: .deploy
+#Dev:WP51:HL:
+Dev:
+  extends: 
+    - .deploy
+    - .deploy_rules
   environment:
-    name: wp51-hl-development
+    name: development
     kubernetes:
-      namespace: ensembl-dev
+      namespace: development
   rules:
     - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "main"'
       when: on_success
+  variables:
+    AGENT: ${DEV_AGENT}
+    NS: ${DEV_NS}
 
 # Setup Review app in its own namespace named by branch name (CI_COMMIT_REF_SLUG)
 Setup:Review:
@@ -89,19 +117,29 @@ Setup:Review:
           $CI_COMMIT_REF_NAME !~  "/^nodeploy\/.*$/"
       when: always
 
-Review:WP51:HL:
+#Review:WP51:HL:
+Review:
   extends: .deploy
   environment:
-    name: wp51-hl-development
+    name: development
     kubernetes:
       namespace: ${CI_COMMIT_REF_SLUG}
   rules:
     - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH != "dev"  && $CI_COMMIT_BRANCH != "main"'
       when: on_success
+  variables:
+    AGENT: ${REVIEW_AGENT}
+    NS: ${CI_COMMIT_REF_SLUG}
 
-Prod:WP41:HX:
-  extends: .deploy
+#Prod:WP41:HX:
+Fallback:
+  extends: 
+    - .deploy
+    - .deploy_rules
   environment:
-    name: wp41-hx-prod
+    name: fallback
+  variables:
+    AGENT: ${FALLABACK_AGENT}
+    NS: ${FALLBACK_NS}
 
 
