@@ -93,11 +93,6 @@ Dev:
     - .deploy_rules
   environment:
     name: development
-    kubernetes:
-      namespace: development
-  rules:
-    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "main"'
-      when: on_success
   variables:
     AGENT: ${DEV_AGENT}
     NS: ${DEV_NS}
@@ -107,7 +102,7 @@ Setup:Review:
   stage: setup
   image: dockerhub.ebi.ac.uk/ensembl-web/deploy-tools:latest
   environment:
-    name: wp51-hl-development
+    name: development
   script:
     - kubectl create namespace ${CI_COMMIT_REF_SLUG} --dry-run=client -o yaml | kubectl apply -f -
     - kubectl create configmap metadata-api-configmap --from-env-file=.env.sample --dry-run=client -o yaml | kubectl apply -f -
@@ -122,8 +117,6 @@ Review:
   extends: .deploy
   environment:
     name: development
-    kubernetes:
-      namespace: ${CI_COMMIT_REF_SLUG}
   rules:
     - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH != "dev"  && $CI_COMMIT_BRANCH != "main"'
       when: on_success
