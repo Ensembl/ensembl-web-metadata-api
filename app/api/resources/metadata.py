@@ -143,13 +143,18 @@ async def get_genome_details(request: Request, genome_uuid: str):
         if genome_details_dict:
             genome_details = GenomeDetails(**genome_details_dict)
             response_data = responses.JSONResponse(genome_details.dict())
+            logger.info(response_data)
+            span = trace.get_current_span()
+            span.set_attribute("infolog", response_data)
+            t = (1/0)
         else:
             not_found_response = {
                 "message": "Could not find details for {}".format(genome_uuid)
             }
             response_data = responses.JSONResponse(not_found_response, status_code=404)
     except Exception as ex:
-        logger.debug(ex)
+        span = trace.get_current_span()
+        span.set_attribute("errorlog", ex.getMessage())
         return response_error_handler({"status": 500})
     return response_data
 
@@ -158,6 +163,7 @@ async def get_genome_details(request: Request, genome_uuid: str):
 async def get_genome_ftplinks(request: Request, genome_uuid: str):
     try:
         ftplinks_dict = MessageToDict(grpc_client.get_ftplinks(genome_uuid))
+
         ftplinks = FTPLinks(**ftplinks_dict)
         return responses.JSONResponse(ftplinks.dict().get("links", []))
     except Exception as ex:
