@@ -142,7 +142,13 @@ async def get_genome_details(request: Request, genome_uuid: str):
 async def get_genome_ftplinks(request: Request, genome_uuid: str):
     try:
         ftplinks_dict = MessageToDict(grpc_client.get_ftplinks(genome_uuid))
-        ftplinks = FTPLinks(**ftplinks_dict)
+        
+        # This is temporary solution to hide regulation ftp links
+        # It should be removed once the ftp links for regulation is fixed
+        ftplinks_no_regulation = {}
+        ftplinks_no_regulation["Links"] = [link for link in ftplinks_dict["Links"]  if link["datasetType"] != "regulation"]
+        
+        ftplinks = FTPLinks(**ftplinks_no_regulation)
         return responses.JSONResponse(ftplinks.model_dump().get("links", []))
     except Exception as ex:
         logger.debug(ex)
