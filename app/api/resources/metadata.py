@@ -25,7 +25,7 @@ from api.models.checksums import Checksum
 from api.models.statistics import GenomeStatistics, ExampleObjectList
 from api.models.popular_species import PopularSpeciesGroup
 from api.models.karyotype import Karyotype
-from api.models.genome import GenomeDetails
+from api.models.genome import GenomeDetails, DatasetAttributes
 from api.models.ftplinks import FTPLinks
 
 from core.config import GRPC_HOST, GRPC_PORT
@@ -118,10 +118,6 @@ def example_objects(request: Request, genome_id: str):
 
 @router.get("/genome/{genome_uuid}/details", name="genome_details")
 async def get_genome_details(request: Request, genome_uuid: str):
-    not_found_response = {
-        "message": "Could not find details for {}".format(genome_uuid)
-    }
-    response_data = responses.JSONResponse(not_found_response, status_code=404)
     try:
         genome_details_dict = MessageToDict(grpc_client.get_genome_details(genome_uuid))
         if genome_details_dict:
@@ -142,12 +138,13 @@ async def get_genome_details(request: Request, genome_uuid: str):
 async def get_genome_ftplinks(request: Request, genome_uuid: str):
     try:
         ftplinks_dict = MessageToDict(grpc_client.get_ftplinks(genome_uuid))
-        
+
         # This is temporary solution to hide regulation ftp links
         # It should be removed once the ftp links for regulation is fixed
         ftplinks_no_regulation = {}
-        ftplinks_no_regulation["Links"] = [link for link in ftplinks_dict["Links"]  if link["datasetType"] != "regulation"]
-        
+        ftplinks_no_regulation["Links"] = [link for link in ftplinks_dict["Links"] if
+                                           link["datasetType"] != "regulation"]
+
         ftplinks = FTPLinks(**ftplinks_no_regulation)
         return responses.JSONResponse(ftplinks.model_dump().get("links", []))
     except Exception as ex:
@@ -157,7 +154,6 @@ async def get_genome_ftplinks(request: Request, genome_uuid: str):
 
 @router.get("/genome/{slug}/explain", name="genome_explain")
 async def explain_genome(request: Request, slug: str):
-    response_dict = {}
     not_found_response = {"message": "Could not explain {}".format(slug)}
     response_data = responses.JSONResponse(not_found_response, status_code=404)
     try:
@@ -189,13 +185,35 @@ async def explain_genome(request: Request, slug: str):
 @router.get("/genome/{genome_uuid}/checksum/{region_name}", name="region_checksum")
 async def get_genome_ftplinks(request: Request, genome_uuid: str, region_name: str):
     try:
-        region_checksum_dict = MessageToDict(grpc_client.get_region_checksum(genome_uuid=genome_uuid, region_name=region_name))
+        region_checksum_dict = MessageToDict(
+            grpc_client.get_region_checksum(genome_uuid=genome_uuid, region_name=region_name))
         region_checksum = Checksum(**region_checksum_dict)
         return responses.PlainTextResponse(region_checksum.md5)
     except ValidationError as e:
         error_type = e.errors()[0]['type']
         if error_type.index('missing') == 0:
             return response_error_handler({"status": 404})
+    except Exception as ex:
+        logger.debug(ex)
+        return response_error_handler({"status": 500})
+
+
+@router.get("/genome/{genome_uuid}/dataset/{dataset_type}/attributes", name="dataset_attributes")
+async def get_genome_dataset_attributes(request: Request, genome_uuid: str, dataset_type: str):
+    try:
+        dataset_attributes = MessageToDict(
+            grpc_client.get_dataset_attributes(genome_uuid=genome_uuid, dataset_type=dataset_type))
+        dataset_attributes_object = DatasetAttributes(**dataset_attributes)
+        response_data = responses.JSONResponse(dataset_attributes_object.dict(), status_code=200)
+        return response_data
+    except ValidationError as e:
+        error_type = e.errors()[0]['type']
+        if error_type.index('missing') == 0:
+            not_found_response = {
+                "message": f"Could not find details for genome {genome_uuid} and dataset {dataset_type}."
+            }
+            return responses.JSONResponse(not_found_response, status_code=404)
+
     except Exception as ex:
         logger.debug(ex)
         return response_error_handler({"status": 500})

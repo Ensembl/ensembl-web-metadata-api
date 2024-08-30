@@ -161,7 +161,7 @@ paths:
                   $ref: '#/components/schemas/FTPLink'
         '500':
           $ref: '#/components/responses/500InternalServerError'
-  /api/metadata/genome/{genome_id}/checksum/{region_id}:
+  /api/metadata/genome/{genome_id}/checksum/{region_name}:
     get:
       summary: Returns a checksum for the specified top-level region
       parameters:
@@ -171,7 +171,7 @@ paths:
           schema:
             type: string
             example: 3704ceb1-948d-11ec-a39d-005056b38ce3
-        - name: region_id
+        - name: region_name
           in: path
           required: true
           schema:
@@ -237,7 +237,7 @@ paths:
           $ref: '#/components/responses/500InternalServerError'
   /api/metadata/genome/{genome_id}/dataset/{dataset_type}/attributes:
     get:
-      description: Returns a list of attributes for a genome.
+      description: Returns a list of attributes of a given dataset of a genome.
       parameters:
         - name: genome_id
           in: path
@@ -265,7 +265,7 @@ paths:
                   attributes:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Attributes'
+                      $ref: '#/components/schemas/DatasetAttribute'
 
         '404':
           description: Genome not found
@@ -276,7 +276,7 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: "Could not find attributes objects for a7335667-93e7-11ec-a39d-005056b38ce3"
+                    example: 'Could not find details for genome 0cbc227a-7179-43c2-8061-a50d94423c4d and dataset homologies.'
         '500':
           $ref: '#/components/responses/500InternalServerError'
 
@@ -639,7 +639,7 @@ components:
         - variation_stats
         - regulation_stats
       additionalProperties: false
-    Attributes:
+    DatasetAttribute:
       type: object
       properties:
         name:

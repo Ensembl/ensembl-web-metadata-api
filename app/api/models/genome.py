@@ -127,3 +127,14 @@ class GenomeDetails(BaseModel):
             }
 
         super().__init__(**data)
+
+class DatasetAttribute(BaseModel):
+    name: str = Field(alias="attributeName")
+    value: str = Field(alias="attributeValue")
+    version: str = Field(alias="datasetVersion")
+    uuid: str = Field(alias="datasetUuid")
+    type: str = Field(alias="datasetType")
+
+class DatasetAttributes(BaseModel):
+    attributes: list[DatasetAttribute]
+    release_version:float = Field(alias="releaseVersion")
