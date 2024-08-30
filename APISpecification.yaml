@@ -161,7 +161,7 @@ paths:
                   $ref: '#/components/schemas/FTPLink'
         '500':
           $ref: '#/components/responses/500InternalServerError'
-  /api/metadata/genome/{genome_id}/checksum/{region_id}:
+  /api/metadata/genome/{genome_id}/checksum/{region_name}:
     get:
       summary: Returns a checksum for the specified top-level region
       parameters:
@@ -235,9 +235,54 @@ paths:
                       $ref: '#/components/schemas/PopularSpecies'
         '500':
           $ref: '#/components/responses/500InternalServerError'
+  /api/metadata/genome/{genome_id}/dataset/{dataset_type}/attributes:
+    get:
+      description: Returns a list of attributes of a given dataset of a genome.
+      parameters:
+        - name: genome_id
+          in: path
+          required: true
+          schema:
+            type: string
+            default: a7335667-93e7-11ec-a39d-005056b38ce3
+        - name: dataset_type
+          in: path
+          required: true
+          schema:
+            type: string
+            default: homologies
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  release_version:
+                    type: string
+                    example: "110.1"
+                  attributes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DatasetAttribute'
+
+        '404':
+          description: Genome not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: 'Could not find details for genome 0cbc227a-7179-43c2-8061-a50d94423c4d and dataset homologies.'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
 
 components:
   schemas:
+
     BriefGenomeDetails:
       type: object
       properties:
@@ -594,6 +639,19 @@ components:
         - variation_stats
         - regulation_stats
       additionalProperties: false
+    DatasetAttribute:
+      type: object
+      properties:
+        name:
+          type: string
+        value:
+          type: string
+        version:
+          type: string
+        uuid:
+          type: string
+        type:
+          type: string
     PopularSpecies:
       type: object
       properties:
@@ -883,5 +941,3 @@ components:
           schema:
             type: string
             example: '{"status_code": 500, "details": "Internal Server Error"}'
-
-            

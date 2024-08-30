@@ -1,5 +1,11 @@
 import mysql.connector
-from pydantic import BaseModel, Field, model_serializer, ValidationError, field_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    model_serializer,
+    ValidationError,
+    field_validator,
+)
 from typing import Any
 
 
@@ -29,11 +35,12 @@ class Species(BaseModel):
 
         return {"fields": species_json}
 
-    @field_validator('unversioned_assembly_accession')
+    @field_validator("unversioned_assembly_accession")
     @classmethod
     def make_unversioned_assembly_accession(cls, v: str) -> str:
-        v = v.split('.')[0]
+        v = v.split(".")[0]
         return v
+
 
 class SpeciesList(BaseModel):
     species_list: list[Species]
