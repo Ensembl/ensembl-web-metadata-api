@@ -131,7 +131,7 @@ class GenomeDetails(BaseModel):
 
 class DatasetAttribute(BaseModel):
     name: str = Field(alias="attributeName")
-    value: str = Field(alias="attributeValue")
+    value: str = Field(alias="attributeValue", default=None)
     version: str = Field(alias="datasetVersion")
     uuid: str = Field(alias="datasetUuid")
     type: str = Field(alias="datasetType")
