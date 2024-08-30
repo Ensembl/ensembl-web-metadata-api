@@ -16,14 +16,17 @@ from pydantic import BaseModel, Field, HttpUrl, field_serializer
 from typing import Literal
 from core.config import FTP_BASE_URL
 
+
 class FTPLink(BaseModel):
-    dataset: Literal['genebuild', 'assembly', 'homologies',
-                     'regulation', 'variation'] = Field(..., validation_alias='datasetType')
-    url: str = Field(..., validation_alias='path')
-    
-    @field_serializer('url')
+    dataset: Literal[
+        "genebuild", "assembly", "homologies", "regulation", "variation"
+    ] = Field(..., validation_alias="datasetType")
+    url: str = Field(..., validation_alias="path")
+
+    @field_serializer("url")
     def url_serializer(self, path: str) -> HttpUrl:
         return f"{FTP_BASE_URL}{path}"
 
+
 class FTPLinks(BaseModel):
-    links: list[FTPLink] = Field(..., validation_alias='Links')
+    links: list[FTPLink] = Field(..., validation_alias="Links")

@@ -36,9 +36,9 @@ class AssemblyInGenome(BaseModel):
     @validator("url", always=True)
     def generate_url(cls, value):
         if value.startswith("GCA"):
-            return ASSEMBLY_URLS['GCA'] + value
+            return ASSEMBLY_URLS["GCA"] + value
         if value.startswith("GCF"):
-            return ASSEMBLY_URLS['GCF'] + value
+            return ASSEMBLY_URLS["GCF"] + value
         return None
 
 
@@ -128,6 +128,7 @@ class GenomeDetails(BaseModel):
 
         super().__init__(**data)
 
+
 class DatasetAttribute(BaseModel):
     name: str = Field(alias="attributeName")
     value: str = Field(alias="attributeValue")
@@ -135,6 +136,7 @@ class DatasetAttribute(BaseModel):
     uuid: str = Field(alias="datasetUuid")
     type: str = Field(alias="datasetType")
 
+
 class DatasetAttributes(BaseModel):
     attributes: list[DatasetAttribute]
-    release_version:float = Field(alias="releaseVersion")
+    release_version: float = Field(alias="releaseVersion")

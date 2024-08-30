@@ -92,7 +92,9 @@ class RegionValidation(BaseModel):
             try:
                 end_value = int(self.end)
                 if self._is_valid[1]:
-                    if (end_value <= genome_region.length) and (end_value > start_value):
+                    if (end_value <= genome_region.length) and (
+                        end_value > start_value
+                    ):
                         self._is_valid[2] = True
                     else:
                         self._is_valid[2] = False
