@@ -220,18 +220,18 @@ async def get_genome_dataset_attributes(
                 genome_uuid=genome_uuid, dataset_type=dataset_type
             )
         )
+        if dataset_attributes == {}:
+            return responses.JSONResponse(
+                {
+                    "message": f"Could not find details for genome {genome_uuid} and dataset {dataset_type}."
+                },
+                status_code=404,
+            )
         dataset_attributes_object = DatasetAttributes(**dataset_attributes)
         response_data = responses.JSONResponse(
             dataset_attributes_object.dict(), status_code=200
         )
         return response_data
-    except ValidationError as e:
-        error_type = e.errors()[0]["type"]
-        if error_type.index("missing") == 0:
-            not_found_response = {
-                "message": f"Could not find details for genome {genome_uuid} and dataset {dataset_type}."
-            }
-            return responses.JSONResponse(not_found_response, status_code=404)
 
     except Exception as ex:
         logger.debug(ex)
