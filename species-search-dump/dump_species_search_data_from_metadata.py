@@ -1,6 +1,7 @@
 from typing import Any
 import sys
 import configparser
+import csv
 
 import mysql.connector
 from pydantic import (
@@ -64,14 +65,14 @@ class Species(DefaultOnNoneModel):
     def clean_up_type(self) -> "Species":
         if len(self.type_type) == 0:
             self.type_value = ""
-            print(
-                f"Cleared type for {self.scientific_name} - {self.id} due to type_type"
-            )
+            #print(
+            #    f"Cleared type for {self.scientific_name} - {self.id} due to type_type"
+            #)
         elif len(self.type_value) == 0:
             self.type_type = ""
-            print(
-                f"Cleared type for {self.scientific_name} - {self.id} due to type_value"
-            )
+            #print(
+            #    f"Cleared type for {self.scientific_name} - {self.id} due to type_value"
+            #)
         return self
 
 
@@ -109,6 +110,19 @@ def dump_species():
         sys.exit(-1)
 
     db = config["database"]
+    
+    #We can make this generic later if needed by inspecting properties of the model that lack a default
+    broken_data_fix = {}
+    if config["genebuild_method"]:
+        print("Found broken data fix csv for genebuild_method")
+        with open(config["genebuild_method"]["csv"]) as genebuild_in:
+            genomesList = csv.reader(genebuild_in)
+            for row in genomesList:
+                broken_data_fix[row[0]] = {
+                    "genebuild_method":row[1]
+                }
+        print(f"{len(broken_data_fix)} fixes found")
+    
 
     try:
         mydb = mysql.connector.connect(
@@ -125,7 +139,7 @@ def dump_species():
     mycursor = mydb.cursor()
 
     query = """SELECT 
-    genome_uuid,
+    gs.genome_uuid,
     common_name,
     scientific_name,
     strain_type,
@@ -138,7 +152,7 @@ def dump_species():
     name,
     species_taxonomy_id,
     scientific_parlance_name,
-    organism_id,
+    gs.organism_id,
     rank,
     contig_n50,
     coding_genes,
@@ -146,21 +160,35 @@ def dump_species():
     has_regulation,
     genebuild_provider,
     genebuild_method
-    from genome_search"""
+    from genome_search as gs 
+    join genome as g on (gs.genome_uuid = g.genome_uuid) 
+    join genome_release as gr on (g.genome_id = gr.genome_id)
+    where gr.is_current = 1
+    """
 
     mycursor.execute(query)
     columns = [desc[0] for desc in mycursor.description]
     species_data = []
+    
+    error_count = 0
 
     for row in mycursor.fetchall():
         dict_row = {columns[x]: clean_value(row[x]) for x in range(0, len(columns))}
+        
+        #Apply any fixes needed
+        if dict_row["genome_uuid"] in broken_data_fix:
+            for key,fix in broken_data_fix[dict_row["genome_uuid"]].items():
+                dict_row[key] = fix
+        
+        
 
         try:
             sd = Species(**dict_row)
             species_data.append(sd)
 
         except ValidationError as err:
-            print(f"Unable to validate {dict_row['scientific_name']}")
+            error_count += 1
+            print(f"Unable to validate {dict_row['genome_uuid']} - {dict_row['scientific_name']}")
             print(f"Errors found {err.error_count()}")
             for e in err.errors():
                 print(f"{e['type']}: {e['loc']}")
@@ -168,11 +196,12 @@ def dump_species():
     species_list = SpeciesList(
         species_list=species_data,
         name="ensemblNext",
-        release="0.0.3",
+        release="0.110.2",
         entry_count=len(species_data),
     )
 
-    print(f"Total : {len(species_data)}")
+    print(f"Rejected : {error_count}")
+    print(f"Added : {len(species_data)}")
 
     with open("ensemblnext_species.json", "w") as sddf:
         sddf.write(species_list.model_dump_json())
