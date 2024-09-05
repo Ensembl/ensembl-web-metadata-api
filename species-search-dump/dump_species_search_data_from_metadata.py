@@ -122,6 +122,10 @@ def dump_species():
                     "genebuild_method":row[1]
                 }
         print(f"{len(broken_data_fix)} fixes found")
+        
+    exclude = []
+    if config["exclude"]:
+        exclude = config["exclude"]["uuids"]
     
 
     try:
@@ -180,7 +184,9 @@ def dump_species():
             for key,fix in broken_data_fix[dict_row["genome_uuid"]].items():
                 dict_row[key] = fix
         
-        
+        if dict_row["genome_uuid"] in exclude:
+            print(f"Skipping {dict_row['genome_uuid']}")
+            continue
 
         try:
             sd = Species(**dict_row)
@@ -204,7 +210,7 @@ def dump_species():
     print(f"Added : {len(species_data)}")
 
     with open("ensemblnext_species.json", "w") as sddf:
-        sddf.write(species_list.model_dump_json())
+        sddf.write(species_list.model_dump_json(indent=4))
 
 
 if __name__ == "__main__":
