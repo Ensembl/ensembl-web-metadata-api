@@ -216,14 +216,14 @@ async def get_genome_dataset_attributes(
     request: Request,
     genome_uuid: str,
     dataset_type: str,
-    attribute_name: Annotated[list[str] | None, Query()] = None,
+    attribute_names: Annotated[list[str] | None, Query()] = None,
 ):
     try:
         dataset_attributes = MessageToDict(
             grpc_client.get_dataset_attributes(
                 genome_uuid=genome_uuid,
                 dataset_type=dataset_type,
-                attribute_name=attribute_name,
+                attribute_names=attribute_names,
             )
         )
         if len(dataset_attributes) <= 1:
