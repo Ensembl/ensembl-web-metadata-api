@@ -239,6 +239,10 @@ paths:
     get:
       description: Returns a list of attributes of a given dataset of a genome.
       parameters:
+        - in: query
+          name: attribute_names
+          schema:
+            type: array
         - name: genome_id
           in: path
           required: true

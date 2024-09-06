@@ -119,11 +119,20 @@ class GRPCClient:
         )
         return self.stub.GetGenomeAssemblySequenceRegion(region_checksum)
 
-    def get_dataset_attributes(self, genome_uuid: str, dataset_type: str):
+    def get_dataset_attributes(
+        self, genome_uuid: str, dataset_type: str, attribute_names: list
+    ):
         request_class = self.reflector.message_class(
             "ensembl_metadata.DatasetAttributesValuesRequest"
         )
-        dataset_attributes = request_class(
-            genome_uuid=genome_uuid, dataset_type=dataset_type
-        )
+        if attribute_names:
+            dataset_attributes = request_class(
+                genome_uuid=genome_uuid,
+                dataset_type=dataset_type,
+                attribute_name=attribute_names,
+            )
+        else:
+            dataset_attributes = request_class(
+                genome_uuid=genome_uuid, dataset_type=dataset_type
+            )
         return self.stub.GetAttributesValuesByUUID(dataset_attributes)

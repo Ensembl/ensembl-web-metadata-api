@@ -15,8 +15,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import logging
+from typing import Annotated
 
-from fastapi import APIRouter, Request, responses
+from fastapi import APIRouter, Request, responses, Query
 from loguru import logger
 from pydantic import ValidationError
 
@@ -212,15 +213,20 @@ async def get_genome_ftplinks(request: Request, genome_uuid: str, region_name: s
     "/genome/{genome_uuid}/dataset/{dataset_type}/attributes", name="dataset_attributes"
 )
 async def get_genome_dataset_attributes(
-    request: Request, genome_uuid: str, dataset_type: str
+    request: Request,
+    genome_uuid: str,
+    dataset_type: str,
+    attribute_names: Annotated[list[str] | None, Query()] = None,
 ):
     try:
         dataset_attributes = MessageToDict(
             grpc_client.get_dataset_attributes(
-                genome_uuid=genome_uuid, dataset_type=dataset_type
+                genome_uuid=genome_uuid,
+                dataset_type=dataset_type,
+                attribute_names=attribute_names,
             )
         )
-        if dataset_attributes == {}:
+        if len(dataset_attributes.get("attributes",[])) == 0:
             return responses.JSONResponse(
                 {
                     "message": f"Could not find details for genome {genome_uuid} and dataset {dataset_type}."
