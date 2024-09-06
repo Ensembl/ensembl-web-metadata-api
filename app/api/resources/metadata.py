@@ -226,7 +226,7 @@ async def get_genome_dataset_attributes(
                 attribute_names=attribute_names,
             )
         )
-        if len(dataset_attributes) <= 1:
+        if len(dataset_attributes.get("attributes",[])) == 0:
             return responses.JSONResponse(
                 {
                     "message": f"Could not find details for genome {genome_uuid} and dataset {dataset_type}."
