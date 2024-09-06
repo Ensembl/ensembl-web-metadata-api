@@ -60,7 +60,7 @@ Prod:
     name: production
   variables:
     AGENT: ${PROD_AGENT}
-    NS: ${PROS_NS}
+    NS: ${PROD_NS}
 
 # Deploy jobs for new k8s cluster
 #Staging:WP40:HL:
