@@ -924,7 +924,7 @@ components:
             - variation
         url:
           type: string
-          example: https://ftp.ebi.ac.uk/pub/databases/ensembl/organisms/Homo_sapiens/GCA_000001405.29/ensembl/genome
+          example: https://ftp.ebi.ac.uk/pub/ensemblorganisms/Homo_sapiens/GCA_000001405.29/ensembl/genome
       required:
         - dataset
         - url
