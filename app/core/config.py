@@ -47,12 +47,12 @@ IDENTIFIERS_ORG_BASE_URL: str = config(
 
 ASSEMBLY_URLS = {}
 
-ASSEMBLY_URLS['GCA'] = IDENTIFIERS_ORG_BASE_URL + "insdc.gca/"
-ASSEMBLY_URLS['GCF'] = IDENTIFIERS_ORG_BASE_URL + "refseq.gcf/"
+ASSEMBLY_URLS["GCA"] = IDENTIFIERS_ORG_BASE_URL + "insdc.gca/"
+ASSEMBLY_URLS["GCF"] = IDENTIFIERS_ORG_BASE_URL + "refseq.gcf/"
 
 # Base URL for FTP download links
 FTP_BASE_URL: str = config(
-    "FTP_BASE_URL", default="https://ftp.ebi.ac.uk/pub/databases/ensembl/organisms/"
+    "FTP_BASE_URL", default="https://ftp.ebi.ac.uk/pub/ensemblorganisms/"
 )
 
 # logging configuration

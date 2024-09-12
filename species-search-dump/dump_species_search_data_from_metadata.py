@@ -3,13 +3,22 @@ import sys
 import configparser
 
 import mysql.connector
-from pydantic import BaseModel, Field, model_serializer, ValidationError, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    model_serializer,
+    ValidationError,
+    field_validator,
+    model_validator,
+)
+
 
 class DefaultOnNoneModel(BaseModel):
     def __init__(self, **data):
-        #Removes keys that have a value of None allowing the default to be selected
-        data_without_none = {k:v for k,v in data.items() if (v is not None)}
+        # Removes keys that have a value of None allowing the default to be selected
+        data_without_none = {k: v for k, v in data.items() if (v is not None)}
         super().__init__(**data_without_none)
+
 
 class Species(DefaultOnNoneModel):
     id: str = Field(alias="genome_uuid")
@@ -27,16 +36,16 @@ class Species(DefaultOnNoneModel):
     has_regulation: bool = Field(default=False)
     annotation_method: str = Field(alias="genebuild_method")
     annotation_provider: str = Field(alias="genebuild_provider")
-    
-    #New fields
-    genome_uuid:str
+
+    # New fields
+    genome_uuid: str
     url_name: str = Field(default="")
     tol_id: str = Field(default="")
-    is_reference:bool = Field(default=False) 
+    is_reference: bool = Field(default=False)
     species_taxonomy_id: int
     organism_id: int
-    rank:int = Field(default="0")
-    
+    rank: int = Field(default="0")
+
     @model_serializer
     def serialise_species_model(self) -> dict[str, Any]:
         species_json = [
@@ -45,21 +54,26 @@ class Species(DefaultOnNoneModel):
         ]
         return {"fields": species_json}
 
-    @field_validator('unversioned_assembly_accession')
+    @field_validator("unversioned_assembly_accession")
     @classmethod
     def make_unversioned_assembly_accession(cls, v: str) -> str:
-        v = v.split('.')[0]
+        v = v.split(".")[0]
         return v
-    
-    @model_validator(mode='after')
-    def clean_up_type(self) -> 'Species':
+
+    @model_validator(mode="after")
+    def clean_up_type(self) -> "Species":
         if len(self.type_type) == 0:
             self.type_value = ""
-            print(f"Cleared type for {self.scientific_name} - {self.id} due to type_type")
+            print(
+                f"Cleared type for {self.scientific_name} - {self.id} due to type_type"
+            )
         elif len(self.type_value) == 0:
             self.type_type = ""
-            print(f"Cleared type for {self.scientific_name} - {self.id} due to type_value")
+            print(
+                f"Cleared type for {self.scientific_name} - {self.id} due to type_value"
+            )
         return self
+
 
 class SpeciesList(BaseModel):
     species_list: list[Species]
@@ -76,38 +90,40 @@ class SpeciesList(BaseModel):
         species_search_data["entry_count"] = self.entry_count
         species_search_data["entries"] = self.species_list
         return species_search_data
-        
+
+
 def clean_value(val):
-    """ Used to set known representations of null in the data coming from metadata to None"""
-    known_data_errors = ["NULL",'"NA"']
+    """Used to set known representations of null in the data coming from metadata to None"""
+    known_data_errors = ["NULL", '"NA"']
     if val in known_data_errors:
         return None
     return val
 
-def dump_species(): 
+
+def dump_species():
     config = configparser.ConfigParser()
-    config.read('config.ini')
-    
+    config.read("config.ini")
+
     if "database" not in config.sections():
         print("Unable to find config.ini")
         sys.exit(-1)
-        
-    db = config['database']
-    
+
+    db = config["database"]
+
     try:
         mydb = mysql.connector.connect(
-            host=db.get('host',''),
-            port=db.getint('port'),
-            user=db.get('user',''),
-            password=db.get('password',None),
-            database=db.get('database','')
+            host=db.get("host", ""),
+            port=db.getint("port"),
+            user=db.get("user", ""),
+            password=db.get("password", None),
+            database=db.get("database", ""),
         )
     except:
         print("Failed to connect to database")
         sys.exit(-1)
-    
+
     mycursor = mydb.cursor()
-    
+
     query = """SELECT 
     genome_uuid,
     common_name,
@@ -131,14 +147,14 @@ def dump_species():
     genebuild_provider,
     genebuild_method
     from genome_search"""
-    
+
     mycursor.execute(query)
     columns = [desc[0] for desc in mycursor.description]
     species_data = []
-    
+
     for row in mycursor.fetchall():
-        dict_row = {columns[x]:clean_value(row[x]) for x in range(0,len(columns))}
-        
+        dict_row = {columns[x]: clean_value(row[x]) for x in range(0, len(columns))}
+
         try:
             sd = Species(**dict_row)
             species_data.append(sd)
@@ -148,18 +164,19 @@ def dump_species():
             print(f"Errors found {err.error_count()}")
             for e in err.errors():
                 print(f"{e['type']}: {e['loc']}")
-    
+
     species_list = SpeciesList(
-    species_list=species_data,
-    name="ensemblNext",
-    release="0.0.3",
-    entry_count=len(species_data),
+        species_list=species_data,
+        name="ensemblNext",
+        release="0.0.3",
+        entry_count=len(species_data),
     )
-    
+
     print(f"Total : {len(species_data)}")
-    
+
     with open("ensemblnext_species.json", "w") as sddf:
         sddf.write(species_list.model_dump_json())
-    
-if __name__ == "__main__": 
+
+
+if __name__ == "__main__":
     dump_species()
