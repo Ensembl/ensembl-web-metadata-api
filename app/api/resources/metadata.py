@@ -18,7 +18,6 @@ import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Request, responses, Query
-from loguru import logger
 from pydantic import ValidationError
 
 from api.error_response import response_error_handler
@@ -41,7 +40,7 @@ logging.getLogger().handlers = [InterceptHandler()]
 
 router = APIRouter()
 
-logger.info("Connecting to gRPC server on " + GRPC_HOST + ":" + str(GRPC_PORT))
+logging.info("Connecting to gRPC server on " + GRPC_HOST + ":" + str(GRPC_PORT))
 grpc_client = GRPCClient(GRPC_HOST, GRPC_PORT)
 
 
@@ -52,7 +51,7 @@ async def get_metadata_statistics(request: Request, genome_uuid: str):
         genome_stats = GenomeStatistics(_raw_data=top_level_stats_dict["statistics"])
         return responses.JSONResponse({"genome_stats": genome_stats.model_dump()})
     except Exception as e:
-        logger.exception(e)
+        logging.error(e)
         return response_error_handler({"status": 500})
 
 
@@ -70,7 +69,7 @@ async def get_genome_karyotype(request: Request, genome_uuid: str):
             karyotype_response.model_dump()["top_level_regions"]
         )
     except Exception as e:
-        logger.debug(e)
+        logging.error(e)
         return response_error_handler({"status": 500})
 
 
@@ -84,7 +83,7 @@ async def get_popular_species(request: Request):
         )
         return responses.JSONResponse(popular_species_response.model_dump())
     except Exception as e:
-        logger.debug(e)
+        logging.error(e)
         return response_error_handler({"status": 500})
 
 
@@ -95,7 +94,7 @@ def validate_region(request: Request, genome_id: str, location: str):
         rgv.validate_region()
         return responses.JSONResponse(rgv.model_dump())
     except Exception as e:
-        logger.debug(e)
+        logging.error(e)
         return response_error_handler({"status": 500})
 
 
@@ -116,7 +115,7 @@ def example_objects(request: Request, genome_id: str):
             }
             response_data = responses.JSONResponse(not_found_response, status_code=404)
     except Exception as ex:
-        logger.debug(ex)
+        logging.error(ex)
         return response_error_handler({"status": 500})
     return response_data
 
@@ -134,7 +133,7 @@ async def get_genome_details(request: Request, genome_uuid: str):
             }
             response_data = responses.JSONResponse(not_found_response, status_code=404)
     except Exception as ex:
-        logger.debug(ex)
+        logging.error(ex)
         return response_error_handler({"status": 500})
     return response_data
 
@@ -156,7 +155,7 @@ async def get_genome_ftplinks(request: Request, genome_uuid: str):
         ftplinks = FTPLinks(**ftplinks_no_regulation)
         return responses.JSONResponse(ftplinks.model_dump().get("links", []))
     except Exception as ex:
-        logger.debug(ex)
+        logging.error(ex)
         return response_error_handler({"status": 500})
 
 
@@ -185,7 +184,7 @@ async def explain_genome(request: Request, slug: str):
             )
             response_data = responses.JSONResponse(response_dict, status_code=200)
     except Exception as ex:
-        logger.debug(ex)
+        logging.error(ex)
         return response_error_handler({"status": 500})
     return response_data
 
@@ -205,7 +204,7 @@ async def get_genome_ftplinks(request: Request, genome_uuid: str, region_name: s
         if error_type.index("missing") == 0:
             return response_error_handler({"status": 404})
     except Exception as ex:
-        logger.debug(ex)
+        logging.error(ex)
         return response_error_handler({"status": 500})
 
 

@@ -14,7 +14,6 @@ from core.logging import InterceptHandler
 from core.config import ASSEMBLY_URLS
 
 logging.getLogger().handlers = [InterceptHandler()]
-from loguru import logger
 
 
 class Type(BaseModel):
@@ -97,7 +96,7 @@ class GenomeDetails(BaseModel):
     number_of_genomes_in_group: int = Field(alias="relatedAssembliesCount", default=1)
 
     @validator("taxonomy_id", "species_taxonomy_id", pre=True)
-    def concert_int_to_str(cls, value):
+    def convert_int_to_str(cls, value):
         return str(value)
 
     @validator("annotation_date", pre=True)

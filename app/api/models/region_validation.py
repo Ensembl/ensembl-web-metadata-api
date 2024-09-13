@@ -11,12 +11,15 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-
+import logging
 from pydantic import BaseModel, model_serializer, Field, root_validator
 from typing import Any, Optional
-from loguru import logger
+
 from core.config import GRPC_HOST, GRPC_PORT
 from api.resources.grpc_client import GRPCClient
+from core.logging import InterceptHandler
+
+logging.getLogger().handlers = [InterceptHandler()]
 
 grpc_client = GRPCClient(GRPC_HOST, GRPC_PORT)
 
@@ -51,7 +54,7 @@ class RegionValidation(BaseModel):
         except IndexError:
             pass
         except Exception as ex:
-            logger.debug(ex)
+            logging.error(ex)
         return region, start, end
 
     def _validate_region_name(self):
@@ -73,7 +76,7 @@ class RegionValidation(BaseModel):
                     else:
                         self._region_code = "non-chormosome"
             except Exception as ex:
-                logger.debug(ex)
+                logging.error(ex)
                 return False
 
             try:

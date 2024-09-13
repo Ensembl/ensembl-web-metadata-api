@@ -34,5 +34,5 @@ ENV PORT 8014
 EXPOSE 8014
 
 # Run uvicorn server
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8014", "--reload"]
+# CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8014", "--reload"]
 

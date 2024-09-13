@@ -56,6 +56,7 @@ FTP_BASE_URL: str = config(
 )
 
 # logging configuration
+logging.basicConfig(level=logging.DEBUG)
 LOGGING_LEVEL = logging.DEBUG if DEBUG else logging.INFO
 LOGGERS = ("uvicorn.asgi", "uvicorn.access")
 
