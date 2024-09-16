@@ -239,5 +239,5 @@ async def get_genome_dataset_attributes(
         return response_data
 
     except Exception as ex:
-        logger.debug(ex)
+        logging.error(ex)
         return response_error_handler({"status": 500})
