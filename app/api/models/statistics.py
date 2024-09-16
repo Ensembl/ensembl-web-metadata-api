@@ -223,10 +223,9 @@ class GenomeStatistics(BaseModel):
         try:
             for stats_item in data["_raw_data"]:
                 try:
-                    data["_compiled_data"][stats_item["name"]] = stats_item[
-                        "statisticValue"
-                    ]
+                    data["_compiled_data"][stats_item["name"]] = stats_item.get("statisticValue", None)
                 except KeyError as ke:
+                    logging.error(ke)
                     logging.error(stats_item["name"], ke)
         except Exception as ex:
             logging.error("Error : ", ex)
