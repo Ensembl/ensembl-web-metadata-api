@@ -25,7 +25,7 @@ from api.models.checksums import Checksum
 from api.models.statistics import GenomeStatistics, ExampleObjectList
 from api.models.popular_species import PopularSpeciesGroup
 from api.models.karyotype import Karyotype
-from api.models.genome import GenomeDetails, DatasetAttributes
+from api.models.genome import BriefGenomeDetails, GenomeDetails, DatasetAttributes
 from api.models.ftplinks import FTPLinks
 
 from core.config import GRPC_HOST, GRPC_PORT
@@ -167,9 +167,9 @@ async def explain_genome(request: Request, slug: str):
         genome_uuid = grpc_client.get_genome_uuid_from_tag(slug)
         if not genome_uuid:
             genome_uuid = slug
-        genome_details_dict = MessageToDict(grpc_client.get_genome_details(genome_uuid))
+        genome_details_dict = MessageToDict(grpc_client.get_genome_details(genome_uuid, get_attributes=False))
         if genome_details_dict:
-            genome_details = GenomeDetails(**genome_details_dict)
+            genome_details = BriefGenomeDetails(**genome_details_dict)
             response_dict = genome_details.model_dump(
                 include={
                     "genome_id": True,

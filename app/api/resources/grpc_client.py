@@ -48,12 +48,12 @@ class GRPCClient:
         toplevel_stats_by_uuid = self.stub.GetTopLevelStatisticsByUUID(genome_request)
         return toplevel_stats_by_uuid
 
-    def get_genome_details(self, genome_uuid: str):
+    def get_genome_details(self, genome_uuid: str, get_attributes: bool = True):
         # Create request
         request_class = self.reflector.message_class(
             "ensembl_metadata.GenomeUUIDRequest"
         )
-        request = request_class(genome_uuid=genome_uuid)
+        request = request_class(genome_uuid=genome_uuid, get_attributes=get_attributes)
 
         # Get response
         response = self.stub.GetGenomeByUUID(request)
