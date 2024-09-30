@@ -48,15 +48,37 @@ class GRPCClient:
         toplevel_stats_by_uuid = self.stub.GetTopLevelStatisticsByUUID(genome_request)
         return toplevel_stats_by_uuid
 
-    def get_genome_details(self, genome_uuid: str, get_attributes: bool = True):
+    def get_genome_details(self, genome_uuid: str):
         # Create request
         request_class = self.reflector.message_class(
             "ensembl_metadata.GenomeUUIDRequest"
         )
-        request = request_class(genome_uuid=genome_uuid, get_attributes=get_attributes)
+        request = request_class(genome_uuid=genome_uuid)
 
         # Get response
         response = self.stub.GetGenomeByUUID(request)
+
+        return response
+
+    def get_brief_genome_details(self, genome_uuid: str):
+        # Create request
+        request_class = self.reflector.message_class(
+            "ensembl_metadata.GenomeUUIDRequest"
+        )
+        request = request_class(genome_uuid=genome_uuid)
+
+        # Get response
+        response = self.stub.GetBriefGenomeDetailsByUUID(request)
+
+        return response
+
+    def get_attributes_info(self, genome_uuid: str):
+        request_class = self.reflector.message_class(
+            "ensembl_metadata.GenomeUUIDRequest"
+        )
+        request = request_class(genome_uuid=genome_uuid)
+
+        response = self.stub.GetAttributesByGenomeUUID(request)
 
         return response
 
@@ -94,16 +116,6 @@ class GRPCClient:
             genome_seq_region_request
         )
         return genome_seq_region
-
-    def get_genome_uuid_from_tag(self, tag):
-        request_class = self.reflector.message_class(
-            "ensembl_metadata.GenomeTagRequest"
-        )
-        uuid_request = request_class(genome_tag=tag)
-        genome_uuid_data = self.stub.GetGenomeUUIDByTag(uuid_request)
-        if genome_uuid_data.genome_uuid:
-            return genome_uuid_data.genome_uuid
-        return None
 
     def get_ftplinks(self, genome_uuid: str):
         request_class = self.reflector.message_class("ensembl_metadata.FTPLinksRequest")

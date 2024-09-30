@@ -101,10 +101,10 @@ def validate_region(request: Request, genome_id: str, location: str):
 @router.get("/genome/{genome_id}/example_objects", name="example_objects")
 def example_objects(request: Request, genome_id: str):
     try:
-        genome_details_dict = MessageToDict(grpc_client.get_genome_details(genome_id))
-        if genome_details_dict:
+        attributes_info = MessageToDict(grpc_client.get_attributes_info(genome_id))
+        if attributes_info:
             example_objects = ExampleObjectList(
-                example_objects=genome_details_dict["attributesInfo"]
+                example_objects=attributes_info
             )
             response_data = responses.JSONResponse(
                 example_objects.model_dump()["example_objects"]
@@ -159,15 +159,12 @@ async def get_genome_ftplinks(request: Request, genome_uuid: str):
         return response_error_handler({"status": 500})
 
 
-@router.get("/genome/{slug}/explain", name="genome_explain")
-async def explain_genome(request: Request, slug: str):
-    not_found_response = {"message": "Could not explain {}".format(slug)}
+@router.get("/genome/{genome_id_or_slug}/explain", name="genome_explain")
+async def explain_genome(request: Request, genome_id_or_slug: str):
+    not_found_response = {"message": "Could not explain {}".format(genome_id_or_slug)}
     response_data = responses.JSONResponse(not_found_response, status_code=404)
     try:
-        genome_uuid = grpc_client.get_genome_uuid_from_tag(slug)
-        if not genome_uuid:
-            genome_uuid = slug
-        genome_details_dict = MessageToDict(grpc_client.get_genome_details(genome_uuid, get_attributes=False))
+        genome_details_dict = MessageToDict(grpc_client.get_brief_genome_details(genome_id_or_slug))
         if genome_details_dict:
             genome_details = BriefGenomeDetails(**genome_details_dict)
             response_dict = genome_details.model_dump(
