@@ -60,12 +60,12 @@ class GRPCClient:
 
         return response
 
-    def get_brief_genome_details(self, genome_uuid: str):
+    def get_brief_genome_details(self, genome_uuid_or_slug: str):
         # Create request
         request_class = self.reflector.message_class(
             "ensembl_metadata.GenomeUUIDRequest"
         )
-        request = request_class(genome_uuid=genome_uuid)
+        request = request_class(genome_uuid=genome_uuid_or_slug)
 
         # Get response
         response = self.stub.GetBriefGenomeDetailsByUUID(request)
