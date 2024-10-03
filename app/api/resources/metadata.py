@@ -104,7 +104,7 @@ def example_objects(request: Request, genome_id: str):
         attributes_info = MessageToDict(grpc_client.get_attributes_info(genome_id))
         if attributes_info:
             example_objects = ExampleObjectList(
-                example_objects=attributes_info
+                example_objects=attributes_info["attributesInfo"]
             )
             response_data = responses.JSONResponse(
                 example_objects.model_dump()["example_objects"]
