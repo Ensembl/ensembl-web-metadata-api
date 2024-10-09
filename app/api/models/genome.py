@@ -63,7 +63,7 @@ class AnnotationProvider(BaseModel):
         return url
 
 
-class BriefGenomeDetails(BaseModel):
+class BaseGenomeDetails(BaseModel):
     genome_id: str = Field(alias="genomeUuid")
     genome_tag: Optional[str] = Field(
         alias=AliasChoices(
@@ -80,7 +80,16 @@ class BriefGenomeDetails(BaseModel):
     assembly: AssemblyInGenome = None
 
 
-class GenomeDetails(BriefGenomeDetails):
+class BriefGenomeDetails(BaseGenomeDetails):
+    """
+    As mentioned in this PR: https://github.com/Ensembl/ensembl-web-metadata-api/pull/60
+    We're planning to extend the BriefGenomeDetails class later but for now,
+    we will leave it as an empty extension of BaseGenomeDetails
+    """
+    pass
+
+
+class GenomeDetails(BaseGenomeDetails):
     taxonomy_id: str = Field(alias=AliasPath("organism", "taxonomyId"))
     species_taxonomy_id: str = Field(alias=AliasPath("organism", "speciesTaxonomyId"))
     assembly_provider: AssemblyProvider = None
