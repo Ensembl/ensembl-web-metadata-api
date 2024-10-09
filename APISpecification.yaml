@@ -11,13 +11,13 @@ tags:
   - name: api
     description: Ensembl Web Metadata API
 paths:
-  /api/metadata/genome/{slug}/explain:
+  /api/metadata/genome/{genome_id_or_slug}/explain:
     get:
       description: Satisfies client's need to disambiguate a string that is part of url pathname
         and that can be either a genome id, or a genome tag. Genome ids are used to communicate
-        whth Ensembl apis; but genome tag only serves the purpose of keeping the url pretty and stable.
+        with Ensembl apis; but genome tag only serves the purpose of keeping the url pretty and stable.
       parameters:
-        - name: slug
+        - name: genome_id_or_slug
           in: path
           required: true
           schema:

@@ -60,6 +60,28 @@ class GRPCClient:
 
         return response
 
+    def get_brief_genome_details(self, genome_uuid_or_slug: str):
+        # Create request
+        request_class = self.reflector.message_class(
+            "ensembl_metadata.GenomeUUIDRequest"
+        )
+        request = request_class(genome_uuid=genome_uuid_or_slug)
+
+        # Get response
+        response = self.stub.GetBriefGenomeDetailsByUUID(request)
+
+        return response
+
+    def get_attributes_info(self, genome_uuid: str):
+        request_class = self.reflector.message_class(
+            "ensembl_metadata.GenomeUUIDRequest"
+        )
+        request = request_class(genome_uuid=genome_uuid)
+
+        response = self.stub.GetAttributesByGenomeUUID(request)
+
+        return response
+
     def get_popular_species(self):
         request_class = self.reflector.message_class(
             "ensembl_metadata.OrganismsGroupRequest"
@@ -94,16 +116,6 @@ class GRPCClient:
             genome_seq_region_request
         )
         return genome_seq_region
-
-    def get_genome_uuid_from_tag(self, tag):
-        request_class = self.reflector.message_class(
-            "ensembl_metadata.GenomeTagRequest"
-        )
-        uuid_request = request_class(genome_tag=tag)
-        genome_uuid_data = self.stub.GetGenomeUUIDByTag(uuid_request)
-        if genome_uuid_data.genome_uuid:
-            return genome_uuid_data.genome_uuid
-        return None
 
     def get_ftplinks(self, genome_uuid: str):
         request_class = self.reflector.message_class("ensembl_metadata.FTPLinksRequest")

@@ -63,7 +63,7 @@ class AnnotationProvider(BaseModel):
         return url
 
 
-class GenomeDetails(BaseModel):
+class BaseGenomeDetails(BaseModel):
     genome_id: str = Field(alias="genomeUuid")
     genome_tag: Optional[str] = Field(
         alias=AliasChoices(
@@ -71,8 +71,6 @@ class GenomeDetails(BaseModel):
         ),
         default=None,
     )
-    taxonomy_id: str = Field(alias=AliasPath("organism", "taxonomyId"))
-    species_taxonomy_id: str = Field(alias=AliasPath("organism", "speciesTaxonomyId"))
     common_name: str = Field(alias=AliasPath("organism", "commonName"), default=None)
     scientific_name: str = Field(alias=AliasPath("organism", "scientificName"))
     type: Optional[Type] = None
@@ -80,6 +78,20 @@ class GenomeDetails(BaseModel):
         alias=AliasPath("assembly", "isReference"), default=False
     )
     assembly: AssemblyInGenome = None
+
+
+class BriefGenomeDetails(BaseGenomeDetails):
+    """
+    As mentioned in this PR: https://github.com/Ensembl/ensembl-web-metadata-api/pull/60
+    We're planning to extend the BriefGenomeDetails class later but for now,
+    we will leave it as an empty extension of BaseGenomeDetails
+    """
+    pass
+
+
+class GenomeDetails(BaseGenomeDetails):
+    taxonomy_id: str = Field(alias=AliasPath("organism", "taxonomyId"))
+    species_taxonomy_id: str = Field(alias=AliasPath("organism", "speciesTaxonomyId"))
     assembly_provider: AssemblyProvider = None
     assembly_level: str = Field(alias=AliasPath("attributesInfo", "assemblyLevel"))
     assembly_date: str = Field(
