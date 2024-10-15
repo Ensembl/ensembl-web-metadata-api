@@ -102,7 +102,12 @@ class GenomeDetails(BaseGenomeDetails):
         alias=AliasPath("attributesInfo", "genebuildMethodDisplay"), default=None
     )
     annotation_version: str = Field(
-        alias=AliasPath("attributesInfo", "genebuildVersion"), default=None
+        # TODO: remove genebuildVersion after the metadata DB is updated
+        alias=AliasChoices(
+            AliasPath("attributesInfo", "genebuildProviderVersion"),
+            AliasPath("attributesInfo", "genebuildVersion")
+        ),
+        default=None
     )
     annotation_date: str = Field(alias="created", default=None)
     number_of_genomes_in_group: int = Field(alias="relatedAssembliesCount", default=1)
