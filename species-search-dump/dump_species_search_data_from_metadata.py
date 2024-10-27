@@ -111,6 +111,8 @@ def dump_species():
 
     db = config["database"]
     
+    print(f"Host:{db['host']}")
+    
     #We can make this generic later if needed by inspecting properties of the model that lack a default
     broken_data_fix = {}
     if config["genebuild_method"]:
@@ -167,7 +169,8 @@ def dump_species():
     from genome_search as gs 
     join genome as g on (gs.genome_uuid = g.genome_uuid) 
     join genome_release as gr on (g.genome_id = gr.genome_id)
-    where gr.is_current = 1
+    join ensembl_release as er on (gr.release_id = er.release_id)
+    where gr.is_current = 1 and er.status = "Released"
     """
 
     mycursor.execute(query)
@@ -202,7 +205,7 @@ def dump_species():
     species_list = SpeciesList(
         species_list=species_data,
         name="ensemblNext",
-        release="0.110.2",
+        release="0.110.3",
         entry_count=len(species_data),
     )
 
