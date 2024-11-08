@@ -18,9 +18,7 @@ from core.config import FTP_BASE_URL
 
 
 class FTPLink(BaseModel):
-    dataset: Literal[
-        "genebuild", "assembly", "homologies", "regulation", "variation"
-    ] = Field(..., validation_alias="datasetType")
+    dataset: str = Field(..., validation_alias="datasetType")
     url: str = Field(..., validation_alias="path")
 
     @field_serializer("url")
