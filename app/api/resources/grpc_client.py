@@ -12,6 +12,7 @@
    limitations under the License.
 """
 
+import logging
 import grpc
 from google.protobuf.json_format import MessageToDict
 from yagrc import reflector as yagrc_reflector
@@ -148,3 +149,12 @@ class GRPCClient:
                 genome_uuid=genome_uuid, dataset_type=dataset_type
             )
         return self.stub.GetAttributesValuesByUUID(dataset_attributes)
+
+    def get_genome_by_specific_keyword(self, assembly_accession_id: str):
+        # Create request
+        request_class = self.reflector.message_class(
+            "ensembl_metadata.GenomeBySpecificKeywordRequest"
+        )
+        request = request_class(assembly_accession_id=assembly_accession_id)
+        response = self.stub.GetGenomesBySpecificKeyword(request)
+        return response
