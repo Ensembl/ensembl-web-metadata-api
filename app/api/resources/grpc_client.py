@@ -150,11 +150,10 @@ class GRPCClient:
             )
         return self.stub.GetAttributesValuesByUUID(dataset_attributes)
 
-    def get_genome_by_specific_keyword(self, assembly_accession_id: str):
-        # Create request
+    def get_genome_by_specific_keyword(self, **kwargs):
         request_class = self.reflector.message_class(
             "ensembl_metadata.GenomeBySpecificKeywordRequest"
         )
-        request = request_class(assembly_accession_id=assembly_accession_id)
+        request = request_class(**kwargs)
         response = self.stub.GetGenomesBySpecificKeyword(request)
         return response

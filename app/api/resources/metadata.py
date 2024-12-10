@@ -240,12 +240,15 @@ async def get_genome_dataset_attributes(
         logging.error(ex)
         return response_error_handler({"status": 500})
 
-@router.get("/genomeid/{assembly_accession_id}", name="genome_id")
-async def get_uuid(request: Request, assembly_accession_id: str):
+@router.get("/genome")
+async def get_genome_by_keyword(request: Request, assembly_accession_id: str):
+    if (assembly_accession_id == ""):
+        not_found_response = {"message": "missing assembly_accession_id"}
+        return responses.JSONResponse(not_found_response, status_code=404)
     try:
-        genome_array = grpc_client.get_genome_by_specific_keyword(assembly_accession_id)
+        genome_response = grpc_client.get_genome_by_specific_keyword(assembly_accession_id=assembly_accession_id)
         latest_genome_by_keyword_object = GenomeByKeyword()
-        for arr in genome_array:
+        for arr in genome_response:
             arr = MessageToDict(arr)
             genome_by_keyword_object = GenomeByKeyword(**arr)
             if (genome_by_keyword_object.release_version > latest_genome_by_keyword_object.release_version):
@@ -254,4 +257,3 @@ async def get_uuid(request: Request, assembly_accession_id: str):
     except Exception as ex:
         logging.error(ex)
         return response_error_handler({"status": 500})
-    return response_data
