@@ -240,7 +240,7 @@ async def get_genome_dataset_attributes(
         logging.error(ex)
         return response_error_handler({"status": 500})
 
-@router.get("/genome")
+@router.get("/genomeid")
 async def get_genome_by_keyword(request: Request, assembly_accession_id: str):
     if (assembly_accession_id == ""):
         not_found_response = {"message": "missing assembly_accession_id"}
