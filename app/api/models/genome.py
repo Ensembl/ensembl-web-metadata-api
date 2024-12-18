@@ -156,3 +156,8 @@ class DatasetAttribute(BaseModel):
 class DatasetAttributes(BaseModel):
     attributes: list[DatasetAttribute]
     release_version: float = Field(alias="releaseVersion")
+
+class GenomeByKeyword(BaseModel):
+    genome_uuid: str = Field(alias="genomeUuid", default="")
+    release_version: float = Field(alias=AliasPath("release", "releaseVersion"), default=0)
+    genome_tag: str = Field(alias=AliasPath("assembly", "urlName"), default="")

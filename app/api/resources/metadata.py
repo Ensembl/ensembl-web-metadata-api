@@ -14,6 +14,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import json
 import logging
 from typing import Annotated
 
@@ -25,7 +26,7 @@ from api.models.checksums import Checksum
 from api.models.statistics import GenomeStatistics, ExampleObjectList
 from api.models.popular_species import PopularSpeciesGroup
 from api.models.karyotype import Karyotype
-from api.models.genome import BriefGenomeDetails, GenomeDetails, DatasetAttributes
+from api.models.genome import BriefGenomeDetails, GenomeDetails, DatasetAttributes, GenomeByKeyword
 from api.models.ftplinks import FTPLinks
 
 from core.config import GRPC_HOST, GRPC_PORT
@@ -234,6 +235,26 @@ async def get_genome_dataset_attributes(
             dataset_attributes_object.dict(), status_code=200
         )
         return response_data
+
+    except Exception as ex:
+        logging.error(ex)
+        return response_error_handler({"status": 500})
+
+@router.get("/genomeid")
+async def get_genome_by_keyword(request: Request, assembly_accession_id: str):
+    try:
+        genome_response = grpc_client.get_genome_by_specific_keyword(assembly_accession_id=assembly_accession_id)
+        latest_genome_by_keyword_object = GenomeByKeyword()
+        for arr in genome_response:
+            arr = MessageToDict(arr)
+            genome_by_keyword_object = GenomeByKeyword(**arr)
+            if (genome_by_keyword_object.release_version > latest_genome_by_keyword_object.release_version):
+                latest_genome_by_keyword_object = genome_by_keyword_object
+        if (latest_genome_by_keyword_object.genome_uuid):
+            return responses.JSONResponse(latest_genome_by_keyword_object.model_dump())
+        else:            
+            logging.error(f"Assembly accession id {assembly_accession_id} not found")
+            return response_error_handler({"status": 404})
 
     except Exception as ex:
         logging.error(ex)
