@@ -244,15 +244,13 @@ async def get_genome_dataset_attributes(
 async def get_genome_by_keyword(request: Request, assembly_accession_id: str):
     try:
         genome_response = grpc_client.get_genome_by_specific_keyword(assembly_accession_id=assembly_accession_id)
-        has_genome = False
         latest_genome_by_keyword_object = GenomeByKeyword()
         for arr in genome_response:
-            has_genome = True
             arr = MessageToDict(arr)
             genome_by_keyword_object = GenomeByKeyword(**arr)
             if (genome_by_keyword_object.release_version > latest_genome_by_keyword_object.release_version):
                 latest_genome_by_keyword_object = genome_by_keyword_object
-        if (has_genome):
+        if (latest_genome_by_keyword_object.genome_uuid):
             return latest_genome_by_keyword_object
         else:            
             logging.error(f"Assembly accession id {assembly_accession_id} not found")
