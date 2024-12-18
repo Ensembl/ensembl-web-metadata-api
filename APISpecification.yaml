@@ -285,14 +285,14 @@ paths:
           $ref: '#/components/responses/500InternalServerError'
   /api/metadata/genomeid/:
     get:
-      summary: Returns a list of genome uuids and its release version
+      summary: Returns the latest genome object
       parameters:
       - name: assembly_accession_id
         in: query
         required: true
         schema:
           type: string
-          example: GCA_009914755.4
+          example: GCA_000001405.29
       responses:
         '200':
           description: successful operation
@@ -306,18 +306,17 @@ paths:
 components:
   schemas:
     GenomeIDFromAssemblyAccessionResponse:
-      type: array
-      items:
-        $ref: '#/components/schemas/GenomeIDObject'
-    GenomeIdObject:
       type: object
       properties:
         genome_id:
           type: string
-          example: "4c07817b-c7c5-463f-8624-982286bc4355"
+          example: "a7335667-93e7-11ec-a39d-005056b38ce3"
         release_version:
           type: number
           example: "110"
+        genome_tag:
+          type: string
+          example: "grch38"
     BriefGenomeDetails:
       type: object
       properties:

@@ -251,7 +251,7 @@ async def get_genome_by_keyword(request: Request, assembly_accession_id: str):
             if (genome_by_keyword_object.release_version > latest_genome_by_keyword_object.release_version):
                 latest_genome_by_keyword_object = genome_by_keyword_object
         if (latest_genome_by_keyword_object.genome_uuid):
-            return latest_genome_by_keyword_object
+            return responses.JSONResponse(latest_genome_by_keyword_object.model_dump())
         else:            
             logging.error(f"Assembly accession id {assembly_accession_id} not found")
             return response_error_handler({"status": 404})
