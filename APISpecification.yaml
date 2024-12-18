@@ -283,10 +283,41 @@ paths:
                     example: 'Could not find details for genome 0cbc227a-7179-43c2-8061-a50d94423c4d and dataset homologies.'
         '500':
           $ref: '#/components/responses/500InternalServerError'
+  /api/metadata/genomeid/:
+    get:
+      summary: Returns a list of genome uuids and its release version
+      parameters:
+      - name: assembly_accession_id
+        in: query
+        required: true
+        schema:
+          type: string
+          example: GCA_009914755.4
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenomeIDFromAssemblyAccessionResponse'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
 
 components:
   schemas:
-
+    GenomeIDFromAssemblyAccessionResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/GenomeIDObject'
+    GenomeIdObject:
+      type: object
+      properties:
+        genome_id:
+          type: string
+          example: "4c07817b-c7c5-463f-8624-982286bc4355"
+        release_version:
+          type: number
+          example: "110"
     BriefGenomeDetails:
       type: object
       properties:
