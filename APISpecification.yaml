@@ -300,6 +300,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GenomeIDFromAssemblyAccessionResponse'
+        '404':
+          $ref: '#/components/responses/404NotFound'
         '500':
           $ref: '#/components/responses/500InternalServerError'
 
