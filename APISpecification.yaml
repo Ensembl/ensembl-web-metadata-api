@@ -310,7 +310,7 @@ components:
     GenomeIDFromAssemblyAccessionResponse:
       type: object
       properties:
-        genome_id:
+        genome_uuid:
           type: string
           example: "a7335667-93e7-11ec-a39d-005056b38ce3"
         release_version:
