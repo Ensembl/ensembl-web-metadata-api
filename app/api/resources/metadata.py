@@ -261,7 +261,7 @@ async def get_genome_by_keyword(request: Request, assembly_accession_id: str):
         logging.error(ex)
         return response_error_handler({"status": 500})
 
-@router.get("/genome/{genome_uuid}/vep/file_path")
+@router.get("/genome/{genome_uuid}/vep/file_paths")
 async def get_vep_file_paths(
     request: Request,
     genome_uuid: str,
