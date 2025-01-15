@@ -157,3 +157,8 @@ class GRPCClient:
         request = request_class(**kwargs)
         response = self.stub.GetGenomesBySpecificKeyword(request)
         return response
+
+    def get_vep_file_paths(self, genome_uuid: str):
+        request_class = self.reflector.message_class("ensembl_metadata.GenomeUUIDOnlyRequest")
+        vep_file_paths_request = request_class(genome_uuid=genome_uuid)
+        return self.stub.GetVepFilePathsByUUID(vep_file_paths_request)
