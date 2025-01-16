@@ -279,10 +279,9 @@ async def get_vep_file_paths(
             )
 
         vep_file_paths_object = VepFilePaths(**vep_file_paths)
-        response_data = responses.JSONResponse(
+        return responses.JSONResponse(
             vep_file_paths_object.dict(), status_code=200
         )
-        return response_data
 
     except Exception as ex:
         logging.error(ex)
