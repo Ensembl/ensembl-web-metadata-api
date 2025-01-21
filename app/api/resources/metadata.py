@@ -28,6 +28,7 @@ from api.models.popular_species import PopularSpeciesGroup
 from api.models.karyotype import Karyotype
 from api.models.genome import BriefGenomeDetails, GenomeDetails, DatasetAttributes, GenomeByKeyword
 from api.models.ftplinks import FTPLinks
+from api.models.vep import VepFilePaths
 
 from core.config import GRPC_HOST, GRPC_PORT
 from core.logging import InterceptHandler
@@ -255,6 +256,32 @@ async def get_genome_by_keyword(request: Request, assembly_accession_id: str):
         else:            
             logging.error(f"Assembly accession id {assembly_accession_id} not found")
             return response_error_handler({"status": 404})
+
+    except Exception as ex:
+        logging.error(ex)
+        return response_error_handler({"status": 500})
+
+@router.get("/genome/{genome_uuid}/vep/file_paths")
+async def get_vep_file_paths(
+    request: Request,
+    genome_uuid: str,
+):
+    try:
+        vep_file_paths = MessageToDict(
+            grpc_client.get_vep_file_paths(genome_uuid=genome_uuid)
+        )
+        if len(vep_file_paths) == 0:
+            return responses.JSONResponse(
+                {
+                    "message": f"Could not find VEP file paths for genome {genome_uuid}."
+                },
+                status_code=404,
+            )
+
+        vep_file_paths_object = VepFilePaths(**vep_file_paths)
+        return responses.JSONResponse(
+            vep_file_paths_object.dict(), status_code=200
+        )
 
     except Exception as ex:
         logging.error(ex)
