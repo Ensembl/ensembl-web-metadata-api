@@ -178,6 +178,7 @@ async def explain_genome(request: Request, genome_id_or_slug: str):
                     "common_name": True,
                     "is_reference": True,
                     "assembly": {"name", "accession_id"},
+                    "release": {"release_date", "release_label", "release_type", "release_version"},
                     "type": True,
                 }
             )
@@ -286,3 +287,38 @@ async def get_vep_file_paths(
     except Exception as ex:
         logging.error(ex)
         return response_error_handler({"status": 500})
+
+
+@router.get("/releases", name="get_releases")
+async def get_releases(
+    request: Request,
+    site_name: list[str] = Query(None, description="Filter by site name(s)"),
+    release_name: list[str] = Query(None, description="Filter by release name(s)"),
+    current_only: bool = Query(False, description="Only current releases")
+):
+    try:
+        releases_stream = grpc_client.get_release(
+            site_name=site_name,
+            release_label=release_name,
+            current_only=current_only
+        )
+
+        releases = []
+        for release in releases_stream:
+            release_dict = MessageToDict(release)
+            releases.append(release_dict)
+
+        if not releases:
+            return responses.JSONResponse(
+                {"message": "No releases found matching criteria"},
+                status_code=404
+            )
+
+        return responses.JSONResponse(releases)
+
+    except Exception as ex:
+        logging.error(f"Error fetching releases: {ex}")
+        return responses.JSONResponse(
+            {"message": "Internal server error"},
+            status_code=500
+        )
