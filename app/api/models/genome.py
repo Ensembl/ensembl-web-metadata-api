@@ -28,10 +28,10 @@ class Type(BaseModel):
 
 
 class Release(BaseModel):
-    release_label: str = Field(alias="releaseLabel")
+    release_name: str = Field(alias="releaseLabel")
     release_date: str = Field(alias="releaseDate")
     release_type: str = Field(alias="releaseType")
-    release_version: float = Field(alias="releaseVersion")
+    is_current: bool = Field(alias="isCurrent", default=False)
 
 
 class AssemblyInGenome(BaseModel):

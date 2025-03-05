@@ -348,7 +348,7 @@ paths:
       description: Retrieve release data with filtering capabilities
       operationId: get_releases
       parameters:
-        - name: release_label
+        - name: release_name
           in: query
           description: Filter by one or more release labels
           required: false
@@ -380,14 +380,12 @@ paths:
                 items:
                   $ref: '#/components/schemas/Release'
               example:
-                - release_version: 114.0
-                  release_date: "2025-06-15"
-                  release_label: "2025-06"
+                - release_date: "2025-06-15"
+                  release_name: "2025-06"
                   release_type: "integrated"
                   is_current: true
-                - release_version: 110.1
-                  release_date: "2024-01-10"
-                  release_label: "2024-01"
+                - release_date: "2024-01-10"
+                  release_name: "2024-01"
                   release_type: "integrated"
                   is_current: false
         '404':
@@ -446,16 +444,13 @@ components:
         release:
           type: object
           properties:
-            release_version:
-              type: number
-              example: 110.1
             release_date:
               type: string
               example: 2023-10-18
             release_type:
               type: string
               example: partial
-            release_label:
+            release_name:
               type: string
               example: 2023-10-18
             is_current:
@@ -1081,15 +1076,11 @@ components:
     Release:
       type: object
       properties:
-        release_version:
-          type: number
-          format: double
-          example: 110.1
         release_date:
           type: string
           format: date
           example: "2024-03-15"
-        release_label:
+        release_name:
           type: string
           example: "2023-10-18"
         release_type:
@@ -1100,9 +1091,8 @@ components:
           type: boolean
           example: true
       required:
-        - release_version
         - release_date
-        - release_label
+        - release_name
         - release_type
         - is_current
   responses:

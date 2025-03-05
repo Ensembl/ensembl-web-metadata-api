@@ -178,7 +178,7 @@ async def explain_genome(request: Request, genome_id_or_slug: str):
                     "common_name": True,
                     "is_reference": True,
                     "assembly": {"name", "accession_id"},
-                    "release": {"release_date", "release_label", "release_type", "release_version"},
+                    "release": {"release_date", "release_name", "release_type", "is_current"},
                     "type": True,
                 }
             )
@@ -313,10 +313,9 @@ async def get_releases(
             for release in releases_list:
                 response_dict = release.model_dump(
                     include={
-                        "release_label": True,
+                        "release_name": True,
                         "release_date": True,
                         "release_type": True,
-                        "release_version": True,
                         "is_current": True,
                     }
                 )
