@@ -372,34 +372,15 @@ paths:
             value: true
       responses:
         '200':
-          description: Successful operation
+          description: successful operation
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Release'
-              example:
-                - release_date: "2025-06-15"
-                  release_name: "2025-06"
-                  release_type: "integrated"
-                  is_current: true
-                - release_date: "2024-01-10"
-                  release_name: "2024-01"
-                  release_type: "integrated"
-                  is_current: false
+                $ref: '#/components/schemas/Release'
         '404':
-          description: No releases found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NotFoundError'
+          $ref: '#/components/responses/404NotFound'
         '500':
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServerError'
+          $ref: '#/components/responses/500InternalServerError'
 
 components:
   schemas:
@@ -442,20 +423,7 @@ components:
               type: string
               example: GRCh38.p13
         release:
-          type: object
-          properties:
-            release_date:
-              type: string
-              example: 2023-10-18
-            release_type:
-              type: string
-              example: partial
-            release_name:
-              type: string
-              example: 2023-10-18
-            is_current:
-              type: boolean
-              example: true
+          $ref: '#/components/schemas/Release'
         type:
           $ref: '#/components/schemas/SpeciesTypeInGenome'
           nullable: true
