@@ -26,7 +26,7 @@ from api.models.checksums import Checksum
 from api.models.statistics import GenomeStatistics, ExampleObjectList
 from api.models.popular_species import PopularSpeciesGroup
 from api.models.karyotype import Karyotype
-from api.models.genome import BriefGenomeDetails, GenomeDetails, DatasetAttributes, GenomeByKeyword
+from api.models.genome import BriefGenomeDetails, GenomeDetails, DatasetAttributes, GenomeByKeyword, Release
 from api.models.ftplinks import FTPLinks
 from api.models.vep import VepFilePaths
 
@@ -292,33 +292,45 @@ async def get_vep_file_paths(
 @router.get("/releases", name="get_releases")
 async def get_releases(
     request: Request,
-    site_name: list[str] = Query(None, description="Filter by site name(s)"),
     release_name: list[str] = Query(None, description="Filter by release name(s)"),
     current_only: bool = Query(False, description="Only current releases")
 ):
     try:
         releases_stream = grpc_client.get_release(
-            site_name=site_name,
             release_label=release_name,
             current_only=current_only
         )
 
-        releases = []
-        for release in releases_stream:
-            release_dict = MessageToDict(release)
-            releases.append(release_dict)
+        releases_list = []
+        for release_msg in releases_stream:
+            release_dict = MessageToDict(release_msg)
+            release = Release(**release_dict)
+            releases_list.append(release)
 
-        if not releases:
-            return responses.JSONResponse(
+        if releases_list:
+            # Serialize each release into the desired format
+            response_list = []
+            for release in releases_list:
+                response_dict = release.model_dump(
+                    include={
+                        "release_label": True,
+                        "release_date": True,
+                        "release_type": True,
+                        "release_version": True,
+                        "is_current": True,
+                    }
+                )
+                response_list.append(response_dict)
+            response_data = responses.JSONResponse(response_list, status_code=200)
+        else:
+            response_data = responses.JSONResponse(
                 {"message": "No releases found matching criteria"},
                 status_code=404
             )
 
-        return responses.JSONResponse(releases)
+    except Exception as e:
+        logging.error(e)
+        error_response = {"message": f"An error occurred: {str(e)}"}
+        response_data = responses.JSONResponse(error_response, status_code=500)
 
-    except Exception as ex:
-        logging.error(f"Error fetching releases: {ex}")
-        return responses.JSONResponse(
-            {"message": "Internal server error"},
-            status_code=500
-        )
+    return response_data

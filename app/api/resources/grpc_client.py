@@ -152,9 +152,7 @@ class GRPCClient:
         vep_file_paths_request = request_class(genome_uuid=genome_uuid)
         return self.stub.GetVepFilePathsByUUID(vep_file_paths_request)
 
-    def get_release(self, site_name: list[str], release_label: list[str], current_only: bool):
+    def get_release(self, release_label: list[str], current_only: bool):
         request_class = self.reflector.message_class("ensembl_metadata.ReleaseRequest")
-        request = request_class(
-            site_name=site_name, release_label=release_label, current_only=current_only
-        )
+        request = request_class(release_label=release_label, current_only=current_only)
         return self.stub.GetRelease(request)

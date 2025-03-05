@@ -348,18 +348,6 @@ paths:
       description: Retrieve release data with filtering capabilities
       operationId: get_releases
       parameters:
-        - name: site_name
-          in: query
-          description: Filter by one or more site names
-          required: false
-          schema:
-            type: array
-            items:
-              type: string
-          style: form
-          explode: false
-          example:
-            value: [ "beta", "plants" ]
         - name: release_label
           in: query
           description: Filter by one or more release labels
@@ -397,17 +385,11 @@ paths:
                   release_label: "2025-06"
                   release_type: "integrated"
                   is_current: true
-                  site_name: "Ensembl"
-                  site_label: "Ensembl Beta"
-                  site_uri: "https://beta.ensembl.org"
                 - release_version: 110.1
                   release_date: "2024-01-10"
                   release_label: "2024-01"
                   release_type: "integrated"
                   is_current: false
-                  site_name: "Ensembl"
-                  site_label: "Ensembl 2024-01 Archive"
-                  site_uri: "https://2024-01.ensembl.org"
         '404':
           description: No releases found
           content:
@@ -476,6 +458,9 @@ components:
             release_label:
               type: string
               example: 2023-10-18
+            is_current:
+              type: boolean
+              example: true
         type:
           $ref: '#/components/schemas/SpeciesTypeInGenome'
           nullable: true
@@ -1114,25 +1099,12 @@ components:
         is_current:
           type: boolean
           example: true
-        site_name:
-          type: string
-          example: "Ensembl"
-        site_label:
-          type: string
-          example: "Ensembl Beta"
-        site_uri:
-          type: string
-          format: uri
-          example: "https://beta.ensembl.org"
       required:
         - release_version
         - release_date
         - release_label
         - release_type
         - is_current
-        - site_name
-        - site_label
-        - site_uri
   responses:
     404NotFound:
       description: The specified resource was not found

@@ -27,7 +27,7 @@ class Type(BaseModel):
         return value
 
 
-class ReleaseInGenome(BaseModel):
+class Release(BaseModel):
     release_label: str = Field(alias="releaseLabel")
     release_date: str = Field(alias="releaseDate")
     release_type: str = Field(alias="releaseType")
@@ -85,7 +85,7 @@ class BaseGenomeDetails(BaseModel):
         alias=AliasPath("assembly", "isReference"), default=False
     )
     assembly: AssemblyInGenome = None
-    release: ReleaseInGenome = None
+    release: Release = None
 
 
 class BriefGenomeDetails(BaseGenomeDetails):
