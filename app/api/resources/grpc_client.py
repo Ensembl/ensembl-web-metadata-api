@@ -15,24 +15,54 @@
 import logging
 import grpc
 from google.protobuf.json_format import MessageToDict
+from grpc_health.v1 import health_pb2_grpc, health_pb2
 from yagrc import reflector as yagrc_reflector
 
+logger = logging.getLogger(__name__)
 
 class GRPCClient:
     def __init__(self, host: str, port: int):
+        self.grpc_server_address = f"{host}:{port}"
         # Create Channel
-        channel = grpc.insecure_channel(
-            "{}:{}".format(host, port),
+        self.channel = grpc.insecure_channel(
+            self.grpc_server_address,
             options=(("grpc.enable_http_proxy", 0),),
         )
+        self.health_stub = health_pb2_grpc.HealthStub(self.channel)
+
+        self.stub = None  # Default stub (will be set only if gRPC is available)
         self.reflector = yagrc_reflector.GrpcReflectionClient()
-        self.reflector.load_protocols(
-            channel, symbols=["ensembl_metadata.EnsemblMetadata"]
-        )
-        stub_class = self.reflector.service_stub_class(
-            "ensembl_metadata.EnsemblMetadata"
-        )
-        self.stub = stub_class(channel)
+
+        try:
+            # Attempt to load gRPC reflection protocols
+            self.reflector.load_protocols(
+                self.channel, symbols=["ensembl_metadata.EnsemblMetadata"]
+            )
+            stub_class = self.reflector.service_stub_class("ensembl_metadata.EnsemblMetadata")
+            self.stub = stub_class(self.channel)  # Assign stub only if reflection succeeds
+            logger.info("gRPC reflection loaded successfully.")
+        except grpc.RpcError as e:
+            logger.warning(f"Failed to connect to gRPC service at {self.grpc_server_address}. "
+                           f"Reflection unavailable. Error: {e.details()}")
+
+
+    def get_grpc_status(self, service_name: str = ""):
+        """
+        Checks the health of the gRPC server or a specific service.
+
+        Parameters:
+            service_name (str): Name of the gRPC service to check. Empty string `""` checks the entire server.
+
+        Returns:
+            dict: {"status": "SERVING" or "NOT_SERVING", "code": "<gRPC Code>"}
+        """
+        request = health_pb2.HealthCheckRequest(service=service_name)
+        try:
+            response = self.health_stub.Check(request)
+            return {"status": response.status, "code": "OK"}
+        except grpc.RpcError as e:
+            return {"status": 0, "code": str(e.code().name)}  # Handle errors gracefully
+
 
     def get_statistics(self, genome_uuid: str):
         """Returns gRPC message containing statistics for given genome_uuid.

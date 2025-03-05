@@ -11,6 +11,35 @@ tags:
   - name: api
     description: Ensembl Web Metadata API
 paths:
+  /grpc_status:
+    get:
+      summary: Check gRPC Server or Service Health
+      description: |
+        - If `service_name` is not provided, it checks the overall gRPC server health.
+        - If `service_name` is provided, it checks that specific service (e.g. `EnsemblMetadata`).
+      parameters:
+        - name: service_name
+          in: query
+          required: false
+          schema:
+            type: string
+          description: The specific gRPC service name to check (leave empty for global health check).
+      responses:
+        200:
+          description: gRPC service is running and healthy.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    example: 1
+                  code:
+                    type: string
+                    example: "OK"
+        503:
+          '$ref': '#/components/responses/503ServiceUnavailable'
   /api/metadata/genome/{genome_id_or_slug}/explain:
     get:
       description: Satisfies client's need to disambiguate a string that is part of url pathname
@@ -1006,6 +1035,19 @@ components:
           schema:
             type: string
             example: '{"status_code": 404, "details": "Not Found"}'
+    503ServiceUnavailable:
+      description: gRPC service is unavailable.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+                example: 0
+              code:
+                type: string
+                example: "UNAVAILABLE"
     500InternalServerError:
       description: Internal server error
       content:
