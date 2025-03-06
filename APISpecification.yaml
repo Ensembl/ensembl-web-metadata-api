@@ -348,9 +348,9 @@ paths:
       description: Retrieve release data with filtering capabilities
       operationId: get_releases
       parameters:
-        - name: release_name
+        - name: name
           in: query
-          description: Filter by one or more release labels
+          description: Filter by one or more release names
           required: false
           schema:
             type: array
@@ -423,7 +423,14 @@ components:
               type: string
               example: GRCh38.p13
         release:
-          $ref: '#/components/schemas/Release'
+          type: object
+          properties:
+            name:
+              type: string
+              example: 2023-10-18
+            type:
+              type: string
+              example: partial
         type:
           $ref: '#/components/schemas/SpeciesTypeInGenome'
           nullable: true
@@ -1044,14 +1051,10 @@ components:
     Release:
       type: object
       properties:
-        release_date:
-          type: string
-          format: date
-          example: "2024-03-15"
-        release_name:
+        name:
           type: string
           example: "2023-10-18"
-        release_type:
+        type:
           type: string
           enum: [ integrated, partial ]
           example: "partial"
@@ -1059,9 +1062,8 @@ components:
           type: boolean
           example: true
       required:
-        - release_date
-        - release_name
-        - release_type
+        - name
+        - type
         - is_current
   responses:
     404NotFound:

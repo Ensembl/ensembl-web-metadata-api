@@ -128,7 +128,11 @@ async def get_genome_details(request: Request, genome_uuid: str):
         genome_details_dict = MessageToDict(grpc_client.get_genome_details(genome_uuid))
         if genome_details_dict:
             genome_details = GenomeDetails(**genome_details_dict)
-            response_data = responses.JSONResponse(genome_details.model_dump())
+            response_data = responses.JSONResponse(genome_details.model_dump(
+                exclude={
+                    "release": {"is_current"},
+                }
+            ))
         else:
             not_found_response = {
                 "message": "Could not find details for {}".format(genome_uuid)
@@ -178,7 +182,7 @@ async def explain_genome(request: Request, genome_id_or_slug: str):
                     "common_name": True,
                     "is_reference": True,
                     "assembly": {"name", "accession_id"},
-                    "release": {"release_date", "release_name", "release_type", "is_current"},
+                    "release": {"name", "type"},
                     "type": True,
                 }
             )
@@ -313,9 +317,8 @@ async def get_releases(
             for release in releases_list:
                 response_dict = release.model_dump(
                     include={
-                        "release_name": True,
-                        "release_date": True,
-                        "release_type": True,
+                        "name": True,
+                        "type": True,
                         "is_current": True,
                     }
                 )
