@@ -107,7 +107,7 @@ Setup:Review:
     - kubectl config use-context ${AGENT}
     - kubectl config set-context --current --namespace=${NS}
   variables:
-    AGENT: ${REVIEW_AGENTREVIEW_AGENT}
+    AGENT: ${REVIEW_AGENT}
     NS: ${CI_COMMIT_REF_SLUG}
   script:
     - kubectl create configmap metadata-api-configmap --from-env-file=.env.sample --dry-run=client -o yaml | kubectl apply -f -
