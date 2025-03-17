@@ -27,6 +27,12 @@ class Type(BaseModel):
         return value
 
 
+class Release(BaseModel):
+    name: str = Field(alias="releaseLabel")
+    type: str = Field(alias="releaseType")
+    is_current: bool = Field(alias="isCurrent", default=False)
+
+
 class AssemblyInGenome(BaseModel):
     accession_id: str = Field(alias="accession")
     name: str = Field(alias="name")
@@ -78,6 +84,7 @@ class BaseGenomeDetails(BaseModel):
         alias=AliasPath("assembly", "isReference"), default=False
     )
     assembly: AssemblyInGenome = None
+    release: Release = None
 
 
 class BriefGenomeDetails(BaseGenomeDetails):

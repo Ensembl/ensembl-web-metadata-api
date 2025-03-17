@@ -26,7 +26,7 @@ from api.models.checksums import Checksum
 from api.models.statistics import GenomeStatistics, ExampleObjectList
 from api.models.popular_species import PopularSpeciesGroup
 from api.models.karyotype import Karyotype
-from api.models.genome import BriefGenomeDetails, GenomeDetails, DatasetAttributes, GenomeByKeyword
+from api.models.genome import BriefGenomeDetails, GenomeDetails, DatasetAttributes, GenomeByKeyword, Release
 from api.models.ftplinks import FTPLinks
 from api.models.vep import VepFilePaths
 
@@ -128,7 +128,11 @@ async def get_genome_details(request: Request, genome_uuid: str):
         genome_details_dict = MessageToDict(grpc_client.get_genome_details(genome_uuid))
         if genome_details_dict:
             genome_details = GenomeDetails(**genome_details_dict)
-            response_data = responses.JSONResponse(genome_details.model_dump())
+            response_data = responses.JSONResponse(genome_details.model_dump(
+                exclude={
+                    "release": {"is_current"},
+                }
+            ))
         else:
             not_found_response = {
                 "message": "Could not find details for {}".format(genome_uuid)
@@ -178,6 +182,7 @@ async def explain_genome(request: Request, genome_id_or_slug: str):
                     "common_name": True,
                     "is_reference": True,
                     "assembly": {"name", "accession_id"},
+                    "release": {"name", "type"},
                     "type": True,
                 }
             )
@@ -286,3 +291,48 @@ async def get_vep_file_paths(
     except Exception as ex:
         logging.error(ex)
         return response_error_handler({"status": 500})
+
+
+@router.get("/releases", name="get_releases")
+async def get_releases(
+    request: Request,
+    release_name: list[str] = Query(None, description="Filter by release name(s)"),
+    current_only: bool = Query(False, description="Only current releases")
+):
+    try:
+        releases_stream = grpc_client.get_release(
+            release_label=release_name,
+            current_only=current_only
+        )
+
+        releases_list = []
+        for release_msg in releases_stream:
+            release_dict = MessageToDict(release_msg)
+            release = Release(**release_dict)
+            releases_list.append(release)
+
+        if releases_list:
+            # Serialize each release into the desired format
+            response_list = []
+            for release in releases_list:
+                response_dict = release.model_dump(
+                    include={
+                        "name": True,
+                        "type": True,
+                        "is_current": True,
+                    }
+                )
+                response_list.append(response_dict)
+            response_data = responses.JSONResponse(response_list, status_code=200)
+        else:
+            response_data = responses.JSONResponse(
+                {"message": "No releases found matching criteria"},
+                status_code=404
+            )
+
+    except Exception as e:
+        logging.error(e)
+        error_response = {"message": f"An error occurred: {str(e)}"}
+        response_data = responses.JSONResponse(error_response, status_code=500)
+
+    return response_data

@@ -50,27 +50,19 @@ class GRPCClient:
         return toplevel_stats_by_uuid
 
     def get_genome_details(self, genome_uuid: str):
-        # Create request
         request_class = self.reflector.message_class(
             "ensembl_metadata.GenomeUUIDRequest"
         )
         request = request_class(genome_uuid=genome_uuid)
-
-        # Get response
         response = self.stub.GetGenomeByUUID(request)
-
         return response
 
     def get_brief_genome_details(self, genome_uuid_or_slug: str):
-        # Create request
         request_class = self.reflector.message_class(
             "ensembl_metadata.GenomeUUIDRequest"
         )
         request = request_class(genome_uuid=genome_uuid_or_slug)
-
-        # Get response
         response = self.stub.GetBriefGenomeDetailsByUUID(request)
-
         return response
 
     def get_attributes_info(self, genome_uuid: str):
@@ -78,9 +70,7 @@ class GRPCClient:
             "ensembl_metadata.GenomeUUIDRequest"
         )
         request = request_class(genome_uuid=genome_uuid)
-
         response = self.stub.GetAttributesByGenomeUUID(request)
-
         return response
 
     def get_popular_species(self):
@@ -88,7 +78,6 @@ class GRPCClient:
             "ensembl_metadata.OrganismsGroupRequest"
         )
         popular_species = self.stub.GetOrganismsGroupCount(request_class())
-
         return popular_species
 
     def get_top_level_regions(self, genome_uuid: str):
@@ -162,3 +151,8 @@ class GRPCClient:
         request_class = self.reflector.message_class("ensembl_metadata.GenomeUUIDOnlyRequest")
         vep_file_paths_request = request_class(genome_uuid=genome_uuid)
         return self.stub.GetVepFilePathsByUUID(vep_file_paths_request)
+
+    def get_release(self, release_label: list[str], current_only: bool):
+        request_class = self.reflector.message_class("ensembl_metadata.ReleaseRequest")
+        request = request_class(release_label=release_label, current_only=current_only)
+        return self.stub.GetRelease(request)

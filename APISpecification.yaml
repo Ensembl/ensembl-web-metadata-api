@@ -340,6 +340,47 @@ paths:
           $ref: '#/components/responses/404NotFound'
         '500':
           $ref: '#/components/responses/500InternalServerError'
+  /api/metadata/releases:
+    get:
+      tags:
+        - Releases
+      summary: Get release information
+      description: Retrieve release data with filtering capabilities
+      operationId: get_releases
+      parameters:
+        - name: name
+          in: query
+          description: Filter by one or more release names
+          required: false
+          schema:
+            type: array
+            items:
+              type: number
+              format: double
+          style: form
+          explode: false
+          example:
+            value: [ "2023-10-18", "2024-09" ]
+        - name: current_only
+          in: query
+          description: Return only current partial and integrated releases
+          required: false
+          schema:
+            type: boolean
+            default: false
+          example:
+            value: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Release'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
 
 components:
   schemas:
@@ -381,6 +422,15 @@ components:
             name:
               type: string
               example: GRCh38.p13
+        release:
+          type: object
+          properties:
+            name:
+              type: string
+              example: 2023-10-18
+            type:
+              type: string
+              example: partial
         type:
           $ref: '#/components/schemas/SpeciesTypeInGenome'
           nullable: true
@@ -998,6 +1048,23 @@ components:
         - url
       additionalProperties: false
       description: FTP link to a dataset directory for a genome
+    Release:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "2023-10-18"
+        type:
+          type: string
+          enum: [ integrated, partial ]
+          example: "partial"
+        is_current:
+          type: boolean
+          example: true
+      required:
+        - name
+        - type
+        - is_current
   responses:
     404NotFound:
       description: The specified resource was not found
