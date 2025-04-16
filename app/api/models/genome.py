@@ -93,7 +93,7 @@ class BriefGenomeDetails(BaseGenomeDetails):
     We're planning to extend the BriefGenomeDetails class later but for now,
     we will leave it as an empty extension of BaseGenomeDetails
     """
-    pass
+    latest_genome: Optional[BaseGenomeDetails] = None
 
 
 class GenomeDetails(BaseGenomeDetails):

@@ -184,6 +184,7 @@ async def explain_genome(request: Request, genome_id_or_slug: str):
                     "assembly": {"name", "accession_id"},
                     "release": {"name", "type"},
                     "type": True,
+                    "latest_genome": True,
                 }
             )
             response_data = responses.JSONResponse(response_dict, status_code=200)
