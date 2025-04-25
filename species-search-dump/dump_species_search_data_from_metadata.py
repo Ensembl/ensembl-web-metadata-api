@@ -205,7 +205,7 @@ def dump_species():
     species_list = SpeciesList(
         species_list=species_data,
         name="ensemblNext",
-        release="0.110.3",
+        release="0.112.1",
         entry_count=len(species_data),
     )
 
