@@ -1,6 +1,0 @@
-[database]
-host=my.database.host
-port=3306
-user=auser
-password=optional_password
-database=database_name
