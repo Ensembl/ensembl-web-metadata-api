@@ -436,6 +436,9 @@ components:
           nullable: true
         is_reference:
           type: boolean
+        latest_genome:
+          $ref: '#/components/schemas/BriefGenomeDetails'
+          nullable: true
       required:
         - genome_id
         - genome_tag
@@ -445,6 +448,7 @@ components:
         - assembly_name
         - type
         - is_reference
+        - latest_genome
     GenomeStats:
       type: object
       properties:

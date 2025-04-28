@@ -90,10 +90,9 @@ class BaseGenomeDetails(BaseModel):
 class BriefGenomeDetails(BaseGenomeDetails):
     """
     As mentioned in this PR: https://github.com/Ensembl/ensembl-web-metadata-api/pull/60
-    We're planning to extend the BriefGenomeDetails class later but for now,
-    we will leave it as an empty extension of BaseGenomeDetails
+    We're planning to extend the BriefGenomeDetails class later
     """
-    pass
+    latest_genome: Optional[BaseGenomeDetails] = Field(alias="latestGenome", default=None)
 
 
 class GenomeDetails(BaseGenomeDetails):
