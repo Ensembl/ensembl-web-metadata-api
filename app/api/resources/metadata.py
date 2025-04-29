@@ -16,9 +16,10 @@ limitations under the License.
 """
 import json
 import logging
-from typing import Annotated
+from typing import Annotated, Optional
 
 from fastapi import APIRouter, Request, responses, Query
+from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
 from api.error_response import response_error_handler
@@ -45,6 +46,22 @@ router = APIRouter()
 logging.info("Connecting to gRPC server on " + GRPC_HOST + ":" + str(GRPC_PORT))
 grpc_client = GRPCClient(GRPC_HOST, GRPC_PORT)
 
+@router.get("/grpc_status", summary="Check gRPC Server or Service Health")
+async def service_health_check(service_name: Optional[str] = None):
+    """
+    HTTP endpoint to check the health status of the entire gRPC server or a specific service.
+
+    - If `service_name` is not provided, it checks the global health.
+    - If `service_name` is provided, it checks that specific service (e.g. `EnsemblMetadata`).
+    """
+    # return grpc_client.get_grpc_status(service_name or "")
+    result = grpc_client.get_grpc_status(service_name or "")
+
+    if result["code"] == "OK":
+        return result
+
+    # if gRPC is down, return JSON response with HTTP 503
+    return JSONResponse(content=result, status_code=503)
 
 @router.get("/genome/{genome_uuid}/stats", name="statistics")
 async def get_metadata_statistics(request: Request, genome_uuid: str):
