@@ -27,12 +27,21 @@ services:
       - DEBUG=${DEBUG}
       - GRPC_HOST=host.docker.internal
       - GRPC_PORT=50051
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - ENABLE_REDIS_CACHE=${ENABLE_REDIS_CACHE}
     container_name: metadata_api
     tty: true
-    init: true
     command: >
       bash -c "uvicorn main:app --host 0.0.0.0 --port 8014 --reload --log-level=trace"
     ports:
       - ${PORT}:${PORT}
     volumes:
       - ./app/:/app/
+    depends_on:
+      - redis
+
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
