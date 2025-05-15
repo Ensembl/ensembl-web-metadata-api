@@ -100,3 +100,9 @@ def redis_cache(key_prefix: str, arg_keys: Optional[list[str]] = None, ttl: int 
 
         return wrapper
     return decorator
+
+
+async def close_redis_pool():
+    """Close the Redis connection pool"""
+    await redis_pool.disconnect()
+    logger.info("Redis connection pool closed")

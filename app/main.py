@@ -14,12 +14,25 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
+from api.resources.redis import close_redis_pool
 from api.resources.routes import router
 from core.config import API_PREFIX, ALLOWED_HOSTS, VERSION, PROJECT_NAME, DEBUG
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Async context manager for FastAPI lifespan events.
+    - Code before yield runs on startup, nothing in there as of now
+    - Code after yield runs on shutdown
+    """
+    yield
+    await close_redis_pool()
 
 
 def get_application() -> FastAPI:
