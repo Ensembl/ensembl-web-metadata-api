@@ -6,6 +6,7 @@ data:
   DEBUG: "False"
   GRPC_HOST: ensembl-metadata-service
   GRPC_PORT: "50051"
-  REDIS_HOST: redis
+  REDIS_HOST: redis # having this in secrets?
   REDIS_PORT: "6379"
   ENABLE_REDIS_CACHE: "True"
+  WORKERS: "10"

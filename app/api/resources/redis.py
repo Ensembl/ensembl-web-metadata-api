@@ -23,74 +23,24 @@ from functools import wraps
 from fastapi.responses import JSONResponse
 from typing import Callable, Awaitable, Any, Optional
 
+from redis.asyncio import ConnectionPool
+
 from core.config import REDIS_HOST, REDIS_PORT, ENABLE_REDIS_CACHE
 
 logger = logging.getLogger("redis_cache")
 logger.setLevel(logging.INFO)
 
 
-redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
+redis_pool = ConnectionPool.from_url(
+    f"redis://{REDIS_HOST}:{REDIS_PORT}",
+    max_connections=10,
+    decode_responses=True
+)
+
+redis_client = redis.Redis(connection_pool=redis_pool)
 
 
-def redis_cache_old(key: str, ttl: int = 300):
-    """
-    A decorator to cache the output of a FastAPI route handler using Redis,
-    with a static cache key and configurable TTL.
-
-    Args:
-        key (str): The Redis key under which the cached response will be stored.
-        ttl (int, optional): Time-to-live in seconds for the cache. Defaults to 300 seconds (5 minutes).
-
-    Returns:
-        Callable: The wrapped async route function with caching enabled.
-
-    Example:
-        @redis_cache(key="popular_species", ttl=60)
-        async def get_popular_species(request: Request):
-            ...
-    """
-
-    def decorator(func: Callable[..., Awaitable[Any]]):
-        @wraps(func)
-        async def wrapper(*args, **kwargs):
-            if not ENABLE_REDIS_CACHE:
-                logger.info(f"Caching DISABLED — calling {func.__name__} directly.")
-                return await func(*args, **kwargs)
-
-            try:
-                # Attempt to retrieve cached response
-                cached_value = await redis_client.get(key)
-                if cached_value is not None:
-                    logger.info(f"Cache HIT for key: {key}")
-                    return JSONResponse(content=json.loads(cached_value))
-
-                # Call the original function if cache miss
-                logger.info(f"Cache MISS for key: {key}")
-                result = await func(*args, **kwargs)
-
-                # Cache only if result is a JSONResponse
-                if isinstance(result, JSONResponse):
-                    content = (
-                        result.body.decode()
-                        if hasattr(result.body, "decode")
-                        else result.body
-                    )
-                    await redis_client.setex(key, ttl, content)
-                    logger.info(f"Cache SET for key: {key} (TTL: {ttl}s)")
-
-                return result
-
-            # /!\ Fallback to normal execution in case there is an issue connecting to redis
-            except Exception as e:
-                logger.error(f"Redis cache error for key '{key}': {e}")
-                return await func(*args, **kwargs)
-
-        return wrapper
-
-    return decorator
-
-
-def redis_cache(key_prefix: str, arg_keys: Optional[list[str]] = None, ttl: int = 3000):
+def redis_cache(key_prefix: str, arg_keys: Optional[list[str]] = None, ttl: int = 300):
     """
     A decorator to cache the output of a FastAPI route handler using Redis,
     with dynamic key generation based on route args.

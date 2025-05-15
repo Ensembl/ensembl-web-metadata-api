@@ -30,10 +30,11 @@ services:
       - REDIS_HOST=${REDIS_HOST}
       - REDIS_PORT=${REDIS_PORT}
       - ENABLE_REDIS_CACHE=${ENABLE_REDIS_CACHE}
+      - WORKERS=${WORKERS}
     container_name: metadata_api
     tty: true
     command: >
-      bash -c "uvicorn main:app --host 0.0.0.0 --port 8014 --reload --log-level=trace"
+      bash -c "uvicorn main:app --host 0.0.0.0 --port 8014 --workers ${WORKERS} --log-level=trace"
     ports:
       - ${PORT}:${PORT}
     volumes:
