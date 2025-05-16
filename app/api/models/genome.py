@@ -86,6 +86,11 @@ class BaseGenomeDetails(BaseModel):
     assembly: AssemblyInGenome = None
     release: Release = None
 
+    def model_post_init(self, __context):
+        """Set genome_tag to None if the release type is 'partial'."""
+        if self.release and self.release.type == "partial":
+            self.genome_tag = None
+
 
 class BriefGenomeDetails(BaseGenomeDetails):
     """
