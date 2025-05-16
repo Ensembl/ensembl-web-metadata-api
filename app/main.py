@@ -14,6 +14,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import logging
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -28,9 +30,12 @@ from core.config import API_PREFIX, ALLOWED_HOSTS, VERSION, PROJECT_NAME, DEBUG
 async def lifespan(app: FastAPI):
     """
     Async context manager for FastAPI lifespan events.
-    - Code before yield runs on startup, nothing in there as of now
+    Logs the PID of the worker at startup, and cleans up Redis on shutdown.
+    - Code before yield runs on startup
     - Code after yield runs on shutdown
     """
+    logger = logging.getLogger("uvicorn.worker")
+    logger.info(f"Worker process started (PID: {os.getpid()})")
     yield
     await close_redis_pool()
 

@@ -61,25 +61,29 @@ def redis_cache(key_prefix: str, arg_keys: Optional[list[str]] = None, ttl: int 
     def decorator(func: Callable[..., Awaitable[Any]]):
         @wraps(func)
         async def wrapper(*args, **kwargs):
+            # Build dynamic key: prefix + arg values (if any)
+            if arg_keys:
+                separator = "\x00"
+                arg_values = [str(kwargs.get(k, "null")) for k in arg_keys]
+                full_key = key_prefix + separator + separator.join(arg_values)
+            else:
+                full_key = key_prefix
+
             if not ENABLE_REDIS_CACHE:
-                logger.info(f"Caching DISABLED — calling {func.__name__} directly.")
+                logger.debug("Caching DISABLED — calling %s directly.", func.__name__)
                 return await func(*args, **kwargs)
 
             try:
-                # Build dynamic key: prefix + arg values (if any)
-                if arg_keys:
-                    arg_values = [str(kwargs.get(k, "null")) for k in arg_keys]
-                    full_key = key_prefix + ":" + ":".join(arg_values)
-                else:
-                    full_key = key_prefix
+                # decode full_key for debugging purposes
+                safe_key = full_key.replace("\x00", ":")
 
                 # Attempt to retrieve cached response
                 cached_value = await redis_client.get(full_key)
                 if cached_value is not None:
-                    logger.info(f"Cache HIT for key: {full_key}")
+                    logger.debug("Cache HIT for key: %s", safe_key)
                     return JSONResponse(content=json.loads(cached_value))
 
-                logger.info(f"Cache MISS for key: {full_key}")
+                logger.debug("Cache MISS for key: %s", safe_key)
                 result = await func(*args, **kwargs)
 
                 if isinstance(result, JSONResponse):
@@ -89,13 +93,13 @@ def redis_cache(key_prefix: str, arg_keys: Optional[list[str]] = None, ttl: int 
                         else result.body
                     )
                     await redis_client.setex(full_key, ttl, content)
-                    logger.info(f"Cache SET for key: {full_key} (TTL: {ttl}s)")
+                    logger.debug("Cache SET for key: %s (TTL: %s s)", safe_key, ttl)
 
                 return result
 
             # /!\ Fallback to normal execution in case there is an issue connecting to redis
             except Exception as e:
-                logger.error(f"Redis cache error for key '{key_prefix}': {e}")
+                logger.error(f"Redis cache error for key '{full_key}': {e}")
                 return await func(*args, **kwargs)
 
         return wrapper
