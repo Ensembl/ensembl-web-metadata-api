@@ -86,6 +86,8 @@ def redis_cache(key_prefix: str, arg_keys: Optional[list[str]] = None, ttl: int 
                 logger.debug("Cache MISS for key: %s", safe_key)
                 result = await func(*args, **kwargs)
 
+                # TODO: Experiment with using Pickle or ujson
+                # Ref: https://github.com/Ensembl/ensembl-web-metadata-api/pull/69#discussion_r2090971527
                 if isinstance(result, JSONResponse):
                     content = (
                         result.body.decode()
