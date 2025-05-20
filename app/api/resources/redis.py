@@ -17,7 +17,7 @@ limitations under the License.
 
 import redis.asyncio as redis
 
-import json
+import ujson as json
 import logging
 from functools import wraps
 from fastapi.responses import JSONResponse
