@@ -40,6 +40,11 @@ ALLOWED_HOSTS: list[str] = config(
 GRPC_HOST: str = config("GRPC_HOST", default="localhost")
 GRPC_PORT: int = config("GRPC_PORT", default=50051)
 
+# Caching Config
+REDIS_HOST: str = config("REDIS_HOST", default="redis")
+REDIS_PORT: int = config("REDIS_PORT", default=6379)
+ENABLE_REDIS_CACHE: bool = config("ENABLE_REDIS_CACHE", cast=bool, default=True)
+
 # IDENTIFIERS_ORG URL
 IDENTIFIERS_ORG_BASE_URL: str = config(
     "IDENTIFIERS_ORG_BASE_URL", default="https://identifiers.org/"

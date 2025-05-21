@@ -34,6 +34,7 @@ from core.config import GRPC_HOST, GRPC_PORT
 from core.logging import InterceptHandler
 
 from api.resources.grpc_client import GRPCClient
+from api.resources.redis import redis_cache
 from api.models.region_validation import RegionValidation
 
 from google.protobuf.json_format import MessageToDict
@@ -47,6 +48,7 @@ grpc_client = GRPCClient(GRPC_HOST, GRPC_PORT)
 
 
 @router.get("/genome/{genome_uuid}/stats", name="statistics")
+@redis_cache("stats", arg_keys=["genome_uuid"])
 async def get_metadata_statistics(request: Request, genome_uuid: str):
     try:
         top_level_stats_dict = MessageToDict(grpc_client.get_statistics(genome_uuid))
@@ -76,6 +78,7 @@ async def get_genome_karyotype(request: Request, genome_uuid: str):
 
 
 @router.get("/popular_species", name="popular_species")
+@redis_cache(key_prefix="popular_species")  # TTL defaults is 5 minutes
 async def get_popular_species(request: Request):
     try:
         popular_species_dict = MessageToDict(grpc_client.get_popular_species())
@@ -101,7 +104,8 @@ def validate_region(request: Request, genome_id: str, location: str):
 
 
 @router.get("/genome/{genome_id}/example_objects", name="example_objects")
-def example_objects(request: Request, genome_id: str):
+@redis_cache("example_objects", arg_keys=["genome_id"])
+async def example_objects(request: Request, genome_id: str):
     try:
         attributes_info = MessageToDict(grpc_client.get_attributes_info(genome_id))
         if attributes_info:
@@ -123,6 +127,7 @@ def example_objects(request: Request, genome_id: str):
 
 
 @router.get("/genome/{genome_uuid}/details", name="genome_details")
+@redis_cache("details", arg_keys=["genome_uuid"])
 async def get_genome_details(request: Request, genome_uuid: str):
     try:
         genome_details_dict = MessageToDict(grpc_client.get_genome_details(genome_uuid))
@@ -166,6 +171,7 @@ async def get_genome_ftplinks(request: Request, genome_uuid: str):
 
 
 @router.get("/genome/{genome_id_or_slug}/explain", name="genome_explain")
+@redis_cache(key_prefix="explain", arg_keys=['genome_id_or_slug'])
 async def explain_genome(request: Request, genome_id_or_slug: str):
     not_found_response = {"message": "Could not explain {}".format(genome_id_or_slug)}
     response_data = responses.JSONResponse(not_found_response, status_code=404)
@@ -295,6 +301,7 @@ async def get_vep_file_paths(
 
 
 @router.get("/releases", name="get_releases")
+@redis_cache("releases")
 async def get_releases(
     request: Request,
     release_name: list[str] = Query(None, description="Filter by release name(s)"),
