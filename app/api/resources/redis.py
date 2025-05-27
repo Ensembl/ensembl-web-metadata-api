@@ -33,7 +33,7 @@ logger.setLevel(logging.INFO)
 
 redis_pool = ConnectionPool.from_url(
     f"redis://{REDIS_HOST}:{REDIS_PORT}",
-    max_connections=REDIS_MAX_CONNECTION,
+    max_connections=int(REDIS_MAX_CONNECTION),
     decode_responses=True
 )
 
