@@ -44,6 +44,7 @@ GRPC_PORT: int = config("GRPC_PORT", default=50051)
 REDIS_HOST: str = config("REDIS_HOST", default="redis")
 REDIS_PORT: int = config("REDIS_PORT", default=6379)
 ENABLE_REDIS_CACHE: bool = config("ENABLE_REDIS_CACHE", cast=bool, default=True)
+REDIS_MAX_CONNECTION: int = config("REDIS_MAX_CONNECTION", default=10)
 
 # IDENTIFIERS_ORG URL
 IDENTIFIERS_ORG_BASE_URL: str = config(
