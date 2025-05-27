@@ -25,7 +25,7 @@ from typing import Callable, Awaitable, Any, Optional
 
 from redis.asyncio import ConnectionPool
 
-from core.config import REDIS_HOST, REDIS_PORT, ENABLE_REDIS_CACHE
+from core.config import REDIS_HOST, REDIS_PORT, ENABLE_REDIS_CACHE, REDIS_MAX_CONNECTION
 
 logger = logging.getLogger("redis_cache")
 logger.setLevel(logging.INFO)
@@ -33,7 +33,7 @@ logger.setLevel(logging.INFO)
 
 redis_pool = ConnectionPool.from_url(
     f"redis://{REDIS_HOST}:{REDIS_PORT}",
-    max_connections=10,
+    max_connections=int(REDIS_MAX_CONNECTION),
     decode_responses=True
 )
 
