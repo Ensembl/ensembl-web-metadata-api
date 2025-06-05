@@ -173,8 +173,6 @@ async def get_genome_ftplinks(request: Request, genome_uuid: str):
 @router.get("/genome/{genome_id_or_slug}/explain", name="genome_explain")
 @redis_cache(key_prefix="explain", arg_keys=['genome_id_or_slug'])
 async def explain_genome(request: Request, genome_id_or_slug: str):
-    not_found_response = {"message": "Could not explain {}".format(genome_id_or_slug)}
-    response_data = responses.JSONResponse(not_found_response, status_code=404)
     try:
         genome_details_dict = MessageToDict(grpc_client.get_brief_genome_details(genome_id_or_slug))
         if genome_details_dict:
@@ -194,6 +192,9 @@ async def explain_genome(request: Request, genome_id_or_slug: str):
                 }
             )
             response_data = responses.JSONResponse(response_dict, status_code=200)
+        else:
+            not_found_response = {"message": "Could not explain {}".format(genome_id_or_slug)}
+            response_data = responses.JSONResponse(not_found_response, status_code=404)
     except Exception as ex:
         logging.error(ex)
         return response_error_handler({"status": 500})
