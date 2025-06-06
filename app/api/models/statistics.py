@@ -1,4 +1,5 @@
 import logging
+from typing import Union, Optional
 
 from pydantic import (
     BaseModel,
@@ -7,6 +8,7 @@ from pydantic import (
     field_serializer,
     root_validator,
     AliasChoices,
+    field_validator,
 )
 from core.logging import InterceptHandler
 
@@ -59,6 +61,18 @@ class Regulation(BaseModel):
         alias=AliasChoices("regulation.stats.open_chromatin_count", "regulation.open_chromatin_count"),
         default=None
     )
+
+    @field_validator("enhancers", "promoters", "ctcf_count", "tfbs_count", "open_chromatin_count", mode="before")
+    def convert_to_int(cls, value: Union[str, int, None], info) -> Optional[int]:
+        """Convert string inputs to integers for the specified fields."""
+        if value is None or isinstance(value, int):
+            return value
+        if isinstance(value, str):
+            try:
+                return int(value)
+            except ValueError:
+                raise ValueError(f"Cannot convert '{value}' to an integer.")
+        return value
 
 
 class Pseudogene(BaseModel):
@@ -252,7 +266,7 @@ class Coding(BaseModel):
 
 class Assembly(BaseModel):
     """
-    I added AliasChoices temporarily for a smooth transition with breaking the API
+    I added AliasChoices temporarily for a smooth transition without breaking the API
     """
     contig_n50: int | None = Field(
         alias=AliasChoices("assembly.stats.contig_n50", "assembly.contig_n50"),
