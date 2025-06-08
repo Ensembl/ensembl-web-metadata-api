@@ -4,7 +4,6 @@ from typing import Union, Optional
 from pydantic import (
     BaseModel,
     Field,
-    validator,
     field_serializer,
     root_validator,
     AliasChoices,
@@ -13,6 +12,28 @@ from pydantic import (
 from core.logging import InterceptHandler
 
 logging.getLogger().handlers = [InterceptHandler()]
+
+# Helper functions
+def _str_to_int(value: Union[str, int, None]) -> Optional[int]:
+    if value is None or isinstance(value, int):
+        return value
+    if isinstance(value, str):
+        try:
+            return int(value)
+        except ValueError:
+            raise ValueError(f"Cannot convert '{value}' to int.")
+    return value
+
+def _str_to_float(value: Union[str, float, None]) -> Optional[float]:
+    if value is None or isinstance(value, float):
+        return value
+    if isinstance(value, str):
+        try:
+            return float(value)
+        except ValueError:
+            raise ValueError(f"Cannot convert '{value}' to float.")
+    return value
+
 
 class Homology(BaseModel):
     coverage: float | None = Field(
@@ -26,12 +47,9 @@ class Homology(BaseModel):
         default=None,
     )
 
-    @validator("reference_species_name", pre=True)
-    def validate_na_values(cls, v) -> str:
-        sanitized_reference_species_name = ""
-        if v:
-            sanitized_reference_species_name = v
-        return sanitized_reference_species_name
+    @field_validator("reference_species_name", mode="before")
+    def validate_na_values(cls, value) -> str:
+        return value or ""
 
     @field_serializer("reference_species_name")
     def serialize_refernce_species(self, value: str):
@@ -63,16 +81,9 @@ class Regulation(BaseModel):
     )
 
     @field_validator("enhancers", "promoters", "ctcf_count", "tfbs_count", "open_chromatin_count", mode="before")
-    def convert_to_int(cls, value: Union[str, int, None], info) -> Optional[int]:
+    def _convert_int_fields(cls, value: Union[str, int, None]) -> Optional[int]:
         """Convert string inputs to integers for the specified fields."""
-        if value is None or isinstance(value, int):
-            return value
-        if isinstance(value, str):
-            try:
-                return int(value)
-            except ValueError:
-                raise ValueError(f"Cannot convert '{value}' to an integer.")
-        return value
+        return _str_to_int(value)
 
 
 class Pseudogene(BaseModel):
@@ -124,6 +135,31 @@ class Pseudogene(BaseModel):
         alias=AliasChoices("genebuild.stats.ps_average_intron_length", "genebuild.ps_average_intron_length"),
         default=None
     )
+
+    @field_validator(
+        "pseudogenes",
+        "shortest_gene_length",
+        "longest_gene_length",
+        "total_transcripts",
+        "total_exons",
+        "total_introns",
+        mode="before",
+    )
+    def _convert_int_fields(cls, value: Union[str, int, None]) -> Optional[int]:
+        """Convert string inputs to integers for the specified fields."""
+        return _str_to_int(value)
+
+    @field_validator(
+        "average_genomic_span",
+        "average_sequence_length",
+        "transcripts_per_gene",
+        "average_exon_length",
+        "average_exons_per_transcript",
+        "average_intron_length",
+        mode="before",
+    )
+    def _convert_float_fields(cls, value: Union[str, float, None]) -> Optional[float]:
+        return _str_to_float(value)
 
 
 class NonCoding(BaseModel):
@@ -187,6 +223,33 @@ class NonCoding(BaseModel):
         alias=AliasChoices("genebuild.stats.nc_average_intron_length", "genebuild.nc_average_intron_length"),
         default=None
     )
+
+    @field_validator(
+        "non_coding_genes",
+        "small_non_coding_genes",
+        "long_non_coding_genes",
+        "misc_non_coding_genes",
+        "shortest_gene_length",
+        "longest_gene_length",
+        "total_transcripts",
+        "total_exons",
+        "total_introns",
+        mode="before",
+    )
+    def _convert_int_fields(cls, value: Union[str, int, None]) -> Optional[int]:
+        return _str_to_int(value)
+
+    @field_validator(
+        "average_genomic_span",
+        "average_sequence_length",
+        "transcripts_per_gene",
+        "average_exon_length",
+        "average_exons_per_transcript",
+        "average_intron_length",
+        mode="before",
+    )
+    def _convert_float_fields(cls, value: Union[str, float, None]) -> Optional[float]:
+        return _str_to_float(value)
 
 
 class Coding(BaseModel):
@@ -263,6 +326,36 @@ class Coding(BaseModel):
         default=None
     )
 
+    @field_validator(
+        "coding_genes",
+        "shortest_gene_length",
+        "longest_gene_length",
+        "total_transcripts",
+        "coding_transcripts",
+        "total_exons",
+        "total_coding_exons",
+        "total_introns",
+        mode="before",
+    )
+    def _convert_int_fields(cls, value):
+        return _str_to_int(value)
+
+    @field_validator(
+        "average_genomic_span",
+        "average_sequence_length",
+        "average_cds_length",
+        "transcripts_per_gene",
+        "coding_transcripts_per_gene",
+        "average_exon_length",
+        "average_coding_exon_length",
+        "average_exons_per_transcript",
+        "average_coding_exons_per_coding_transcript",
+        "average_intron_length",
+        mode="before",
+    )
+    def _convert_float_fields(cls, value):
+        return _str_to_float(value)
+
 
 class Assembly(BaseModel):
     """
@@ -305,17 +398,20 @@ class Assembly(BaseModel):
         default=None
     )
 
-    @validator("contig_n50", "component_sequences", pre=True)
-    def validate_na_values(cls, v) -> int:
-        if v == "NA":
+    def _convert_int_fields(cls, value: Union[str, int, None], info) -> Optional[int]:
+        # special-case "NA" for these two fields
+        if info.field.name in ("contig_n50", "component_sequences") and value == "NA":
             return -1
-        return v
+        return _str_to_int(value)
+
+    @field_validator("gc_percentage", mode="before")
+    def _convert_float_fields(cls, value: Union[str, float, None]) -> Optional[float]:
+        return _str_to_float(value)
 
     @field_serializer("contig_n50", "component_sequences")
-    def serialise_contig_n50(self, v: int):
-        if v == -1:
-            return None
-        return v
+    def serialise_contig_n50(self, v: Optional[int]) -> Optional[int]:
+        # on export, turn -1 back into null
+        return None if v == -1 else v
 
 
 class Variation(BaseModel):
@@ -343,6 +439,18 @@ class Variation(BaseModel):
         alias=AliasChoices("variation.stats.structural_variants_with_phenotype_assertions", "variation.structural_variants_with_phenotype_assertions"),
         default=None
     )
+
+    @field_validator(
+        "short_variants",
+        "structural_variants",
+        "short_variants_with_phenotype_assertions",
+        "short_variants_with_publications",
+        "short_variants_frequency_studies",
+        "structural_variants_with_phenotype_assertions",
+        mode="before",
+    )
+    def _convert_int_fields(cls, value):
+        return _str_to_int(value)
 
 
 class GenomeStatistics(BaseModel):
