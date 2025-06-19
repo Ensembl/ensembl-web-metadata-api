@@ -60,6 +60,7 @@ async def get_metadata_statistics(request: Request, genome_uuid: str):
 
 
 @router.get("/genome/{genome_uuid}/karyotype", name="karyotype")
+@redis_cache("karyotype", arg_keys=["genome_uuid"])
 async def get_genome_karyotype(request: Request, genome_uuid: str):
     try:
         top_level_regions = grpc_client.get_top_level_regions(genome_uuid)
@@ -150,6 +151,7 @@ async def get_genome_details(request: Request, genome_uuid: str):
 
 
 @router.get("/genome/{genome_uuid}/ftplinks", name="genome_ftplinks")
+@redis_cache("ftplinks", arg_keys=["genome_uuid"])
 async def get_genome_ftplinks(request: Request, genome_uuid: str):
     try:
         ftplinks_dict = MessageToDict(grpc_client.get_ftplinks(genome_uuid))
