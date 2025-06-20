@@ -14,11 +14,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-import json
 import logging
 from typing import Annotated
 
-from fastapi import APIRouter, Request, responses, Query
+from fastapi import APIRouter, Request, responses, Query, HTTPException
 from pydantic import ValidationError
 
 from api.error_response import response_error_handler
@@ -117,10 +116,12 @@ async def example_objects(request: Request, genome_id: str):
                 example_objects.model_dump()["example_objects"]
             )
         else:
-            not_found_response = {
-                "message": "Could not find example objects for {}".format(genome_id)
-            }
-            response_data = responses.JSONResponse(not_found_response, status_code=404)
+            raise HTTPException(
+                status_code=404,
+                detail=f"Could not find example objects for {genome_id}"
+            )
+    except HTTPException:
+        raise
     except Exception as ex:
         logging.error(ex)
         return response_error_handler({"status": 500})
@@ -140,10 +141,12 @@ async def get_genome_details(request: Request, genome_uuid: str):
                 }
             ))
         else:
-            not_found_response = {
-                "message": "Could not find details for {}".format(genome_uuid)
-            }
-            response_data = responses.JSONResponse(not_found_response, status_code=404)
+            raise HTTPException(
+                status_code=404,
+                detail=f"Could not find details for {genome_uuid}"
+            )
+    except HTTPException:
+        raise
     except Exception as ex:
         logging.error(ex)
         return response_error_handler({"status": 500})
@@ -195,8 +198,9 @@ async def explain_genome(request: Request, genome_id_or_slug: str):
             )
             response_data = responses.JSONResponse(response_dict, status_code=200)
         else:
-            not_found_response = {"message": "Could not explain {}".format(genome_id_or_slug)}
-            response_data = responses.JSONResponse(not_found_response, status_code=404)
+            raise HTTPException(status_code=404, detail=f"Could not explain {genome_id_or_slug}")
+    except HTTPException:
+        raise
     except Exception as ex:
         logging.error(ex)
         return response_error_handler({"status": 500})
@@ -336,11 +340,12 @@ async def get_releases(
                 response_list.append(response_dict)
             response_data = responses.JSONResponse(response_list, status_code=200)
         else:
-            response_data = responses.JSONResponse(
-                {"message": "No releases found matching criteria"},
-                status_code=404
+            raise HTTPException(
+                status_code=404,
+                detail="No releases found matching criteria"
             )
-
+    except HTTPException:
+        raise
     except Exception as e:
         logging.error(e)
         error_response = {"message": f"An error occurred: {str(e)}"}
