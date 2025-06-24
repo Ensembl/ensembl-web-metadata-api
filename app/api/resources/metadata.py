@@ -116,12 +116,10 @@ async def example_objects(request: Request, genome_id: str):
                 example_objects.model_dump()["example_objects"]
             )
         else:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Could not find example objects for {genome_id}"
-            )
-    except HTTPException:
-        raise
+            return response_error_handler({
+                "status": 404,
+                "details": f"Could not find example objects for {genome_id}"
+            })
     except Exception as ex:
         logging.error(ex)
         return response_error_handler({"status": 500})
@@ -141,12 +139,10 @@ async def get_genome_details(request: Request, genome_uuid: str):
                 }
             ))
         else:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Could not find details for {genome_uuid}"
-            )
-    except HTTPException:
-        raise
+            return response_error_handler({
+                "status": 404,
+                "details": f"Could not find details for {genome_uuid}"
+            })
     except Exception as ex:
         logging.error(ex)
         return response_error_handler({"status": 500})
@@ -198,9 +194,10 @@ async def explain_genome(request: Request, genome_id_or_slug: str):
             )
             response_data = responses.JSONResponse(response_dict, status_code=200)
         else:
-            raise HTTPException(status_code=404, detail=f"Could not explain {genome_id_or_slug}")
-    except HTTPException:
-        raise
+            return response_error_handler({
+                "status": 404,
+                "details": f"Could not explain {genome_id_or_slug}"
+            })
     except Exception as ex:
         logging.error(ex)
         return response_error_handler({"status": 500})
@@ -340,12 +337,10 @@ async def get_releases(
                 response_list.append(response_dict)
             response_data = responses.JSONResponse(response_list, status_code=200)
         else:
-            raise HTTPException(
-                status_code=404,
-                detail="No releases found matching criteria"
-            )
-    except HTTPException:
-        raise
+            return response_error_handler({
+                "status": 404,
+                "details": "No releases found matching criteria"
+            })
     except Exception as e:
         logging.error(e)
         error_response = {"message": f"An error occurred: {str(e)}"}
