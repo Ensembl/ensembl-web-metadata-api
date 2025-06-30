@@ -79,12 +79,17 @@ class BaseGenomeDetails(BaseModel):
     )
     common_name: str = Field(alias=AliasPath("organism", "commonName"), default=None)
     scientific_name: str = Field(alias=AliasPath("organism", "scientificName"))
+    species_taxonomy_id: str = Field(alias=AliasPath("organism", "speciesTaxonomyId"))
     type: Optional[Type] = None
     is_reference: bool = Field(
         alias=AliasPath("assembly", "isReference"), default=False
     )
     assembly: AssemblyInGenome = None
     release: Release = None
+
+    @validator("species_taxonomy_id", pre=True)
+    def convert_int_to_str(cls, value):
+        return str(value)
 
     def model_post_init(self, __context):
         """Set genome_tag to None if the release type is 'partial'."""
@@ -102,7 +107,6 @@ class BriefGenomeDetails(BaseGenomeDetails):
 
 class GenomeDetails(BaseGenomeDetails):
     taxonomy_id: str = Field(alias=AliasPath("organism", "taxonomyId"))
-    species_taxonomy_id: str = Field(alias=AliasPath("organism", "speciesTaxonomyId"))
     assembly_provider: AssemblyProvider = None
     assembly_level: str = Field(alias=AliasPath("attributesInfo", "assemblyLevel"))
     assembly_date: str = Field(
