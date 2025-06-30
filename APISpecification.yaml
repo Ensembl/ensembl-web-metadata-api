@@ -412,6 +412,9 @@ components:
           nullable: true
         scientific_name:
           type: string
+          example: 9606
+        species_taxonomy_id:
+          type: string
           example: Homo sapiens
         assembly:
           type: object
