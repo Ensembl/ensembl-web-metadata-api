@@ -91,8 +91,21 @@ class GRPCClient:
         genome_top_level_regions = []
         for tlr in top_level_regions:
             genome_top_level_regions.append(MessageToDict(tlr))
-        # Sort region by reank
-        genome_top_level_regions.sort(key=lambda region: region["rank"])
+
+        # Sort the list of regions by two criteria:
+        # 1. By "rank" if present, regions without a rank are considered to have the highest possible rank (so they go last)
+        # 2. Then by "length", which is stored as a string, so we convert it to an integer for proper numeric sorting
+        genome_top_level_regions.sort(
+            key=lambda region: (
+                # Use the value of "rank" if it exists, otherwise use infinity
+                # This ensures regions without a rank are placed at the end of the list
+                region.get("rank", float("inf")),
+
+                # Convert the "length" from string to integer so numeric comparison works correctly
+                # If "length" is missing, treat it as 0
+                int(region.get("length", 0))
+            )
+        )
         return genome_top_level_regions
 
     def get_region(self, genome_uuid: str, region_name: str):
