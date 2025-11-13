@@ -169,3 +169,17 @@ class GRPCClient:
         request_class = self.reflector.message_class("ensembl_metadata.ReleaseRequest")
         request = request_class(release_label=release_label, current_only=current_only)
         return self.stub.GetRelease(request)
+
+    def get_genome_groups_with_reference(self, group_type: str, release_label: str):
+        request_class = self.reflector.message_class(
+            "ensembl_metadata.GroupTypeRequest"
+        )
+        request = request_class(group_type=group_type, release_label=release_label)
+        return self.stub.GetGenomeGroupsWithReference(request)
+
+    def get_genomes_in_group(self, group_id: str, release_label: str):
+        request_class = self.reflector.message_class(
+            "ensembl_metadata.GenomesInGroupRequest"
+        )
+        request = request_class(group_id=group_id, release_label=release_label)
+        return self.stub.GetGenomesInGroup(request)
