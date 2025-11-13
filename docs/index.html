@@ -1,23 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
+    <meta charset="utf-8" />
     <title>API Documentation</title>
-    <!-- ReDoc standalone bundle via CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/redoc/bundles/redoc.standalone.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
       body {
         margin: 0;
         padding: 0;
       }
       redoc {
-        width: 100vw;
+        display: block;
         height: 100vh;
       }
     </style>
   </head>
   <body>
-    <!-- ReDoc mounts here -->
-    <redoc spec-url="https://ensembl.github.io/ensembl-web-metadata-api/APISpecification.yaml"></redoc>
+    <redoc spec-url="APISpecification.yaml"></redoc>
+
+    <script src="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"></script>
   </body>
 </html>
