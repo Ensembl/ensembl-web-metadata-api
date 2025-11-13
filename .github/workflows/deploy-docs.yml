@@ -1,0 +1,37 @@
+name: Deploy API Docs
+on:
+  push:
+    branches: [main]
+    paths: ['APISpecification.yaml']  # Only run when spec changes
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create documentation page
+        run: |
+          cat > index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>API Documentation</title>
+              <meta charset="utf-8"/>
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700" rel="stylesheet">
+              <style> body { margin: 0; padding: 0; } </style>
+            </head>
+            <body>
+              <redoc spec-url='APISpecification.yaml'></redoc>
+              <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"></script>
+            </body>
+          </html>
+          EOF
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./
+          publish_branch: gh-pages
