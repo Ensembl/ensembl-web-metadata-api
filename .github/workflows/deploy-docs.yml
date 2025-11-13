@@ -1,37 +1,42 @@
-name: Deploy API Docs
+name: Deploy OpenAPI docs to GitHub Pages
+
 on:
   push:
-    branches: [main, add-genome-groups]
-    paths: ['APISpecification.yaml']  # Only run when spec changes
+    branches:
+      - main
+      - add-genome-groups
+    paths:
+      - 'docs/**'
+      - '.github/workflows/deploy-docs.yml'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: true
 
 jobs:
   deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - name: Create documentation page
-        run: |
-          cat > index.html << 'EOF'
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <title>API Documentation</title>
-              <meta charset="utf-8"/>
-              <meta name="viewport" content="width=device-width, initial-scale=1">
-              <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700" rel="stylesheet">
-              <style> body { margin: 0; padding: 0; } </style>
-            </head>
-            <body>
-              <redoc spec-url='APISpecification.yaml'></redoc>
-              <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"></script>
-            </body>
-          </html>
-          EOF
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
 
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./
-          publish_branch: gh-pages
+        id: deployment
+        uses: actions/deploy-pages@v4
