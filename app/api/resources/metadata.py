@@ -349,7 +349,7 @@ async def get_releases(
 
     return response_data
 
-@router.get("/genome_groups", name="genome_groups", response_model=GenomeGroupsResponse)
+@router.get("/genome_groups", name="genome_groups")
 @redis_cache("genome_groups", arg_keys=["group_type", "release_label"])
 async def get_genome_groups(
         group_type: str = Query(..., description="Group type, e.g. 'structural_variant'"),
@@ -369,16 +369,14 @@ async def get_genome_groups(
                 "details": "No genome groups found matching criteria"
             })
 
-        return GenomeGroupsResponse(**genome_groups_dict)
+        genome_groups = GenomeGroupsResponse(**genome_groups_dict)
+        response_dict = genome_groups.model_dump()
+        return responses.JSONResponse(response_dict, status_code=200)
     except Exception as ex:
         logging.exception("Error in get_genome_groups")
         return response_error_handler({"status": 500})
 
-@router.get(
-    "/genome_groups/{group_id}/genomes",
-    name="genomes_in_group",
-    response_model=GenomesInGroupResponse
-)
+@router.get("/genome_groups/{group_id}/genomes", name="genomes_in_group")
 @redis_cache("genomes_in_group", arg_keys=["group_id", "release_label"])
 async def get_genomes_in_group(
         group_id: str = Path(..., description="Group ID, e.g. 'grch38-group'"),
@@ -398,7 +396,9 @@ async def get_genomes_in_group(
                 "details": "No genomes found in specified group"
             })
 
-        return GenomesInGroupResponse(**genomes_in_group_dict)
+        genomes_in_group = GenomesInGroupResponse(**genomes_in_group_dict)
+        response_dict = genomes_in_group.model_dump()
+        return responses.JSONResponse(response_dict, status_code=200)
     except Exception as ex:
         logging.exception("Error in get_genomes_in_group")
         return response_error_handler({"status": 500})
