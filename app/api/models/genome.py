@@ -9,6 +9,7 @@ from pydantic import (
     AliasPath,
     field_serializer,
 )
+from pydantic.functional_validators import model_validator
 
 from core.logging import InterceptHandler
 from core.config import ASSEMBLY_URLS
@@ -87,6 +88,30 @@ class BaseGenomeDetails(BaseModel):
     assembly: AssemblyInGenome = None
     release: Release = None
 
+    @model_validator(mode="before")
+    @classmethod
+    def inject_type_from_organism(cls, data):
+        """
+        Build a 'type' object from organism.strainType and organism.strain
+        before normal field parsing.
+        """
+        if not isinstance(data, dict):
+            return data
+
+        org = data.get("organism") or {}
+        strain_type = org.get("strainType")
+        strain = org.get("strain")
+
+        # only inject if we actually have something
+        if (strain_type or strain) and "type" not in data:
+            data = dict(data)  # shallow copy to avoid mutating original
+            data["type"] = {
+                "kind": strain_type,
+                "value": strain,
+            }
+
+        return data
+
     @validator("species_taxonomy_id", pre=True)
     def convert_int_to_str(cls, value):
         return str(value)
@@ -137,11 +162,6 @@ class GenomeDetails(BaseGenomeDetails):
         return year + "-" + month
 
     def __init__(self, **data):
-        if data.get("organism", {}).get("strainType", None):
-            data["type"] = {
-                "kind": data.get("organism", {}).get("strainType", ""),
-                "value": data.get("organism", {}).get("strain", ""),
-            }
         if data.get("attributesInfo", {}).get("AssemblyProviderName", None):
             data["assembly_provider"] = {
                 "name": data.get("attributesInfo", {}).get(
