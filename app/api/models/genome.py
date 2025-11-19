@@ -102,8 +102,8 @@ class BaseGenomeDetails(BaseModel):
         strain_type = org.get("strainType")
         strain = org.get("strain")
 
-        # only inject if we actually have something
-        if (strain_type or strain) and "type" not in data:
+        # only inject if we actually have both strain_type and strain
+        if strain_type is not None and strain is not None and "type" not in data:
             data = dict(data)  # shallow copy to avoid mutating original
             data["type"] = {
                 "kind": strain_type,
