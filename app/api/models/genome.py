@@ -196,3 +196,15 @@ class GenomeByKeyword(BaseModel):
     genome_uuid: str = Field(alias="genomeUuid", default="")
     release_version: float = Field(alias=AliasPath("release", "releaseVersion"), default=0)
     genome_tag: str = Field(alias=AliasPath("assembly", "urlName"), default="")
+
+class GenomeGroup(BaseModel):
+    id: str = Field(alias="groupId")
+    type: str = Field(alias="groupType")
+    name: str | None = Field(alias="groupName", default=None)
+    reference_genome: BaseGenomeDetails = Field(alias="referenceGenome")
+
+class GenomeGroupsResponse(BaseModel):
+    genome_groups: list[GenomeGroup] = Field(alias="genomeGroups")
+
+class GenomesInGroupResponse(BaseModel):
+    genomes: list[BaseGenomeDetails] = Field(alias="genomes")

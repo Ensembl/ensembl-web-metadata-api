@@ -382,6 +382,62 @@ paths:
         '500':
           $ref: '#/components/responses/500InternalServerError'
 
+  /api/metadata/genome_groups:
+      get:
+        summary: List genome groups with their reference genome
+        parameters:
+          - in: query
+            name: group_type
+            required: true
+            schema:
+              type: string
+          - in: query
+            name: release_label
+            required: false
+            schema:
+              type: string
+        responses:
+          "200":
+            description: OK
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    genome_groups:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/GenomeGroup'
+          "400": { description: Bad Request }
+
+  /api/metadata/genome_groups/{group_id}/genomes:
+    get:
+      summary: List genomes in a group
+      parameters:
+        - in: path
+          name: group_id
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: release_label
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  genomes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Genome'
+        "404": { description: Not Found }
+
 components:
   schemas:
     GenomeIDFromAssemblyAccessionResponse:
@@ -1072,6 +1128,35 @@ components:
         - name
         - type
         - is_current
+    Genome:
+      type: object
+      properties:
+        genome_uuid:
+          type: string
+          format: uuid
+        common_name:
+          type: string
+        scientific_name:
+          type: string
+        assembly_name:
+          type: string
+        is_reference:
+          type: boolean
+        is_group_reference:
+          type: boolean
+        release:
+          $ref: '#/components/schemas/Release'
+    GenomeGroup:
+      type: object
+      properties:
+        group_id:
+          type: string
+        group_type:
+          type: string
+        group_name:
+          type: string
+        reference_genome:
+          $ref: '#/components/schemas/Genome'
   responses:
     404NotFound:
       description: The specified resource was not found
