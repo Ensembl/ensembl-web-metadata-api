@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "Ensembl_web_metadata_API"
+version = "0.0.0"
+description = "FastAPI application ."
+authors = ["Web team <ensembl-webteam@ebi.ac.uk>"]
+license = "Apache-2.0"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+fastapi = "^0.57.0"
+pydantic = "^1.5.1"
+starlette = "^0.13.4"
+loguru = "^0.5.1"
+protobuf = "3.20"
+aiohttp = "^3.8.4"
+grpcio = "1.38.1"
+grpcio-tools = "1.38.1"
+uvicorn = "^0.22.0"
+orjson = "^3.9.1"
+black = "^23.3.0"
+ensembl-metadata-service = {git = "https://github.com/Ensembl/ensembl-metadata-service.git", rev = "main"}
+
+
+[build-system]
+requires = ["poetry>=1.0"]
+build-backend = "poetry.masonry.api"

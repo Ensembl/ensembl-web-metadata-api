@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: metadata-api-configmap
+data:
+  DEBUG: "False"
+  GRPC_HOST: ensembl-metadata-service
+  GRPC_PORT: "50051"

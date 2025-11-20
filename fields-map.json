@@ -1,0 +1,80 @@
+{
+  "assembly_stats": {
+    "contig_n50": "contig_n50",
+    "total_genome_length": "total_genome_length",
+    "total_coding_sequence_length": "total_coding_sequence_length",
+    "total_gap_length": "total_gap_length",
+    "spanned_gaps": "spanned_gaps",
+    "chromosomes": "chromosomes",
+    "toplevel_sequences": "toplevel_sequences",
+    "component_sequences": "component_sequences",
+    "gc_percentage": "gc_percentage"
+  },
+  "coding_stats": {
+    "coding_genes": "coding_genes",
+    "average_genomic_span": "average_genomic_span",
+    "average_sequence_length": "average_sequence_length",
+    "average_cds_length": "average_cds_length",
+    "shortest_gene_length": "shortest_gene_length",
+    "longest_gene_length": "longest_gene_length",
+    "total_transcripts": "total_transcripts",
+    "coding_transcripts": "coding_transcripts",
+    "transcripts_per_gene": "transcripts_per_gene",
+    "coding_transcripts_per_gene": "coding_transcripts_per_gene",
+    "total_exons": "total_exons",
+    "total_coding_exons": "total_coding_exons",
+    "average_exon_length": "average_exon_length",
+    "average_coding_exon_length": "average_coding_exon_length",
+    "average_exons_per_transcript": "average_exons_per_transcript",
+    "average_coding_exons_per_coding_transcript": "average_coding_exons_per_coding_transcript",
+    "total_introns": "total_introns",
+    "average_intron_length": "average_intron_length"
+  },
+  "non_coding_stats": {
+    "non_coding_genes": "nc_non_coding_genes",
+    "small_non_coding_genes": "nc_small_non_coding_genes",
+    "long_non_coding_genes": "nc_long_non_coding_genes",
+    "misc_non_coding_genes": "nc_misc_non_coding_genes",
+    "average_genomic_span": "nc_average_genomic_span",
+    "average_sequence_length": "nc_average_sequence_length",
+    "shortest_gene_length": "nc_shortest_gene_length",
+    "longest_gene_length": "nc_longest_gene_length",
+    "total_transcripts": "nc_total_transcripts",
+    "transcripts_per_gene": "nc_transcripts_per_gene",
+    "total_exons": "nc_total_exons",
+    "average_exon_length": "nc_average_exon_length",
+    "average_exons_per_transcript": "nc_average_exons_per_transcript",
+    "total_introns": "nc_total_introns",
+    "average_intron_length": "nc_average_intron_length"
+  },
+  "pseudogene_stats": {
+    "pseudogenes": "ps_pseudogenes",
+    "average_genomic_span": "ps_average_genomic_span",
+    "average_sequence_length": "ps_average_sequence_length",
+    "shortest_gene_length": "ps_shortest_gene_length",
+    "longest_gene_length": "ps_longest_gene_length",
+    "total_transcripts": "ps_total_transcripts",
+    "transcripts_per_gene": "ps_transcripts_per_gene",
+    "total_exons": "ps_total_exons",
+    "average_exon_length": "ps_average_exon_length",
+    "average_exons_per_transcript": "ps_average_exons_per_transcript",
+    "total_introns": "ps_total_introns",
+    "average_intron_length": "ps_average_intron_length"
+  },
+  "homology_stats": {
+    "coverage": "homology_coverage",
+    "coverage_explanation": "TODO: DOES NOT EXIST IN PRODUCTION DATABASE"
+  },
+  "variation_stats": {
+    "short_variants": "short_variants",
+    "structural_variants": "structural_variants",
+    "short_variants_with_phenotype_assertions": "short_variants_with_phenotype_assertions",
+    "short_variants_with_publications": "short_variants_with_publications",
+    "short_variants_frequency_studies": "short_variants_frequency_studies",
+    "structural_variants_with_phenotype_assertions": "structural_variants_with_phenotype_assertions"
+  },
+  "regulation_stats": {
+    "enhancers": "enhancers",
+    "promoters": "promoters"
+  }
+}
