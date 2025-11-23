@@ -26,7 +26,7 @@ from api.models.statistics import GenomeStatistics, ExampleObjectList
 from api.models.popular_species import PopularSpeciesGroup
 from api.models.karyotype import Karyotype
 from api.models.genome import BriefGenomeDetails, GenomeDetails, DatasetAttributes, GenomeByKeyword, Release, \
-    GenomeGroupsResponse, GenomesInGroupResponse
+    GenomeGroupsResponse, GenomesInGroupResponse, GenomeCountsResponse
 from api.models.ftplinks import FTPLinks
 from api.models.vep import VepFilePaths
 
@@ -402,3 +402,20 @@ async def get_genomes_in_group(
     except Exception as ex:
         logging.exception("Error in get_genomes_in_group")
         return response_error_handler({"status": 500})
+
+
+@router.get("/genome_counts", name="genome_counts")
+@redis_cache(key_prefix="genome_counts", arg_keys=["release_label"])
+async def get_genome_counts(
+    release_label: str | None = Query(None, description="Optional release label to filter counts")
+):
+    try:
+        genome_counts_dict = MessageToDict(
+            grpc_client.get_genome_counts(release_label=release_label)
+        )
+        genome_counts = GenomeCountsResponse(**genome_counts_dict)
+        response_data = responses.JSONResponse(genome_counts.model_dump(), status_code=200)
+    except Exception as ex:
+        logging.exception("Error in get_genome_counts")
+        return response_error_handler({"status": 500})
+    return response_data
