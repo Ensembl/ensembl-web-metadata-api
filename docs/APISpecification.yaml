@@ -242,7 +242,7 @@ paths:
       summary: Genome counts grouped by specific taxonomic group
       description: Returns aggregated genome counts optionally filtered by release label.
       parameters:
-        - name: release_label
+        - name: release
           in: query
           required: false
           description: Filter counts for genomes that belong to a specific release label.
@@ -415,7 +415,7 @@ paths:
             schema:
               type: string
           - in: query
-            name: release_label
+            name: release
             required: false
             schema:
               type: string
@@ -443,7 +443,7 @@ paths:
           schema:
             type: string
         - in: query
-          name: release_label
+          name: release
           required: false
           schema:
             type: string
