@@ -208,3 +208,13 @@ class GenomeGroupsResponse(BaseModel):
 
 class GenomesInGroupResponse(BaseModel):
     genomes: list[BaseGenomeDetails] = Field(alias="genomes")
+
+
+class GenomeCountItem(BaseModel):
+    label: str
+    count: int
+
+
+class GenomeCountsResponse(BaseModel):
+    total: int = 0
+    counts: list[GenomeCountItem] = Field(default_factory=list)

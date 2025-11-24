@@ -183,3 +183,10 @@ class GRPCClient:
         )
         request = request_class(group_id=group_id, release_label=release_label)
         return self.stub.GetGenomesInGroup(request)
+
+    def get_genome_counts(self, release_label: str | None):
+        request_class = self.reflector.message_class(
+            "ensembl_metadata.GenomeCountsRequest"
+        )
+        request = request_class(release_label=release_label)
+        return self.stub.GetGenomeCounts(request)

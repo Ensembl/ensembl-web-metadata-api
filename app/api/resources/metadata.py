@@ -26,7 +26,7 @@ from api.models.statistics import GenomeStatistics, ExampleObjectList
 from api.models.popular_species import PopularSpeciesGroup
 from api.models.karyotype import Karyotype
 from api.models.genome import BriefGenomeDetails, GenomeDetails, DatasetAttributes, GenomeByKeyword, Release, \
-    GenomeGroupsResponse, GenomesInGroupResponse
+    GenomeGroupsResponse, GenomesInGroupResponse, GenomeCountsResponse
 from api.models.ftplinks import FTPLinks
 from api.models.vep import VepFilePaths
 
@@ -350,16 +350,16 @@ async def get_releases(
     return response_data
 
 @router.get("/genome_groups", name="genome_groups")
-@redis_cache("genome_groups", arg_keys=["group_type", "release_label"])
+@redis_cache("genome_groups", arg_keys=["group_type", "release"])
 async def get_genome_groups(
         group_type: str = Query(..., description="Group type, e.g. 'structural_variant'"),
-        release_label: str | None = Query(None, description="Optional release label, e.g. '2025-02'")
+        release: str | None = Query(None, description="Optional release label, e.g. '2025-02'")
 ):
     try:
         genome_groups_dict = MessageToDict(
             grpc_client.get_genome_groups_with_reference(
                 group_type=group_type,
-                release_label=release_label
+                release_label=release
             )
         )
         logging.debug(f"genome_groups_dict: {genome_groups_dict}")
@@ -377,16 +377,16 @@ async def get_genome_groups(
         return response_error_handler({"status": 500})
 
 @router.get("/genome_groups/{group_id}/genomes", name="genomes_in_group")
-@redis_cache("genomes_in_group", arg_keys=["group_id", "release_label"])
+@redis_cache("genomes_in_group", arg_keys=["group_id", "release"])
 async def get_genomes_in_group(
         group_id: str = Path(..., description="Group ID, e.g. 'grch38-group'"),
-        release_label: str | None = Query(None, description="Optional release label, e.g. '2025-02'")
+        release: str | None = Query(None, description="Optional release label, e.g. '2025-02'")
 ):
     try:
         genomes_in_group_dict = MessageToDict(
             grpc_client.get_genomes_in_group(
                 group_id=group_id,
-                release_label=release_label
+                release_label=release
             )
         )
         logging.debug(f"genomes_in_group_dict: {genomes_in_group_dict}")
@@ -402,3 +402,20 @@ async def get_genomes_in_group(
     except Exception as ex:
         logging.exception("Error in get_genomes_in_group")
         return response_error_handler({"status": 500})
+
+
+@router.get("/genome_counts", name="genome_counts")
+@redis_cache(key_prefix="genome_counts", arg_keys=["release"])
+async def get_genome_counts(
+    release: str | None = Query(None, description="Optional release label to filter counts, e.g. '2025-02'")
+):
+    try:
+        genome_counts_dict = MessageToDict(
+            grpc_client.get_genome_counts(release_label=release)
+        )
+        genome_counts = GenomeCountsResponse(**genome_counts_dict)
+        response_data = responses.JSONResponse(genome_counts.model_dump(), status_code=200)
+    except Exception as ex:
+        logging.exception("Error in get_genome_counts")
+        return response_error_handler({"status": 500})
+    return response_data
