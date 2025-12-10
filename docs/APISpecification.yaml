@@ -235,6 +235,29 @@ paths:
                       $ref: '#/components/schemas/PopularSpecies'
         '500':
           $ref: '#/components/responses/500InternalServerError'
+  /api/metadata/genome_counts:
+    get:
+      tags:
+        - api
+      summary: Genome counts grouped by specific taxonomic group
+      description: Returns aggregated genome counts optionally filtered by release label.
+      parameters:
+        - name: release
+          in: query
+          required: false
+          description: Filter counts for genomes that belong to a specific release label.
+          schema:
+            type: string
+            example: 2025-05
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenomeCountsResponse'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
   /api/metadata/genome/{genome_id}/dataset/{dataset_type}/attributes:
     get:
       description: Returns a list of attributes of a given dataset of a genome.
@@ -392,7 +415,7 @@ paths:
             schema:
               type: string
           - in: query
-            name: release_label
+            name: release
             required: false
             schema:
               type: string
@@ -420,7 +443,7 @@ paths:
           schema:
             type: string
         - in: query
-          name: release_label
+          name: release
           required: false
           schema:
             type: string
@@ -508,6 +531,31 @@ components:
         - type
         - is_reference
         - latest_genome
+    GenomeCountItem:
+      type: object
+      properties:
+        label:
+          type: string
+          example: Animals
+        count:
+          type: integer
+          example: 1207
+      required:
+        - label
+        - count
+    GenomeCountsResponse:
+      type: object
+      properties:
+        total:
+          type: integer
+          example: 4218
+        counts:
+          type: array
+          items:
+            $ref: '#/components/schemas/GenomeCountItem'
+      required:
+        - total
+        - counts
     GenomeStats:
       type: object
       properties:
