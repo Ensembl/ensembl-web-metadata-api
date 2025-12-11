@@ -137,7 +137,7 @@ Fallback:
   environment:
     name: fallback
   variables:
-    AGENT: ${FALLABACK_AGENT}
+    AGENT: ${FALLBACK_AGENT}
     NS: ${FALLBACK_NS}
 
 
