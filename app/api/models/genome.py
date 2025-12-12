@@ -149,17 +149,14 @@ class GenomeDetails(BaseGenomeDetails):
         ),
         default=None
     )
-    annotation_date: str = Field(alias="created", default=None)
+    annotation_date: str = Field(
+        alias=AliasPath("attributesInfo", "genebuildLastGenesetUpdate"), default=None
+    )
     number_of_genomes_in_group: int = Field(alias="relatedAssembliesCount", default=1)
 
     @validator("taxonomy_id", "species_taxonomy_id", pre=True)
     def convert_int_to_str(cls, value):
         return str(value)
-
-    @validator("annotation_date", pre=True)
-    def parse_date(cls, value):
-        year, month, _ = value.split("-")
-        return year + "-" + month
 
     def __init__(self, **data):
         if data.get("attributesInfo", {}).get("AssemblyProviderName", None):
