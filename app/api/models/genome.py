@@ -153,6 +153,7 @@ class GenomeDetails(BaseGenomeDetails):
         alias=AliasPath("attributesInfo", "genebuildLastGenesetUpdate"), default=None
     )
     number_of_genomes_in_group: int = Field(alias="relatedAssembliesCount", default=1)
+    available_datasets: list[str] = Field(alias="availableDatasets", default=[])
 
     @validator("taxonomy_id", "species_taxonomy_id", pre=True)
     def convert_int_to_str(cls, value):

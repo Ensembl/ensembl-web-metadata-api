@@ -1027,6 +1027,21 @@ components:
           description: The number of genomes, including the current one, that share the same species taxonomy id.
             May just mean the number of alternative assemblies; but may also include genomes
             that have the same assembly, but different annotations.
+        available_datasets:
+          type: array
+          description: List of dataset types available for the genome.
+          items:
+            type: string
+            enum:
+              - genebuild
+              - assembly
+              - homologies
+              - regulatory_features
+              - variation
+          example:
+            - genebuild
+            - assembly
+            - homologies
       required:
         - genome_id
         - genome_tag
@@ -1045,6 +1060,7 @@ components:
         - annotation_version
         - annotation_date
         - related_genomes_count
+        - available_datasets
       additionalProperties: false
       type: object
     ExampleObject:
