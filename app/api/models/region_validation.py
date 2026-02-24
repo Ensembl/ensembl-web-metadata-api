@@ -15,13 +15,9 @@ import logging
 from pydantic import BaseModel, model_serializer, Field, root_validator
 from typing import Any, Optional
 
-from core.config import GRPC_HOST, GRPC_PORT
-from api.resources.grpc_client import GRPCClient
 from core.logging import InterceptHandler
 
 logging.getLogger().handlers = [InterceptHandler()]
-
-grpc_client = GRPCClient(GRPC_HOST, GRPC_PORT)
 
 
 class RegionValidation(BaseModel):
@@ -58,12 +54,25 @@ class RegionValidation(BaseModel):
         return region, start, end
 
     def _validate_region_name(self):
+
+        # TODO FIXME - this is a "mocked" protobuf object for a
+        # GenomeAssemblySequenceRegion, but only with data we actually use
+        # Do the actual validation vs DB, remove this
+        class GenReg:
+            length: int
+            chromosomal: bool
+
+        genome_region = GenReg()
+        genome_region.length = 26372680
+        genome_region.chromosomal = True
+
         if self.name:
             try:
-                genome_region = grpc_client.get_region(self.genome_uuid, self.name)
                 if self.end is None:
                     self.end = genome_region.length
-                if genome_region.ByteSize() == 0:
+                # TODO FIXME - this checked for empty protobuf content before.
+                # Does this still make sense? Maybe just remove
+                if genome_region.length == 0:
                     self._is_valid[0] = False
                     self._region_name_error = "Could not find region {} for {}".format(
                         self.name, self.genome_uuid

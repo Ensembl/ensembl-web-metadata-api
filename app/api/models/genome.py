@@ -29,14 +29,15 @@ class Type(BaseModel):
 
 
 class Release(BaseModel):
-    name: str = Field(alias="releaseLabel")
-    type: str = Field(alias="releaseType")
-    is_current: bool = Field(alias="isCurrent", default=False)
+    name: str = Field(alias="release_label")
+    type: str = Field(alias="release_type")
+    is_current: bool = Field(alias="is_current", default=False)
 
 
 class AssemblyInGenome(BaseModel):
     accession_id: str = Field(alias="accession")
     name: str = Field(alias="name")
+    # TODO FIX: accession alias is defined twice?
     url: str = Field(alias="accession", default=None)
 
     @validator("url", always=True)
@@ -71,19 +72,19 @@ class AnnotationProvider(BaseModel):
 
 
 class BaseGenomeDetails(BaseModel):
-    genome_id: str = Field(alias="genomeUuid")
+    genome_id: str = Field(alias="genome_uuid")
     genome_tag: Optional[str] = Field(
         alias=AliasChoices(
             AliasPath("assembly", "urlName"), AliasPath("assembly", "tolId")
         ),
         default=None,
     )
-    common_name: str = Field(alias=AliasPath("organism", "commonName"), default=None)
-    scientific_name: str = Field(alias=AliasPath("organism", "scientificName"))
-    species_taxonomy_id: str = Field(alias=AliasPath("organism", "speciesTaxonomyId"))
+    common_name: str = Field(alias=AliasPath("organism", "common_name"), default=None)
+    scientific_name: str = Field(alias=AliasPath("organism", "scientific_name"))
+    species_taxonomy_id: str = Field(alias=AliasPath("organism", "species_taxonomy_id"))
     type: Optional[Type] = None
     is_reference: bool = Field(
-        alias=AliasPath("assembly", "isReference"), default=False
+        alias=AliasPath("assembly", "is_reference"), default=False
     )
     assembly: AssemblyInGenome = None
     release: Release = None
@@ -131,47 +132,47 @@ class BriefGenomeDetails(BaseGenomeDetails):
 
 
 class GenomeDetails(BaseGenomeDetails):
-    taxonomy_id: str = Field(alias=AliasPath("organism", "taxonomyId"))
+    taxonomy_id: str = Field(alias=AliasPath("organism", "taxonomy_id"))
     assembly_provider: AssemblyProvider = None
-    assembly_level: str = Field(alias=AliasPath("attributesInfo", "assemblyLevel"))
+    assembly_level: str = Field(alias=AliasPath("attributes_info", "assembly_level"))
     assembly_date: str = Field(
-        alias=AliasPath("attributesInfo", "assemblyDate"), default=None
+        alias=AliasPath("attributes_info", "assembly_date"), default=None
     )
     annotation_provider: AnnotationProvider = None
     annotation_method: str = Field(
-        alias=AliasPath("attributesInfo", "genebuildMethodDisplay"), default=None
+        alias=AliasPath("attributes_info", "genebuild_method_display"), default=None
     )
     annotation_version: str = Field(
         # TODO: remove genebuildVersion after the metadata DB is updated
         alias=AliasChoices(
-            AliasPath("attributesInfo", "genebuildProviderVersion"),
-            AliasPath("attributesInfo", "genebuildVersion")
+            AliasPath("attributes_info", "genebuild_provider_version"),
+            AliasPath("attributes_info", "genebuild_version")
         ),
         default=None
     )
     annotation_date: str = Field(
-        alias=AliasPath("attributesInfo", "genebuildLastGenesetUpdate"), default=None
+        alias=AliasPath("attributes_info", "genebuild_last_geneset_update"), default=None
     )
-    number_of_genomes_in_group: int = Field(alias="relatedAssembliesCount", default=1)
+    number_of_genomes_in_group: int = Field(alias="related_assemblies_count", default=1)
 
     @validator("taxonomy_id", "species_taxonomy_id", pre=True)
     def convert_int_to_str(cls, value):
         return str(value)
 
     def __init__(self, **data):
-        if data.get("attributesInfo", {}).get("AssemblyProviderName", None):
+        if data.get("attributes_info", {}).get("assembly_provider_name", None):
             data["assembly_provider"] = {
-                "name": data.get("attributesInfo", {}).get(
-                    "assemblyProviderName", None
+                "name": data.get("attributes_info", {}).get(
+                    "assembly_provider_name", None
                 ),
-                "url": data.get("attributesInfo", {}).get("assemblyProviderUrl", ""),
+                "url": data.get("attributes_info", {}).get("assembly_provider_url", ""),
             }
-        if data.get("attributesInfo", {}).get("genebuildProviderName", None):
+        if data.get("attributes_info", {}).get("genebuild_provider_name", None):
             data["annotation_provider"] = {
-                "name": data.get("attributesInfo", {}).get(
-                    "genebuildProviderName", None
+                "name": data.get("attributes_info", {}).get(
+                    "genebuild_provider_name", None
                 ),
-                "url": data.get("attributesInfo", {}).get("genebuildProviderUrl", ""),
+                "url": data.get("attributes_info", {}).get("genebuild_provider_url", ""),
             }
 
         super().__init__(**data)

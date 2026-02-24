@@ -36,10 +36,6 @@ ALLOWED_HOSTS: list[str] = config(
     default="*",
 )
 
-# GRPC Info
-GRPC_HOST: str = config("GRPC_HOST", default="localhost")
-GRPC_PORT: int = config("GRPC_PORT", default=50051)
-
 # Caching Config
 REDIS_HOST: str = config("REDIS_HOST", default="redis")
 REDIS_PORT: int = config("REDIS_PORT", default=6379)

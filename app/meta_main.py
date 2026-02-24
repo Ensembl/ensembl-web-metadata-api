@@ -1,0 +1,2800 @@
+"""
+See the NOTICE file distributed with this work for additional information
+regarding copyright ownership.
+
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
+import enum
+import itertools
+import logging
+from core.logging import InterceptHandler
+import os
+import pprint
+import pytest
+import sqlalchemy
+import time
+import timeit
+import uuid
+from datetime import datetime
+
+from typing import Annotated, Type, Any
+
+from fastapi import APIRouter, Request, responses, Query, Path, FastAPI, Depends
+from fastapi.testclient import TestClient
+
+from pydantic import ValidationError
+
+from sqlalchemy import Column, Integer, create_engine, Index, ForeignKey
+from sqlalchemy.orm import DeclarativeBase, relationship
+from sqlalchemy.orm.session import Session
+
+from api.error_response import response_error_handler
+from api.models.checksums import Checksum
+from api.models.ftplinks import FTPLinks
+from api.models.genome import BriefGenomeDetails, GenomeDetails, DatasetAttributes, GenomeByKeyword, Release, GenomeGroupsResponse, GenomesInGroupResponse, GenomeCountsResponse
+from api.models.karyotype import Karyotype
+from api.models.popular_species import PopularSpeciesGroup
+from api.models.region_validation import RegionValidation
+from api.models.statistics import GenomeStatistics, ExampleObjectList
+from api.models.vep import VepFilePaths
+
+from ensembl.production.metadata.api.adaptors import GenomeAdaptor, BaseAdaptor, ReleaseAdaptor
+from ensembl.production.metadata.api.models import Genome
+from ensembl.production.metadata.grpc.config import MetadataConfig
+
+from ensembl.utils.database import DBConnection
+
+#from api.resources.redis import redis_cache
+
+#@pytest.fixture
+#def session():
+TEST_DB_URL = "duckdb:///./duck_meta.db"
+meta_conn = DBConnection(TEST_DB_URL)
+adaptor = GenomeAdaptor(meta_conn)
+
+def get_adaptor():
+	yield adaptor
+
+AdaptorDep = Annotated[GenomeAdaptor, Depends(get_adaptor)]
+
+
+#eng = sqlalchemy.create_engine(TEST_DB_URL, connect_args={
+#    'read_only': True,
+#    'config': {
+#        'memory_limit': '500mb'
+#    }
+#})
+#
+#class Base(DeclarativeBase):
+#    pass
+#
+#Base.metadata.reflect(eng)
+#
+#
+#class EnsemblRelease(Base):
+#    __tablename__ = 'ensembl_release'
+#    __table_args__ = {'extend_existing': True}
+#    release_id = Column(Integer, primary_key=True)
+#
+#class Assembly(Base):
+#    __tablename__ = 'assembly'
+#    __table_args__ = {'extend_existing': True}
+#    assembly_id = Column(Integer, primary_key=True)
+#
+#class AssemblySequence(Base):
+#    __tablename__ = 'assembly_sequence'
+#    __table_args__ = {'extend_existing': True}
+#    assembly_sequence_id = Column(Integer, primary_key=True)
+#
+#class Attribute(Base):
+#    __tablename__ = 'attribute'
+#    __table_args__ = {'extend_existing': True}
+#    attribute_id = Column(Integer, primary_key=True)
+#
+#class Dataset(Base):
+#    __tablename__ = 'dataset'
+#    __table_args__ = {'extend_existing': True}
+#    dataset_id = Column(Integer, primary_key=True)
+#
+#class DatasetAttribute(Base):
+#    __tablename__ = 'dataset_attribute'
+#    __table_args__ = {'extend_existing': True}
+#    dataset_attribute_id = Column(Integer, primary_key=True)
+#
+#class DatasetSource(Base):
+#    __tablename__ = 'dataset_source'
+#    __table_args__ = {'extend_existing': True}
+#    dataset_source_id = Column(Integer, primary_key=True)
+#
+#class DatasetType(Base):
+#    __tablename__ = 'dataset_type'
+#    __table_args__ = {'extend_existing': True}
+#    dataset_type_id = Column(Integer, primary_key=True)
+#
+#class EnsemblSite(Base):
+#    __tablename__ = 'ensembl_site'
+#    __table_args__ = {'extend_existing': True}
+#    site_id = Column(Integer, primary_key=True)
+#
+#class Genome(Base):
+#    __tablename__ = 'genome'
+#    __table_args__ = {'extend_existing': True}
+#    genome_id = Column(Integer, primary_key=True)
+#
+#class GenomeDataset(Base):
+#    __tablename__ = 'genome_dataset'
+#    __table_args__ = {'extend_existing': True}
+#    genome_dataset_id = Column(Integer, primary_key=True)
+#
+#class GenomeRelease(Base):
+#    __tablename__ = 'genome_release'
+#    __table_args__ = {'extend_existing': True}
+#    genome_release_id = Column(Integer, primary_key=True)
+#
+#class NCBITaxaName(Base):
+#    __tablename__ = 'ncbi_taxa_name'
+#    __table_args__ = {'extend_existing': True}
+#    taxon_id = Column(Integer, primary_key=True)
+#    name = Column(Integer, primary_key=True)
+#
+#class NCBITaxaNode(Base):
+#    __tablename__ = 'ncbi_taxa_node'
+#    __table_args__ = {'extend_existing': True}
+#    taxon_id = Column(Integer, primary_key=True)
+#
+#class Organism(Base):
+#    __tablename__ = 'organism'
+#    __table_args__ = {'extend_existing': True}
+#    organism_id = Column(Integer, primary_key=True)
+#
+#class OrganismGroup(Base):
+#    __tablename__ = 'organism_group'
+#    __table_args__ = {'extend_existing': True}
+#    organism_group_id = Column(Integer, primary_key=True)
+#
+#class OrganismGroupMember(Base):
+#    __tablename__ = 'organism_group_member'
+#    __table_args__ = {'extend_existing': True}
+#    organism_group_member_id = Column(Integer, primary_key=True)
+#
+#
+#
+#session = Session(bind=eng)
+
+
+logging.getLogger().handlers = [InterceptHandler()]
+
+router = APIRouter()
+
+logging.info("Starting up")
+
+logger = logging
+
+
+# works
+def get_species_information(db_conn, genome_uuid):
+    if not genome_uuid:
+        logger.warning("Missing or Empty Genome UUID field.")
+        return None
+    species_results = db_conn.fetch_genomes(genome_uuid=genome_uuid)
+    # TODO Patchy updates to fetch only the first one from results in case the genome is in multiple
+    #  release == strongly based on assertion that results are ordered by EnsemblRelease.version.desc()
+    if len(species_results) == 0:
+        logger.error(f"Species not found for genome {genome_uuid}")
+        return None
+    else:
+        if len(species_results) > 1:
+            logger.warning(f"Multiple results returned for {genome_uuid}.")
+        tax_id = species_results[0].Organism.taxonomy_id
+        taxo_results = db_conn.fetch_taxonomy_names(tax_id)
+        response_data = (species_results[0], taxo_results[tax_id])
+        return response_data
+
+
+
+def is_valid_uuid(value):
+    try:
+        # Attempt to create a UUID object from the input
+        uuid_obj = uuid.UUID(value)
+        return True
+    except (ValueError, AttributeError, TypeError):
+        return False
+
+
+def get_alternative_names(db_conn, taxon_id):
+    """ Get alternative names for a given taxon ID """
+    taxon_ifo = db_conn.fetch_taxonomy_names(taxon_id)
+    alternative_names = taxon_ifo[taxon_id].get('synonym')
+    genbank_common_name = taxon_ifo[taxon_id].get('genbank_common_name')
+
+    if genbank_common_name is not None:
+        alternative_names.append(genbank_common_name)
+
+    # remove duplicates
+    unique_alternative_names = list(set(alternative_names))
+    # sort before returning (otherwise the test breaks)
+    sorted_unique_alternative_names = sorted(unique_alternative_names)
+    return sorted_unique_alternative_names
+
+
+# TODO
+
+
+def get_assembly_information(db_conn, assembly_uuid):
+    if not assembly_uuid:
+        logger.warning("Missing or Empty Assembly UUID field.")
+        return msg_factory.create_assembly_info()
+
+    assembly_results = db_conn.fetch_sequences(
+        assembly_uuid=assembly_uuid
+    )
+    if len(assembly_results) > 0:
+        response_data = msg_factory.create_assembly_info(assembly_results[0])
+        # logger.debug(f"Response data: \n{response_data}")
+        return response_data
+
+    logger.debug("No assembly information was found.")
+    return msg_factory.create_assembly_info()
+
+
+def create_stats_by_genome_uuid(data=None):
+    if data is None:
+        return None
+
+    # list of TopLevelStatisticsByUUID (see the proto file)
+    genome_uuid_stats = []
+    # this dict will help us group stats by genome_uuid, protobuf is pain in the back...
+    # it won't let us do that while constructing the object
+    statistics = {}
+    # data is [GenomeDatasetsListItem]
+    # FIXME deduplicate and make sure we keep the right one Sure it can be simplified now we have the NamedTuple
+    for result in data:
+        # start creating a dictionary with genome_uuid as key and stats as value list
+        if result.genome.genome_uuid not in list(statistics.keys()):
+            statistics[result.genome.genome_uuid] = []
+        for dataset in result.datasets:
+            # item is GenomeDatasetItem
+            dataset_stats = [attribute for attribute in dataset.attributes]
+            statistics[result.genome.genome_uuid].extend(
+                [{
+                    'name':attribute.name,
+                    'label':attribute.label,
+                    'statistic_type':attribute.type,
+                    'statistic_value':attribute.value
+                } for attribute in dataset_stats])  # list of DatasetAttributeItem
+
+    # now we can construct the object after having everything in statistics grouped by genome_uuid
+    for genome_uuid in list(statistics.keys()):
+        genome_uuid_stat = {}
+        genome_uuid_stat['genome_uuid'] = genome_uuid
+        for stat in statistics[genome_uuid]:
+            genome_uuid_stat.statistics.append(stat)
+
+        genome_uuid_stats.append(genome_uuid_stat)
+
+    return genome_uuid_stats
+
+
+
+
+
+#{'taxonomy_id': 9606, 'organism_uuid': '1d336185-affe-4a91-85bb-04ebd73cbb56', 'common_name': 'Human', 'scientific_name': 'Homo sapiens', 's ... (32 characters truncated) ... ', 'strain_type': None, 'organism_id': 83, 'species_taxonomy_id': 9606,
+
+
+
+
+
+def get_genomes_from_assembly_accession_iterator(db_conn, assembly_accession):
+    if not assembly_accession:
+        logger.warning("Missing or Empty Assembly accession field.")
+        return msg_factory.create_genome()
+    # TODO: Add try except to the other functions as well
+    try:
+        genome_results = db_conn.fetch_genomes(assembly_accession=assembly_accession)
+    except Exception as e:
+        logger.error(f"Error fetching genomes: {e}")
+        raise
+
+    for genome in genome_results:
+        yield msg_factory.create_genome(data=genome)
+
+    return msg_factory.create_genome()
+
+
+
+
+def get_sub_species_info(db_conn, organism_uuid, group):
+    if not organism_uuid:
+        logger.warning("Missing or Empty Organism UUID field.")
+        return msg_factory.create_sub_species()
+    sub_species_results = db_conn.fetch_genomes(organism_uuid=organism_uuid, group=group)
+
+    species_name = []
+    species_type = []
+    if len(sub_species_results) > 0:
+        for result in sub_species_results:
+            if result.OrganismGroup.type not in species_type:
+                species_type.append(result.OrganismGroup.type)
+            if result.OrganismGroup.name not in species_name:
+                species_name.append(result.OrganismGroup.name)
+
+        response_data = msg_factory.create_sub_species({
+            'organism_uuid': organism_uuid,
+            'species_type': species_type,
+            'species_name': species_name
+        })
+        # logger.debug(f"Response data: \n{response_data}")
+        return response_data
+
+    logger.debug("No sub-species information was found.")
+    return msg_factory.create_sub_species()
+
+
+def get_genome_uuid(db_conn: GenomeAdaptor,
+                    production_name: str,
+                    assembly_name: str,
+                    genebuild_date: str = None,
+                    use_default: bool = False,
+                    release_version: str = None):
+    if production_name and assembly_name:
+        genome_uuid_result = db_conn.fetch_genomes_by_assembly_name_genebuild(assembly=assembly_name,
+                                                                              genebuild=genebuild_date,
+                                                                              production_name=production_name,
+                                                                              use_default=use_default,
+                                                                              release_version=release_version)
+
+        if len(genome_uuid_result) == 0:
+            logger.error(f"No Genome found for params {production_name}")
+        else:
+            if len(genome_uuid_result) > 1:
+                logger.warning(f"Multiple results returned. {genome_uuid_result}")
+            response_data = msg_factory.create_genome_uuid(
+                {"genome_uuid": genome_uuid_result[0].Genome.genome_uuid}
+            )
+            return response_data
+    logger.warning("Missing or Empty production_name or assembly_name field.")
+    return msg_factory.create_genome_uuid()
+
+
+def test_create_genome_with_attributes_and_count():
+    genome_uuid='a7335667-93e7-11ec-a39d-005056b38ce3'
+    release_version=None
+    db_conn = adaptor
+    genome_results = db_conn.fetch_genomes(genome_uuid=genome_uuid, release_version=release_version)
+    genome=genome_results[0]
+
+    genome_obj = create_genome_with_attributes_and_count(db_conn,genome,release_version)
+
+    pprint.pprint(genome_obj)
+
+#    genome_uuid=genome.Genome.genome_uuid
+#
+#    attrib_data_results = db_conn.fetch_genome_datasets(genome_uuid=genome_uuid,
+#                                                        dataset_type_name="all",
+#                                                        release_version=release_version)
+#
+#    related_assemblies_count = db_conn.fetch_assemblies_count(genome.Organism.species_taxonomy_id)
+#    assert related_assemblies_count == 565
+#    alternative_names = get_alternative_names(db_conn, genome.Organism.species_taxonomy_id)
+#    assert alternative_names == ['human']
+#
+#    attribs = []
+#    if len(attrib_data_results) > 0:
+#        for dataset in attrib_data_results[0].datasets:
+#            attribs.extend(dataset.attributes)
+
+    #return msg_factory.create_genome(
+    #    data=genome,
+    #    attributes=attribs,
+    #    count=related_assemblies_count,
+    #    alternative_names=alternative_names,
+    #    datasets=attrib_data_results[0].datasets
+    #)
+
+def create_genome(data=None, attributes=None, count=0, alternative_names=[], datasets=[]):
+
+    if data is None:
+            return None
+
+    assembly = create_assembly(data)
+    taxon = create_taxon(data, alternative_names)
+    organism = create_organism(data)
+    attributes_info = create_attributes_info(attributes)
+    release = create_release(data)
+
+    available_datasets = list({ds_type.dataset.dataset_type.name for ds_type in datasets})
+
+    genome = {
+        'genome_uuid':data.Genome.genome_uuid,
+        'created':str(data.Genome.created),
+        'assembly':assembly,
+        'taxon':taxon,
+        'organism':organism,
+        'attributes_info':attributes_info,
+        'release':release,
+        'related_assemblies_count':count,
+        'available_datasets':available_datasets
+    }
+    #pprint.pprint(genome)
+    return genome
+
+#    response_data = create_genome_with_attributes_and_count(
+#        db_conn=db_conn,
+#        genome=one_genome,
+#        release_version=release_version
+#    )
+
+def create_assembly(data=None):
+    if data is None:
+        return None
+
+    assembly = {
+            'assembly_uuid':data.Assembly.assembly_uuid,
+            'accession':data.Assembly.accession,
+            'level':data.Assembly.level,
+            'name':data.Assembly.name,
+            'ucsc_name':data.Assembly.ucsc_name,
+            'ensembl_name':data.Assembly.ensembl_name,
+            'is_reference':data.Assembly.is_reference
+    }
+
+    return assembly
+
+def create_taxon(data=None, alternative_names=[]):
+    if data is None:
+        return None
+
+    taxon = {
+        'alternative_names':alternative_names,
+        'taxonomy_id':data.Organism.taxonomy_id,
+        'scientific_name':data.Organism.scientific_name,
+        'strain':data.Organism.strain,
+    }
+    return taxon
+
+def create_organism(data=None):
+    if data is None:
+        return None
+
+    organism = {
+        'common_name':data.Organism.common_name,
+        'strain':data.Organism.strain,
+        'strain_type':data.Organism.strain_type,
+        'scientific_name':data.Organism.scientific_name,
+        'ensembl_name':data.Organism.biosample_id,
+        'scientific_parlance_name':data.Organism.scientific_parlance_name,
+        'organism_uuid':data.Organism.organism_uuid,
+        'taxonomy_id':data.Organism.taxonomy_id,
+        'species_taxonomy_id':data.Organism.species_taxonomy_id,
+    }
+    return organism
+
+def create_attribute(data=None):
+    if data is None:
+        return None
+
+    attribute = {
+        'name':data.Attribute.name,
+        'label':data.Attribute.label,
+        'description':data.Attribute.description,
+        'type':data.Attribute.type,
+    }
+    return attribute
+
+
+def create_attributes_info(data=None):
+    if data is None:
+        return None
+
+    # from EA-1105
+    required_attributes = {
+        "genebuild.method": "",
+        "genebuild.method_display": "",
+        "genebuild.last_geneset_update": "",
+        "genebuild.provider_version": "",
+        "genebuild.provider_name": "",
+        "genebuild.provider_url": "",
+        "genebuild.sample_gene": "",
+        "genebuild.sample_location": "",
+        "assembly.level": "",
+        "assembly.date": "",
+        "assembly.provider_name": "",
+        "assembly.provider_url": "",
+        "variation.sample_variant": ""
+    }
+    # set required_attributes values
+    if type(data) is list and len(data) > 0:
+        pass
+    else:
+        return None
+
+    for attrib_data in data:
+        attrib_name = attrib_data.name
+        if attrib_name in list(required_attributes.keys()):
+            required_attributes[attrib_name] = attrib_data.value
+
+    return {
+        'genebuild_method':required_attributes["genebuild.method"],
+        'genebuild_method_display':required_attributes["genebuild.method_display"],
+        'genebuild_last_geneset_update':required_attributes["genebuild.last_geneset_update"],
+        'genebuild_provider_version':required_attributes["genebuild.provider_version"],
+        'genebuild_provider_name':required_attributes["genebuild.provider_name"],
+        'genebuild_provider_url':required_attributes["genebuild.provider_url"],
+        'genebuild_sample_gene':required_attributes["genebuild.sample_gene"],
+        'genebuild_sample_location':required_attributes["genebuild.sample_location"],
+        'assembly_level':required_attributes["assembly.level"],
+        'assembly_date':required_attributes["assembly.date"],
+        'assembly_provider_name':required_attributes["assembly.provider_name"],
+        'assembly_provider_url':required_attributes["assembly.provider_url"],
+        'variation_sample_variant':required_attributes["variation.sample_variant"],
+    }
+
+
+def create_release(data=None):
+    if data is None or data.EnsemblRelease is None:
+        return None
+
+    release = {
+        'release_version':data.EnsemblRelease.version,
+        'release_date':str(data.EnsemblRelease.release_date) if data.EnsemblRelease.release_date else "Unreleased",
+        'release_label':data.EnsemblRelease.label,
+        'release_type':data.EnsemblRelease.release_type,
+        'is_current':data.EnsemblRelease.is_current,
+        'site_name':data.EnsemblSite.name,
+        'site_label':data.EnsemblSite.label,
+        'site_uri':data.EnsemblSite.uri
+    }
+    return release
+
+
+def create_genome_with_attributes_and_count(db_conn, genome, release_version):
+    attrib_data_results = db_conn.fetch_genome_datasets(genome_uuid=genome.Genome.genome_uuid,
+                                                        dataset_type_name="all",
+                                                        release_version=release_version)
+
+    logger.debug(f"Genome Datasets Retrieved: {attrib_data_results}")
+    attribs = []
+    if len(attrib_data_results) > 0:
+        for dataset in attrib_data_results[0].datasets:
+            attribs.extend(dataset.attributes)
+
+    # fetch related assemblies count
+    related_assemblies_count = db_conn.fetch_assemblies_count(genome.Organism.species_taxonomy_id)
+
+    alternative_names = get_alternative_names(db_conn, genome.Organism.species_taxonomy_id)
+
+    return create_genome(
+        data=genome,
+        attributes=attribs,
+        count=related_assemblies_count,
+        alternative_names=alternative_names,
+        datasets=attrib_data_results[0].datasets
+    )
+
+
+
+
+
+def data_get_genome_by_uuid(db_conn, genome_uuid, release_version):
+    if not genome_uuid:
+        logger.warning("Missing or Empty Genome UUID field.")
+        return None
+    genome_results = db_conn.fetch_genomes(genome_uuid=genome_uuid, release_version=release_version)
+    if len(genome_results) == 0:
+        logger.error(f"No Genome/Release found: {genome_uuid}/{release_version}")
+    else:
+        if len(genome_results) > 1:
+            logger.warning(f"Multiple results returned. {genome_results}")
+
+        one_genome=genome_results[0]
+
+
+        response_data = create_genome_with_attributes_and_count(
+            db_conn=db_conn,
+            genome=one_genome,
+            release_version=release_version
+        )
+        return response_data
+    return None
+
+
+def get_brief_genome_details_by_uuid(db_conn, genome_uuid_or_tag, release_version):
+    """
+    Fetch brief genome details by UUID or tag and release version.
+
+    Args:
+        db_conn: Database connection object.
+        genome_uuid_or_tag: Genome UUID or tag.
+        release_version: Release version to fetch.
+
+    Returns:
+        A dictionary containing brief genome details.
+    """
+    if not genome_uuid_or_tag:
+        logger.warning("Missing or Empty Genome UUID field.")
+        return msg_factory.create_brief_genome_details()
+
+    # If genome_uuid_or_tag is not a valid UUID, assume it's a tag and fetch genome_uuid
+    if not is_valid_uuid(genome_uuid_or_tag):
+        logger.debug(f"Invalid genome_uuid {genome_uuid_or_tag}, assuming it's a tag and using it to fetch genome_uuid")
+        # For tag (URL name), we only care about the latest integrated release.
+        # For archives, we will need to keep in mind the combination of release and tag
+        # that will take the user to the archived version of the genome.
+        genome_results = db_conn.fetch_genomes(
+            genome_tag=genome_uuid_or_tag,
+            # release_type="integrated", #  Add this once we have tags linked only to integrated releases
+            release_version=release_version
+        )
+    else:
+        genome_uuid = genome_uuid_or_tag
+        genome_results = db_conn.fetch_genomes(genome_uuid=genome_uuid, release_version=release_version)
+
+    if not genome_results:
+        logger.error(f"No Genome/Release found: {genome_uuid_or_tag}/{release_version}")
+        return msg_factory.create_brief_genome_details()
+
+    if len(genome_results) > 1:
+        logger.warning(f"Multiple results found for Genome UUID/Release version: {genome_uuid_or_tag}/{release_version}")
+        # means that this genome is released in both a partial and integrated release
+        # we get the integrated release specifically since it's the one we are interested in
+        genome_results = [res for res in genome_results if res.EnsemblRelease.release_type == "integrated"]
+
+    # Get the current (requested) genome
+    current_genome = genome_results[0]
+    assembly_name = current_genome.Assembly.name
+    # Fetch all genomes with the same assembly name, sorted by release date
+    all_genomes_with_same_assembly = db_conn.fetch_genomes(assembly_name=assembly_name)
+
+    # Find the genome with the most recent release date
+    latest_genome = None
+    if all_genomes_with_same_assembly:
+        # First genome should be the latest due to ordering in fetch_genomes
+        if all_genomes_with_same_assembly[0].Genome.genome_uuid != current_genome.Genome.genome_uuid:
+            latest_genome = all_genomes_with_same_assembly[0]
+            logger.debug(f"Found newer genome: {latest_genome.Genome.genome_uuid}")
+
+    # Return the requested genome together with the latest genome details (or None if current is latest)
+    return msg_factory.create_brief_genome_details(current_genome, latest_genome)
+
+
+def get_attributes_by_genome_uuid(db_conn, genome_uuid, release_version):
+    if not genome_uuid:
+        logger.warning("Missing or Empty Genome UUID field.")
+        return msg_factory.create_attributes_by_genome_uuid()
+
+    attrib_data_results = db_conn.fetch_genome_datasets(genome_uuid=genome_uuid,
+                                                        dataset_type_name="all",
+                                                        release_version=release_version)
+
+    logger.debug(f"Genome Datasets Retrieved: {attrib_data_results}")
+
+    if len(attrib_data_results) == 0:
+        logger.error(f"No Attributes were found: {genome_uuid}/{release_version}")
+
+    else:
+        if len(attrib_data_results) > 0:
+            attribs = []
+            for dataset in attrib_data_results[0].datasets:
+                attribs.extend(dataset.attributes)
+
+            attributes_info = msg_factory.create_attributes_info(attribs)
+            return msg_factory.create_attributes_by_genome_uuid(
+                genome_uuid=genome_uuid,
+                attributes_info=attributes_info
+            )
+    return msg_factory.create_attributes_by_genome_uuid()
+
+
+def get_genomes_by_specific_keyword_iterator(
+    db_conn, tolid, assembly_accession_id, assembly_name, ensembl_name,
+    common_name, scientific_name, scientific_parlance_name, species_taxonomy_id,
+    release_version=None
+):
+    if (not tolid and assembly_accession_id and assembly_name and ensembl_name and
+            common_name and scientific_name and scientific_parlance_name and species_taxonomy_id):
+        logger.warning("Missing required field")
+        return msg_factory.create_genome()
+
+    try:
+        genome_results = db_conn.fetch_genome_by_specific_keyword(
+            tolid, assembly_accession_id, assembly_name, ensembl_name,
+            common_name, scientific_name, scientific_parlance_name,
+            species_taxonomy_id, release_version
+        )
+
+        if len(genome_results) > 0:
+            # Create an empty list to store the genomes list
+            genomes_list = []
+            # sort genomes based on the `assembly_accession` field since we are going to group by it
+            genome_results.sort(key=lambda r: r.Assembly.accession)
+            # Group `genome_results` based on the `assembly_accession` field
+            for _, genome_release_group in itertools.groupby(genome_results, lambda r: r.Assembly.accession):
+                # Sort the genomes in each group based on the `genome_uuid` field to prepare for grouping
+                sorted_genomes = sorted(genome_release_group, key=lambda g: g.Genome.genome_uuid)
+                # group by genome uuid incase of partial and integrated releases
+                for _, genome_uuid_group in itertools.groupby(sorted_genomes, lambda g: g.Genome.genome_uuid):
+                    genome_uuid_group = list(genome_uuid_group)
+                    if len(genome_uuid_group) > 1:
+                        # sort by release date descending. The last code checked if EnsemblRelease exists. If it doesn't it uses a default date and not genome uuid
+                        sorted_genome_uuid_group = sorted(
+                            genome_uuid_group,
+                            key=lambda g: getattr(g.EnsemblRelease, 'release_date', datetime.strptime('1900-01-01', '%Y-%m-%d')) if g.EnsemblRelease else datetime.strptime('1900-01-01', '%Y-%m-%d'),
+                            reverse=True
+                        )
+                        # check for integrated release in group
+                        integrated_genome = [
+                            g for g in sorted_genome_uuid_group
+                            if g.EnsemblRelease and getattr(g.EnsemblRelease, 'release_type', None) == 'integrated'
+                        ]
+                        if len(integrated_genome) > 0:
+                            genomes_list.append(integrated_genome[0])
+
+                        # if no integrated release, just take the first one, which is the most recent partial release
+                        else:
+                            genomes_list.append(sorted_genome_uuid_group[0])
+                    # if only one genome in the group, just add it to the list
+                    else:
+                        genomes_list.append(list(genome_uuid_group)[0])
+
+            for genome_row in genomes_list:
+                yield msg_factory.create_genome(data=genome_row)
+
+    except Exception as e:
+        logger.error(f"Error fetching genomes: {e}")
+        return msg_factory.create_genome()
+
+    logger.debug("No genomes were found.")
+    return msg_factory.create_genome()
+
+
+def get_genomes_by_release_version_iterator(
+    db_conn,release_version
+):
+    if (not release_version):
+        logger.warning("Missing required release_version")
+        return msg_factory.create_brief_genome_details()
+
+    genome_results = db_conn.fetch_genome_by_release_version(release_version)
+
+    if len(genome_results) > 0:
+        for genome_row in genome_results:
+            yield msg_factory.create_brief_genome_details(data=genome_row)
+    else:
+        logger.debug("No genomes were found.")
+        return msg_factory.create_brief_genome_details()
+
+
+def get_genome_by_name(db_conn, biosample_id, site_name, release_version):
+    if not biosample_id and not site_name:
+        logger.warning("Missing or Empty ensembl_name and site_name field.")
+        return msg_factory.create_genome()
+    genome_results = db_conn.fetch_genomes(biosample_id=biosample_id, site_name=site_name,
+                                           release_version=release_version)
+    if len(genome_results) == 0:
+        logger.error(f"Genome not found for biosample. {biosample_id}")
+    else:
+        if len(genome_results) > 1:
+            logger.warning(f"Multiple results returned. {genome_results}")
+        response_data = create_genome_with_attributes_and_count(
+            db_conn=db_conn, genome=genome_results[0], release_version=release_version
+        )
+        return response_data
+    return msg_factory.create_genome()
+
+
+def get_datasets_list_by_uuid(db_conn, genome_uuid, release_version):
+    if not genome_uuid:
+        logger.warning("Missing or Empty Genome UUID field.")
+        return msg_factory.create_datasets()
+
+    datasets_results = db_conn.fetch_genome_datasets(genome_uuid=genome_uuid, dataset_type_name="all",
+                                                     release_version=release_version)
+    if len(datasets_results) > 0:
+        # FIXME dataset_results can contain multiple genomes?
+        datasets_info = msg_factory.populate_dataset_info(datasets_results[0])
+        response_data = msg_factory.create_datasets({
+            'genome_uuid': genome_uuid,
+            'datasets': datasets_info
+        })
+        # logger.debug(f"Response data: \n{response_data}")
+        return response_data
+
+    logger.debug("No datasets found.")
+    return msg_factory.create_datasets()
+
+
+def genome_sequence_iterator(db_conn, genome_uuid, chromosomal_only):
+    if not genome_uuid:
+        logger.warning("Missing or Empty Genome UUID field.")
+        return
+
+    assembly_sequence_results = db_conn.fetch_sequences(
+        genome_uuid=genome_uuid,
+        chromosomal_only=chromosomal_only,
+    )
+    for result in assembly_sequence_results:
+        logger.debug(f"Processing assembly: {result.AssemblySequence.name}")
+        yield msg_factory.create_genome_sequence(result)
+
+
+def assembly_region_iterator(db_conn, genome_uuid, chromosomal_only):
+    if not genome_uuid:
+        logger.warning("Missing or Empty Genome UUID field.")
+        return
+
+    assembly_sequence_results = db_conn.fetch_sequences(
+        genome_uuid=genome_uuid,
+        chromosomal_only=chromosomal_only,
+    )
+    for result in assembly_sequence_results:
+        logger.debug(f"Processing assembly: {result.AssemblySequence.name}")
+        yield msg_factory.create_assembly_region(result)
+
+
+def genome_assembly_sequence_region(db_conn, genome_uuid, sequence_region_name):
+    if not genome_uuid or not sequence_region_name:
+        logger.warning("Missing or Empty Genome UUID or Sequence region name field.")
+        return msg_factory.create_genome_assembly_sequence_region()
+
+    assembly_sequence_results = db_conn.fetch_sequences(
+        genome_uuid=genome_uuid,
+        assembly_sequence_name=sequence_region_name
+    )
+    if len(assembly_sequence_results) == 0:
+        logger.error(f"Assembly sequence not found for {genome_uuid}/{sequence_region_name}")
+    else:
+        if len(assembly_sequence_results) > 1:
+            logger.warning(f"Multiple results returned for {genome_uuid}/{sequence_region_name}")
+        response_data = msg_factory.create_genome_assembly_sequence_region(assembly_sequence_results[0])
+        return response_data
+    return msg_factory.create_genome_assembly_sequence_region()
+
+
+def release_iterator(metadata_db, site_name, release_label, current_only):
+    conn = ReleaseAdaptor(metadata_uri=MetadataConfig().metadata_uri)
+
+    # set release_label and site_name to None if it's an empty list
+    release_label = release_label or None
+    site_name = site_name or None
+
+    release_results = conn.fetch_releases(
+        site_name=site_name,
+        release_label=release_label,
+        current_only=current_only
+    )
+
+    for result in release_results:
+        logger.debug(
+            f"Processing release: {result.EnsemblRelease.version if hasattr(result, 'EnsemblRelease') else None}")
+        yield msg_factory.create_release(result)
+
+
+def release_by_uuid_iterator(metadata_db, genome_uuid):
+    if not genome_uuid:
+        return
+
+    conn = ReleaseAdaptor(metadata_uri=MetadataConfig().metadata_uri)
+    release_results = conn.fetch_releases_for_genome(
+        genome_uuid=genome_uuid,
+    )
+
+    for result in release_results:
+        logger.debug(
+            f"Processing release: {result.EnsemblRelease.version if hasattr(result, 'EnsemblRelease') else None}")
+        yield msg_factory.create_release(result)
+
+
+def get_dataset_by_genome_and_dataset_type(db_conn, genome_uuid, requested_dataset_type='assembly'):
+    if not genome_uuid:
+        logger.warning("Missing or Empty Genome UUID field.")
+        return msg_factory.populate_dataset_info()
+
+    dataset_results = db_conn.fetch_genome_datasets(genome_uuid=genome_uuid,
+                                                    dataset_type_name=requested_dataset_type)
+    logger.debug("dataset Results %s", dataset_results)
+    if len(dataset_results) == 0:
+        logger.error(f"No data for {genome_uuid} / {requested_dataset_type}")
+        return {}
+    else:
+        # FIXME it's possible that multiple datasets are returned here. released multiple times.
+        if len(dataset_results) > 1:
+            logger.warning(f"Multiple results for {genome_uuid} / {requested_dataset_type}")
+
+        datasets_info = msg_factory.populate_dataset_info(dataset_results[0])
+        response_data = msg_factory.create_datasets({
+            'genome_uuid': genome_uuid,
+            'datasets': datasets_info
+        })
+        return response_data
+
+
+def get_organisms_group_count(db_conn, release_label):
+    count_result = db_conn.fetch_organisms_group_counts(release_label=release_label)
+    response_data = msg_factory.create_organisms_group_count(count_result, release_label)
+    # logger.debug(f"Response data: \n{response_data}")
+    return response_data
+
+
+def get_genome_uuid_by_tag(db_conn, genome_tag):
+    if not genome_tag:
+        logger.warning("Missing or Empty Genome tag field.")
+        return msg_factory.create_genome_uuid()
+
+    genome_uuid_result = db_conn.fetch_genomes(genome_tag=genome_tag)
+    if len(genome_uuid_result) == 0:
+        logger.error(f"No Genome UUID found. {genome_tag}")
+    else:
+        if len(genome_uuid_result) > 1:
+            logger.warning(f"Multiple results returned. {genome_uuid_result}")
+        response_data = msg_factory.create_genome_uuid(
+            {"genome_uuid": genome_uuid_result[0].Genome.genome_uuid}
+        )
+        return response_data
+    return msg_factory.create_genome_uuid()
+
+
+def get_ftp_links(db_conn, genome_uuid, dataset_type, release_version):
+    # Request is sending an empty string '' instead of None when
+    # an input parameter is not supplied by the user
+    if not genome_uuid:
+        logger.warning("Missing or Empty Genome UUID field.")
+        return msg_factory.create_paths()
+    if not dataset_type:
+        dataset_type = 'all'
+    if not release_version:
+        release_version = None
+
+    # Find the Genome
+    with db_conn.metadata_db.session_scope() as session:
+        genome = session.query(Genome).filter(Genome.genome_uuid == genome_uuid).first()
+
+        # Return empty links if Genome is not found
+        if genome is None:
+            logger.debug("No Genome found.")
+            return msg_factory.create_paths()
+
+        # Find the links for the given dataset.
+        # Find the links for the given dataset.
+        # Note: release_version filtration is not implemented in the API yet
+        try:
+            links = db_conn.get_public_path(
+                genome_uuid=genome_uuid,
+                dataset_type=dataset_type
+            )
+        except (ValueError, RuntimeError) as error:
+            # log the errors to error log and return empty list of links
+            logger.error(f"Error fetching links: {error}")
+            return msg_factory.create_paths()
+
+    if len(links) > 0:
+        response_data = msg_factory.create_paths(data=links)
+        # logger.debug(f"Response data: \n{response_data}")
+        return response_data
+
+    logger.debug("No Genome found.")
+    return msg_factory.create_paths()
+
+
+def get_release_version_by_uuid(db_conn, genome_uuid, dataset_type, release_version):
+    if not genome_uuid:
+        logger.warning("Missing or Empty Genome UUID field.")
+        return msg_factory.create_release_version()
+
+    release_version_result = db_conn.fetch_genome_datasets(genome_uuid=genome_uuid,
+                                                           dataset_type_name=dataset_type,
+                                                           release_version=release_version)
+
+    if len(release_version_result) == 0:
+        logger.error(f"No result found for {genome_uuid}/{dataset_type}/{release_version}")
+    else:
+        if len(release_version_result) > 1:
+            logger.warning(f"Multiple results returned. {release_version_result}")
+        response_data = msg_factory.create_release_version(release_version_result[0])
+        return response_data
+    return msg_factory.create_release_version()
+
+
+def get_attributes_values_by_uuid(db_conn, genome_uuid, dataset_type, release_version, attribute_names, latest_only):
+    """
+    Retrieve attribute values for a given genome UUID from the database.
+
+    This function fetches genome datasets based on the provided genome UUID, dataset type, and release version.
+    If a single dataset result is found, it creates and returns the attribute values. If no or multiple datasets
+    are found, appropriate warnings or debug messages are logged.
+
+    Args:
+        db_conn: Database connection object.
+        genome_uuid (str): The UUID of the genome to fetch data for. Must not be empty.
+        dataset_type (str): The type of dataset to retrieve.
+        release_version (str): The release version of the dataset to retrieve.
+        attribute_names (list): A list of attribute names to filter the results by.
+        latest_only (bool): Whether to fetch the latest dataset or not (default is `False`).
+
+    Returns:
+        object: A response object containing the attribute values. If no valid dataset is found,
+                an empty attribute value object is returned.
+    """
+    if not genome_uuid:
+        logger.warning("Missing or Empty Genome UUID field.")
+        return msg_factory.create_attribute_value()
+
+    genome_datasets_results = db_conn.fetch_genome_datasets(
+        genome_uuid=genome_uuid,
+        dataset_type_name=dataset_type,
+        release_version=release_version
+    )
+
+    if len(genome_datasets_results) > 1:
+        logger.debug("Multiple results returned.")
+        # if we get more than one genome, it means it's attached to both partial and integrated releases
+        # we pick the integrated genome because it's the one taking precedence
+        genome_datasets_results = [gd for gd in genome_datasets_results if gd.release.release_type == 'integrated']
+
+    if len(genome_datasets_results) == 1:
+        response_data = msg_factory.create_attribute_value(
+            data=genome_datasets_results,
+            # There is no point in filtering by attribute_names in the API because it returns the whole dataset object
+            # which will contain all the attributes (we should be altering them from within the API)
+            attribute_names=attribute_names,
+            latest_only=latest_only
+        )
+        logger.debug(f"Response data: \n{response_data}")
+        return response_data
+    else:
+        logger.debug("Genome not found.")
+
+    logger.debug("No attribute values were found.")
+    return msg_factory.create_attribute_value()
+
+
+def get_vep_paths_by_uuid(db_conn, genome_uuid):
+    if not genome_uuid:
+        logger.warning("Missing or Empty Genome UUID field.")
+        return msg_factory.create_vep_file_paths()
+
+    try:
+        vep_paths = db_conn.fetch_vep_locations(genome_uuid=genome_uuid)
+        if vep_paths:
+            return msg_factory.create_vep_file_paths(vep_paths)
+    except (ValueError, RuntimeError) as error:
+        logger.error(error)
+
+    return msg_factory.create_vep_file_paths()
+
+
+def get_genome_groups_by_reference(
+    db_conn: Any,
+    group_type: str,
+    release_label: str | None = None,
+):
+    if not group_type or group_type != 'structural_variant': # accepting only structural_variant for now
+        logger.warning("Missing or Wrong Group type field.")
+        return msg_factory.create_genome_groups_by_reference()
+
+    # The logic calling the ORM and fetching data from the DB
+    # will go here, we are returning dummy data for now
+    # /!\ Remember to handle the release label
+
+    try:
+        # The logic calling the ORM and fetching data from the DB
+        # will go here. For now, we return dummy data.
+        dummy_data = [
+            {
+                "group_id": "grch38-group",
+                "group_type": group_type,
+                "group_name": "",
+                "reference_genome": {
+                    "genome_uuid": "a7335667-93e7-11ec-a39d-005056b38ce3",
+                    "assembly": {
+                        "accession": "GCA_000001405.29",
+                        "name": "GRCh38.p14",
+                        "ucsc_name": "hg38",
+                        "level": "chromosome",
+                        "ensembl_name": "GRCh38.p14",
+                        "assembly_uuid": "fd7fea38-981a-4d73-a879-6f9daef86f08",
+                        "is_reference": True,
+                        "url_name": "grch38",
+                        "tol_id": "",
+                    },
+                    "taxon": {
+                        "taxonomy_id": 9606,
+                        "scientific_name": "Homo sapiens",
+                        "strain": "",
+                        "alternative_names": [],
+                    },
+                    "created": "2023-09-22 15:04:45",
+                    "organism": {
+                        "common_name": "Human",
+                        "strain": "",
+                        "scientific_name": "Homo sapiens",
+                        "ensembl_name": "SAMN12121739",
+                        "scientific_parlance_name": "Human",
+                        "organism_uuid": "1d336185-affe-4a91-85bb-04ebd73cbb56",
+                        "strain_type": "",
+                        "taxonomy_id": 9606,
+                        "species_taxonomy_id": 9606,
+                    },
+                    "release": {
+                        "release_version": 1,
+                        "release_date": "2025-02-27",
+                        "release_label": "2025-02",
+                        "release_type": "integrated",
+                        "is_current": True,
+                        "site_name": "Ensembl",
+                        "site_label": "MVP ENsembl",
+                        "site_uri": "https://beta.ensembl.org",
+                    },
+                },
+            },
+            {
+                "group_id": "t2t-group",
+                "group_type": group_type,
+                "group_name": "",
+                "reference_genome": {
+                    "genome_uuid": "4c07817b-c7c5-463f-8624-982286bc4355",
+                    "assembly": {
+                        "accession": "GCA_009914755.4",
+                        "name": "T2T-CHM13v2.0",
+                        "ucsc_name": "",
+                        "level": "primary_assembly",
+                        "ensembl_name": "T2T-CHM13v2.0",
+                        "assembly_uuid": "fc20ebd6-f756-45da-b941-b3b17e11515f",
+                        "is_reference": False,
+                        "url_name": "t2t-chm13",
+                        "tol_id": "",
+                    },
+                    "taxon": {
+                        "taxonomy_id": 9606,
+                        "scientific_name": "Homo sapiens",
+                        "strain": "",
+                        "alternative_names": [],
+                    },
+                    "created": "2023-09-22 15:06:39",
+                    "organism": {
+                        "common_name": "Human",
+                        "strain": "",
+                        "scientific_name": "Homo sapiens",
+                        "ensembl_name": "SAMN03255769",
+                        "scientific_parlance_name": "Human",
+                        "organism_uuid": "9df68864-e9fe-4c02-ab8c-8190baad16c6",
+                        "strain_type": "",
+                        "taxonomy_id": 9606,
+                        "species_taxonomy_id": 9606,
+                    },
+                    "release": {
+                        "release_version": 1,
+                        "release_date": "2025-02-27",
+                        "release_label": "2025-02",
+                        "release_type": "integrated",
+                        "is_current": True,
+                        "site_name": "Ensembl",
+                        "site_label": "MVP ENsembl",
+                        "site_uri": "https://beta.ensembl.org",
+                    },
+                },
+            },
+        ]
+
+        # Very simple use of release_label even in dummy mode
+        # TODO: move this filtering into the ORM query once the real implementation is added.
+        if release_label:
+            dummy_data = [
+                g
+                for g in dummy_data
+                if g["reference_genome"]["release"]["release_label"] == release_label
+            ]
+
+        return msg_factory.create_genome_groups_by_reference(dummy_data)
+
+    except Exception:
+        # Dummy error handling until the real ORM logic is in place
+        logger.exception(
+            "Unexpected error while fetching genome groups "
+            "(group_type=%r, release_label=%r)",
+            group_type,
+            release_label,
+        )
+        # Return an empty message to avoid propagating the error to callers.
+        return msg_factory.create_genome_groups_by_reference([])
+
+
+def get_genomes_in_group(
+    db_conn: Any,
+    group_id: str,
+    release_label: str | None,
+):
+    if not group_id:
+        logger.warning("Missing or Empty Group type field.")
+        return msg_factory.create_genomes_in_group()
+
+    try:
+        # The logic calling the ORM and fetching data from the DB using group_id
+        # will go here. We return dummy data for now.
+        # /!\ Remember to handle the release label in the real query.
+
+        # TODO: remove this once we have the real data from the DB.
+        dummy_data = [
+            {
+                "genome_uuid": "a7335667-93e7-11ec-a39d-005056b38ce3",
+                "assembly": {
+                    "accession": "GCA_000001405.29",
+                    "name": "GRCh38.p14",
+                    "ucsc_name": "hg38",
+                    "level": "chromosome",
+                    "ensembl_name": "GRCh38.p14",
+                    "assembly_uuid": "fd7fea38-981a-4d73-a879-6f9daef86f08",
+                    "is_reference": True,
+                    "url_name": "grch38",
+                    "tol_id": "",
+                },
+                "taxon": {
+                    "taxonomy_id": 9606,
+                    "scientific_name": "Homo sapiens",
+                    "strain": "",
+                    "alternative_names": [],
+                },
+                "created": "2023-09-22 15:04:45",
+                "organism": {
+                    "common_name": "Human",
+                    "strain": "",
+                    "scientific_name": "Homo sapiens",
+                    "ensembl_name": "SAMN12121739",
+                    "scientific_parlance_name": "Human",
+                    "organism_uuid": "1d336185-affe-4a91-85bb-04ebd73cbb56",
+                    "strain_type": "",
+                    "taxonomy_id": 9606,
+                    "species_taxonomy_id": 9606,
+                },
+                "release": {
+                    "release_version": 1,
+                    "release_date": "2025-02-27",
+                    "release_label": "2025-02",
+                    "release_type": "integrated",
+                    "is_current": True,
+                    "site_name": "Ensembl",
+                    "site_label": "MVP ENsembl",
+                    "site_uri": "https://beta.ensembl.org",
+                },
+            },
+            {
+                "genome_uuid": "4c07817b-c7c5-463f-8624-982286bc4355",
+                "assembly": {
+                    "accession": "GCA_009914755.4",
+                    "name": "T2T-CHM13v2.0",
+                    "ucsc_name": "",
+                    "level": "primary_assembly",
+                    "ensembl_name": "T2T-CHM13v2.0",
+                    "assembly_uuid": "fc20ebd6-f756-45da-b941-b3b17e11515f",
+                    "is_reference": False,
+                    "url_name": "t2t-chm13",
+                    "tol_id": "",
+                },
+                "taxon": {
+                    "taxonomy_id": 9606,
+                    "scientific_name": "Homo sapiens",
+                    "strain": "",
+                    "alternative_names": [],
+                },
+                "created": "2023-09-22 15:06:39",
+                "organism": {
+                    "common_name": "Human",
+                    "strain": "",
+                    "scientific_name": "Homo sapiens",
+                    "ensembl_name": "SAMN03255769",
+                    "scientific_parlance_name": "Human",
+                    "organism_uuid": "9df68864-e9fe-4c02-ab8c-8190baad16c6",
+                    "strain_type": "",
+                    "taxonomy_id": 9606,
+                    "species_taxonomy_id": 9606,
+                },
+                "release": {
+                    "release_version": 1,
+                    "release_date": "2025-02-27",
+                    "release_label": "2025-02",
+                    "release_type": "integrated",
+                    "is_current": True,
+                    "site_name": "Ensembl",
+                    "site_label": "MVP ENsembl",
+                    "site_uri": "https://beta.ensembl.org",
+                },
+            },
+            {
+                "genome_uuid": "9d3b2ead-a987-4f08-8d18-10a1eb1e0fb0",
+                "assembly": {
+                    "accession": "GCA_018503275.2",
+                    "name": "NA19240_mat_hprc_f2",
+                    "ucsc_name": "",
+                    "level": "primary_assembly",
+                    "ensembl_name": "",
+                    "assembly_uuid": "561a1451-cfe4-451d-ad8f-00310645e1fd",
+                    "is_reference": False,
+                    "url_name": "",
+                    "tol_id": ""
+                },
+                "taxon": {
+                    "taxonomy_id": 9606,
+                    "scientific_name": "Homo sapiens",
+                    "strain": "Yoruban in Nigeria",
+                    "alternative_names": []
+                },
+                "created": "2025-09-23 19:07:22",
+                "organism": {
+                    "common_name": "Human",
+                    "strain": "Yoruban in Nigeria",
+                    "scientific_name": "Homo sapiens",
+                    "ensembl_name": "SAMN03838746",
+                    "scientific_parlance_name": "Human",
+                    "organism_uuid": "14a967b2-6d62-49f8-b0b7-c3836a87cffa",
+                    "strain_type": "population",
+                    "taxonomy_id": 9606,
+                    "species_taxonomy_id": 9606
+                },
+                "release": {
+                    "release_version": 114.9,
+                    "release_date": "2025-10-21",
+                    "release_label": "2025-10-21",
+                    "release_type": "partial",
+                    "is_current": False,
+                    "site_name": "Ensembl",
+                    "site_label": "MVP ENsembl",
+                    "site_uri": "https://beta.ensembl.org"
+                }
+            },
+            {
+                "genome_uuid": "27be510b-c431-434c-a6f5-158d8c138507",
+                "assembly": {
+                    "accession": "GCA_018506975.2",
+                    "name": "HG00733_mat_hprc_f2",
+                    "ucsc_name": "",
+                    "level": "primary_assembly",
+                    "ensembl_name": "",
+                    "assembly_uuid": "0fb76cdf-6c6b-4c20-beef-7f7d4151651b",
+                    "is_reference": False,
+                    "url_name": "",
+                    "tol_id": ""
+                },
+                "taxon": {
+                    "taxonomy_id": 9606,
+                    "scientific_name": "Homo sapiens",
+                    "strain": "Puerto Rican in Puerto Rico",
+                    "alternative_names": []
+                },
+                "created": "2025-09-23 22:58:45",
+                "organism": {
+                    "common_name": "Human",
+                    "strain": "Puerto Rican in Puerto Rico",
+                    "scientific_name": "Homo sapiens",
+                    "ensembl_name": "SAMN00006581",
+                    "scientific_parlance_name": "Human",
+                    "organism_uuid": "07314e4e-9ac5-4ed7-b2ae-b8e257e1e6d7",
+                    "strain_type": "population",
+                    "taxonomy_id": 9606,
+                    "species_taxonomy_id": 9606
+                },
+                "release": {
+                    "release_version": 114.9,
+                    "release_date": "2025-10-21",
+                    "release_label": "2025-10-21",
+                    "release_type": "partial",
+                    "is_current": False,
+                    "site_name": "Ensembl",
+                    "site_label": "MVP ENsembl",
+                    "site_uri": "https://beta.ensembl.org"
+                }
+            },
+            {
+                "genome_uuid": "7e09bad9-aa22-46e4-ab8f-1b2a64202967",
+                "assembly": {
+                    "accession": "GCA_042077495.1",
+                    "name": "NA19036_hap1_hprc_f2",
+                    "ucsc_name": "",
+                    "level": "primary_assembly",
+                    "ensembl_name": "",
+                    "assembly_uuid": "11ed863b-5b0a-45e6-b3e6-f0788be79706",
+                    "is_reference": False,
+                    "url_name": "",
+                    "tol_id": ""
+                },
+                "taxon": {
+                    "taxonomy_id": 9606,
+                    "scientific_name": "Homo sapiens",
+                    "strain": "",
+                    "alternative_names": []
+                },
+                "created": "2025-03-14 00:00:45",
+                "organism": {
+                    "common_name": "Human",
+                    "strain": "",
+                    "scientific_name": "Homo sapiens",
+                    "ensembl_name": "SAMN41021642",
+                    "scientific_parlance_name": "Human",
+                    "organism_uuid": "eec7d10e-3ef4-4f14-8d2e-3233978dd0ce",
+                    "strain_type": "",
+                    "taxonomy_id": 9606,
+                    "species_taxonomy_id": 9606
+                },
+                "release": {
+                    "release_version": 114.1,
+                    "release_date": "2025-05-28",
+                    "release_label": "2025-05-28",
+                    "release_type": "partial",
+                    "is_current": False,
+                    "site_name": "Ensembl",
+                    "site_label": "MVP ENsembl",
+                    "site_uri": "https://beta.ensembl.org"
+                }
+            },
+            {
+                "genome_uuid": "30094672-c48c-425a-84e0-4049073a68d3",
+                "assembly": {
+                    "accession": "GCA_018469665.2",
+                    "name": "HG01123_mat_hprc_f2",
+                    "ucsc_name": "",
+                    "level": "primary_assembly",
+                    "ensembl_name": "",
+                    "assembly_uuid": "6ab0e3a4-4e11-443d-a18a-81ff1e68d42d",
+                    "is_reference": False,
+                    "url_name": "",
+                    "tol_id": ""
+                },
+                "taxon": {
+                    "taxonomy_id": 9606,
+                    "scientific_name": "Homo sapiens",
+                    "strain": "Colombian in Medellin",
+                    "alternative_names": []
+                },
+                "created": "2025-09-24 11:47:25",
+                "organism": {
+                    "common_name": "Human",
+                    "strain": "Colombian in Medellin",
+                    "scientific_name": "Homo sapiens",
+                    "ensembl_name": "SAMN17861232",
+                    "scientific_parlance_name": "Human",
+                    "organism_uuid": "c9bd9d75-c746-4515-ad37-40d054eeaa91",
+                    "strain_type": "population",
+                    "taxonomy_id": 9606,
+                    "species_taxonomy_id": 9606
+                },
+                "release": {
+                    "release_version": 114.9,
+                    "release_date": "2025-10-21",
+                    "release_label": "2025-10-21",
+                    "release_type": "partial",
+                    "is_current": False,
+                    "site_name": "Ensembl",
+                    "site_label": "MVP ENsembl",
+                    "site_uri": "https://beta.ensembl.org"
+                }
+            },
+            {
+                "genome_uuid": "82b440be-8f7d-47fe-a363-a40cea709ea2",
+                "assembly": {
+                    "accession": "GCA_018472595.2",
+                    "name": "HG00438_pat_hprc_f2",
+                    "ucsc_name": "",
+                    "level": "primary_assembly",
+                    "ensembl_name": "",
+                    "assembly_uuid": "179f190d-17f9-4692-9353-374976c62e20",
+                    "is_reference": False,
+                    "url_name": "",
+                    "tol_id": ""
+                },
+                "taxon": {
+                    "taxonomy_id": 9606,
+                    "scientific_name": "Homo sapiens",
+                    "strain": "Han Chinese South",
+                    "alternative_names": []
+                },
+                "created": "2025-09-25 09:01:42",
+                "organism": {
+                    "common_name": "Human",
+                    "strain": "Han Chinese South",
+                    "scientific_name": "Homo sapiens",
+                    "ensembl_name": "SAMN17861652",
+                    "scientific_parlance_name": "Human",
+                    "organism_uuid": "b6f5e927-22f1-4e12-8bc5-77880de41211",
+                    "strain_type": "population",
+                    "taxonomy_id": 9606,
+                    "species_taxonomy_id": 9606
+                },
+                "release": {
+                    "release_version": 114.9,
+                    "release_date": "2025-10-21",
+                    "release_label": "2025-10-21",
+                    "release_type": "partial",
+                    "is_current": False,
+                    "site_name": "Ensembl",
+                    "site_label": "MVP ENsembl",
+                    "site_uri": "https://beta.ensembl.org"
+                }
+            },
+            {
+                "genome_uuid": "ddfadcb5-3b4a-48ca-9dcd-e75884445bd1",
+                "assembly": {
+                    "accession": "GCA_018472695.2",
+                    "name": "HG01928_mat_hprc_f2",
+                    "ucsc_name": "",
+                    "level": "primary_assembly",
+                    "ensembl_name": "",
+                    "assembly_uuid": "c4b526fd-4919-459f-b25e-9f1f658e0c53",
+                    "is_reference": False,
+                    "url_name": "",
+                    "tol_id": ""
+                },
+                "taxon": {
+                    "taxonomy_id": 9606,
+                    "scientific_name": "Homo sapiens",
+                    "strain": "Peruvian in Lima",
+                    "alternative_names": []
+                },
+                "created": "2025-09-26 17:12:04",
+                "organism": {
+                    "common_name": "Human",
+                    "strain": "Peruvian in Lima",
+                    "scientific_name": "Homo sapiens",
+                    "ensembl_name": "SAMN17861660",
+                    "scientific_parlance_name": "Human",
+                    "organism_uuid": "c0ce970e-a1ab-492e-8838-684854ed22fb",
+                    "strain_type": "population",
+                    "taxonomy_id": 9606,
+                    "species_taxonomy_id": 9606
+                },
+                "release": {
+                    "release_version": 114.9,
+                    "release_date": "2025-10-21",
+                    "release_label": "2025-10-21",
+                    "release_type": "partial",
+                    "is_current": False,
+                    "site_name": "Ensembl",
+                    "site_label": "MVP ENsembl",
+                    "site_uri": "https://beta.ensembl.org"
+                }
+            }
+        ]
+
+        # Use release_label even in dummy mode: filter to matching releases.
+        if release_label:
+            dummy_data = [
+                g
+                for g in dummy_data
+                if "release" in g
+                   and g["release"].get("release_label") == release_label
+            ]
+
+        return msg_factory.create_genomes_in_group(dummy_data)
+
+    except Exception:
+        # Dummy error handling until ORM logic is implemented.
+        logger.exception(
+            "Unexpected error while fetching genomes in group "
+            "(group_id=%r, release_label=%r)",
+            group_id,
+            release_label,
+        )
+        return msg_factory.create_genomes_in_group([])
+
+
+# END TODO
+
+
+
+#pprint.pprint(get_species_information(GenomeAdaptor(meta_conn), 'a7335667-93e7-11ec-a39d-005056b38ce3'))
+
+
+#def get_top_level_statistics(db_conn, organism_uuid):
+#    if not organism_uuid:
+#        logger.warning("Missing or Empty Organism UUID field.")
+#        return None
+#    # FIXME get best genome for organism and fetch from genome
+#    genomes = db_conn.fetch_genomes(organism_uuid=organism_uuid)
+#    #Todo fetch_genome returns duplicate genome uuids  if a genome assigned to multiple release and param allow_unreleased set to true
+#    stats_results = db_conn.fetch_genome_datasets(genome_uuid=list({genome.Genome.genome_uuid for genome in genomes}),
+#                                                  dataset_type_name="all")
+#
+#    if len(stats_results) > 0:
+#        response_data = {
+#            'organism_uuid': organism_uuid,
+#            'stats_by_genome_uuid': stats_results
+#        }
+#        # logger.debug(f"Response data: \n{response_data}")
+#        return response_data
+#
+#    logger.debug("No top level stats found.")
+#    return None
+
+def get_top_level_statistics_by_uuid(db_conn, genome_uuid):
+    if not genome_uuid:
+        logging.warning("Missing or Empty Genome UUID field.")
+        return None
+
+    stats_results = db_conn.fetch_genome_datasets(genome_uuid=genome_uuid, dataset_type_name="all")
+
+    statistics = []
+    # FIXME stats_results can contain multiple entries
+    if len(stats_results) > 0:
+
+        for dataset in stats_results[0].datasets:
+            for attribute in dataset.attributes:
+                statistics.append({
+                    'name': attribute.name,
+                    'label': attribute.label,
+                    'statistic_type': attribute.type,
+                    'statistic_value': attribute.value
+                })
+
+        statistics.sort(key=lambda x: x['name'])
+
+        #logging.debug(f"Response data: \n{statistics}")
+        return statistics
+
+    logging.debug("No top level stats found.")
+    return None
+
+@router.get("/genome/{genome_uuid}/stats", name="statistics")
+#@redis_cache("stats", arg_keys=["genome_uuid"])
+async def get_metadata_statistics(
+    adaptor: AdaptorDep,
+    request: Request,
+    genome_uuid: str
+):
+    try:
+        top_level_stats = get_top_level_statistics_by_uuid(adaptor, genome_uuid)
+        genome_stats = GenomeStatistics(_raw_data=top_level_stats)
+        logging.debug(genome_stats.model_dump())
+        return responses.JSONResponse({"genome_stats": genome_stats.model_dump()})
+    except Exception as e:
+        logging.error(e)
+        return response_error_handler({"status": 500})
+
+
+def test_get_metadata_statistics():
+    response = client.get("/genome/a7335667-93e7-11ec-a39d-005056b38ce3/stats")
+    assert response.status_code == 200
+    assert response.json() == {
+        "genome_stats":{
+            "assembly_stats":{
+                "contig_n50":54806562,
+                "total_genome_length":3298912062,
+                "total_coding_sequence_length":34493611,
+                "total_gap_length":161611139,
+                "spanned_gaps":663,
+                "chromosomes":25,
+                "toplevel_sequences":709,
+                "component_sequences":36829,
+                "gc_percentage":38.88
+            },
+            "coding_stats":{
+                "coding_genes":20481,
+                "average_genomic_span":67396.48,
+                "average_sequence_length":None,
+                "average_cds_length":1191.97,
+                "shortest_gene_length":8,
+                "longest_gene_length":2473539,
+                "total_transcripts":170833,
+                "coding_transcripts":111076,
+                "transcripts_per_gene":8.34,
+                "coding_transcripts_per_gene":5.42,
+                "total_exons":1388435,
+                "total_coding_exons":886243,
+                "average_exon_length":250.15,
+                "average_coding_exon_length":149.38,
+                "average_exons_per_transcript":None,
+                "average_coding_exons_per_coding_transcript":None,
+                "total_introns":1217602,
+                "average_intron_length":6172.48
+            },
+            "variation_stats":{
+                "short_variants":1099106974,
+                "structural_variants":None,
+                "short_variants_with_phenotype_assertions":None,
+                "short_variants_with_publications":None,
+                "short_variants_frequency_studies":None,
+                "structural_variants_with_phenotype_assertions":None
+            },
+            "non_coding_stats":{
+                "non_coding_genes":25959,
+                "small_non_coding_genes":4864,
+                "long_non_coding_genes":18874,
+                "misc_non_coding_genes":2221,
+                "average_genomic_span":22981.34,
+                "average_sequence_length":967.28,
+                "shortest_gene_length":41,
+                "longest_gene_length":1375317,
+                "total_transcripts":64262,
+                "transcripts_per_gene":2.48,
+                "total_exons":224817,
+                "average_exon_length":339.13,
+                "average_exons_per_transcript":3.5,
+                "total_introns":160555,
+                "average_intron_length":14932.57
+            },
+            "pseudogene_stats":{
+                "pseudogenes":15239,
+                "average_genomic_span":3412.92,
+                "average_sequence_length":725.47,
+                "shortest_gene_length":23,
+                "longest_gene_length":909387,
+                "total_transcripts":16703,
+                "transcripts_per_gene":1.1,
+                "total_exons":35229,
+                "average_exon_length":371.37,
+                "average_exons_per_transcript":2.11,
+                "total_introns":18526,
+                "average_intron_length":4117.36
+            },
+            "homology_stats":{
+                "coverage":91.6,
+                "reference_species_name":"Pan troglodytes"
+            },
+            "regulation_stats":{
+                "enhancers":246403,
+                "promoters":35983,
+                "ctcf_count":90891,
+                "tfbs_count":30873,
+                "open_chromatin_count":7541
+            }
+        }
+    }
+
+
+@router.get("/genome/{genome_uuid}/karyotype", name="karyotype")
+# @redis_cache("karyotype", arg_keys=["genome_uuid"])
+async def get_genome_karyotype(request: Request, genome_uuid: str):
+    try:
+        top_level_regions = data_get_top_level_regions(genome_uuid)
+
+        # Temporary hack for e.coli and remov when the correct schema/data is available in metadata-database
+        if genome_uuid == "a73351f7-93e7-11ec-a39d-005056b38ce3":
+            for tlr in top_level_regions:
+                tlr["is_circular"] = True
+        karyotype_response = Karyotype(top_level_regions=top_level_regions)
+        return responses.JSONResponse(
+            karyotype_response.model_dump()["top_level_regions"]
+        )
+    except Exception as e:
+        logging.error(e)
+        return response_error_handler({"status": 500})
+
+# TODO: get data from DB
+def data_get_top_level_regions(genome_uuid):
+    return [
+        {"name":"1", "type":"chromosome", "length":248956422, "is_circular":False},
+        {"name":"2", "type":"chromosome", "length":242193529, "is_circular":False},
+        {"name":"3", "type":"chromosome", "length":198295559, "is_circular":False},
+        {"name":"4", "type":"chromosome", "length":190214555, "is_circular":False},
+        {"name":"5", "type":"chromosome", "length":181538259, "is_circular":False},
+        {"name":"6", "type":"chromosome", "length":170805979, "is_circular":False},
+        {"name":"7", "type":"chromosome", "length":159345973, "is_circular":False},
+        {"name":"8", "type":"chromosome", "length":145138636, "is_circular":False},
+        {"name":"9", "type":"chromosome", "length":138394717, "is_circular":False},
+        {"name":"10", "type":"chromosome", "length":133797422, "is_circular":False},
+        {"name":"11", "type":"chromosome", "length":135086622, "is_circular":False},
+        {"name":"12", "type":"chromosome", "length":133275309, "is_circular":False},
+        {"name":"13", "type":"chromosome", "length":114364328, "is_circular":False},
+        {"name":"14", "type":"chromosome", "length":107043718, "is_circular":False},
+        {"name":"15", "type":"chromosome", "length":101991189, "is_circular":False},
+        {"name":"16", "type":"chromosome", "length":90338345, "is_circular":False},
+        {"name":"17", "type":"chromosome", "length":83257441, "is_circular":False},
+        {"name":"18", "type":"chromosome", "length":80373285, "is_circular":False},
+        {"name":"19", "type":"chromosome", "length":58617616, "is_circular":False},
+        {"name":"20", "type":"chromosome", "length":64444167, "is_circular":False},
+        {"name":"21", "type":"chromosome", "length":46709983, "is_circular":False},
+        {"name":"22", "type":"chromosome", "length":50818468, "is_circular":False},
+        {"name":"X", "type":"chromosome", "length":156040895, "is_circular":False},
+        {"name":"Y", "type":"chromosome", "length":57227415, "is_circular":False},
+        {"name":"MT", "type":"chromosome", "length":16569, "is_circular":False}
+    ]
+
+def test_get_genome_karyotype():
+    response = client.get("/genome/a7335667-93e7-11ec-a39d-005056b38ce3/karyotype")
+    assert response.status_code == 200
+    assert response.json() == [
+        {"name":"1", "type":"chromosome", "length":248956422, "is_circular":False},
+        {"name":"2", "type":"chromosome", "length":242193529, "is_circular":False},
+        {"name":"3", "type":"chromosome", "length":198295559, "is_circular":False},
+        {"name":"4", "type":"chromosome", "length":190214555, "is_circular":False},
+        {"name":"5", "type":"chromosome", "length":181538259, "is_circular":False},
+        {"name":"6", "type":"chromosome", "length":170805979, "is_circular":False},
+        {"name":"7", "type":"chromosome", "length":159345973, "is_circular":False},
+        {"name":"8", "type":"chromosome", "length":145138636, "is_circular":False},
+        {"name":"9", "type":"chromosome", "length":138394717, "is_circular":False},
+        {"name":"10", "type":"chromosome", "length":133797422, "is_circular":False},
+        {"name":"11", "type":"chromosome", "length":135086622, "is_circular":False},
+        {"name":"12", "type":"chromosome", "length":133275309, "is_circular":False},
+        {"name":"13", "type":"chromosome", "length":114364328, "is_circular":False},
+        {"name":"14", "type":"chromosome", "length":107043718, "is_circular":False},
+        {"name":"15", "type":"chromosome", "length":101991189, "is_circular":False},
+        {"name":"16", "type":"chromosome", "length":90338345, "is_circular":False},
+        {"name":"17", "type":"chromosome", "length":83257441, "is_circular":False},
+        {"name":"18", "type":"chromosome", "length":80373285, "is_circular":False},
+        {"name":"19", "type":"chromosome", "length":58617616, "is_circular":False},
+        {"name":"20", "type":"chromosome", "length":64444167, "is_circular":False},
+        {"name":"21", "type":"chromosome", "length":46709983, "is_circular":False},
+        {"name":"22", "type":"chromosome", "length":50818468, "is_circular":False},
+        {"name":"X", "type":"chromosome", "length":156040895, "is_circular":False},
+        {"name":"Y", "type":"chromosome", "length":57227415, "is_circular":False},
+        {"name":"MT", "type":"chromosome", "length":16569, "is_circular":False}
+    ]
+
+
+@router.get("/popular_species", name="popular_species")
+#@redis_cache(key_prefix="popular_species")  # TTL defaults is 5 minutes
+async def get_popular_species(request: Request):
+    try:
+        popular_species_dict = data_get_popular_species()
+        popular_species = popular_species_dict["organismsGroupCount"]
+        popular_species_response = PopularSpeciesGroup(
+            _base_url=request.headers["host"], popular_species=popular_species
+        )
+        return responses.JSONResponse(popular_species_response.model_dump())
+    except Exception as e:
+        logging.error(e)
+        return response_error_handler({"status": 500})
+
+
+# TODO: get data from DB
+def data_get_popular_species():
+    return {
+        "organismsGroupCount" : [
+            {
+                "speciesTaxonomyId":"9606",
+                "commonName":"Human",
+                "count":565
+            },
+            {
+                "speciesTaxonomyId":"10090",
+                "commonName":"Mouse",
+                "count":31
+            }
+
+        ]
+    }
+
+def test_get_popular_species():
+    response = client.get("/popular_species")
+    assert response.status_code == 200
+    assert response.json() == {
+        "popular_species":[
+            {
+                "species_taxonomy_id":"9606",
+                "name":"Human",
+                "image":"//testserver/static/genome_images/9606.svg",
+                "genomes_count":565
+            },
+            {
+                "species_taxonomy_id":"10090",
+                "name":"Mouse",
+                "image":"//testserver/static/genome_images/10090.svg",
+                "genomes_count":31
+            }
+        ]
+    }
+
+
+
+@router.get("/validate_location", name="validate_location")
+def validate_region(request: Request, genome_id: str, location: str):
+    try:
+        rgv = RegionValidation(genome_uuid=genome_id, location_input=location)
+        rgv.validate_region()
+        return responses.JSONResponse(rgv.model_dump())
+    except Exception as e:
+        logging.error(e)
+        return response_error_handler({"status": 500})
+
+
+def test_validate_region():
+    response = client.get("/validate_location?genome_id=a7335667-93e7-11ec-a39d-005056b38ce3&location=8:26291508-26372680")
+    assert response.status_code == 200
+    assert response.json() == {
+        "region":{
+            "error_code":None,
+            "error_message":None,
+            "region_name":"8",
+            "is_valid":True
+        },
+        "start":{
+            "error_code":None,
+            "error_message":None,
+            "value":26291508,
+            "is_valid":True
+        },
+        "end":{
+            "error_code":None,
+            "error_message":None,
+            "value":26372680,
+            "is_valid":True
+        },
+        "location":"8:26291508-26372680"
+    }
+
+
+
+@router.get("/genome/{genome_id}/example_objects", name="example_objects")
+#@redis_cache("example_objects", arg_keys=["genome_id"])
+async def example_objects(request: Request, genome_id: str):
+    try:
+        attributes_info = data_get_attributes_info(genome_id)
+        if attributes_info:
+            example_objects = ExampleObjectList(
+                example_objects=attributes_info["attributesInfo"]
+            )
+            response_data = responses.JSONResponse(
+                example_objects.model_dump()["example_objects"]
+            )
+        else:
+            return response_error_handler({
+                "status": 404,
+                "details": f"Could not find example objects for {genome_id}"
+            })
+    except Exception as ex:
+        logging.error(ex)
+        return response_error_handler({"status": 500})
+    return response_data
+
+# TODO: get data from DB
+def data_get_attributes_info(genome_uuid):
+    return {
+        "attributesInfo":
+            {"genebuildSampleGene":"ENSG00000221914",
+            "genebuildSampleLocation":"8:26291508-26372680",
+            "variationSampleVariant":"1:230710048:rs699"}
+    }
+
+def test_example_objects():
+    response = client.get("/genome/a7335667-93e7-11ec-a39d-005056b38ce3/example_objects")
+    assert response.status_code == 200
+    assert response.json() == [{"type":"gene","id":"ENSG00000221914"},{"type":"location","id":"8:26291508-26372680"},{"type":"variant","id":"1:230710048:rs699"}]
+
+
+
+
+@router.get("/genome/{genome_uuid}/details", name="genome_details")
+#@redis_cache("details", arg_keys=["genome_uuid"])
+async def get_genome_details(
+    adaptor: AdaptorDep,
+    request: Request,
+    genome_uuid: str):
+    try:
+        genome_details_dict = data_get_genome_by_uuid(adaptor, genome_uuid, None)
+
+        if genome_details_dict:
+            genome_details = GenomeDetails(**genome_details_dict)
+            response_data = responses.JSONResponse(genome_details.model_dump(
+                exclude={
+                    "release": {"is_current"},
+                }
+            ))
+        else:
+            return response_error_handler({
+                "status": 404,
+                "details": f"Could not find details for {genome_uuid}"
+            })
+    except Exception as ex:
+        logging.error(ex)
+        return response_error_handler({"status": 500})
+    return response_data
+
+
+# TODO: get data from DB
+def data_get_genome_details(genome_uuid):
+    return {
+        "organism": {
+            "scientificName":"Homo sapiens",
+            "taxonomyId":"9606",
+            "speciesTaxonomyId":"9606",
+            "commonName":"Human",
+        },
+        "genomeUuid":"a7335667-93e7-11ec-a39d-005056b38ce3",
+        "type":None,
+        "assembly":{
+            "accession":"GCA_000001405.29",
+            "name":"GRCh38.p14",
+            "isReference":True,
+            "level":"chromosome",
+            "date":"2013-12",
+        },
+        "attributesInfo":{
+            "assemblyLevel":"chromosome",
+            "genebuildMethodDisplay":"Ensembl Genebuild",
+            "genebuildVersion":"44",
+            "genebuildLastGenesetUpdate":"2023-03",
+            "assemblyDate":"2013-12"
+        },
+        "release":{
+            "releaseLabel":"2025-02",
+            "releaseType":"integrated",
+            "isCurrent":True
+        },
+        "annotation_provider":{
+            "name":"Ensembl",
+            "url":"https://www.ensembl.org"
+        },
+        "relatedAssembliesCount":565
+    }
+
+
+
+def test_get_genome_details():
+    response = client.get("/genome/a7335667-93e7-11ec-a39d-005056b38ce3/details")
+    assert response.status_code == 200
+    assert response.json() == {
+        "genome_id":"a7335667-93e7-11ec-a39d-005056b38ce3",
+        "genome_tag":None,
+        "common_name":"Human",
+        "scientific_name":"Homo sapiens",
+        "species_taxonomy_id":"9606",
+        "type":None,
+        "is_reference":True,
+        "assembly":{
+            "accession_id":"GCA_000001405.29",
+            "name":"GRCh38.p14",
+            "url":"https://identifiers.org/insdc.gca/GCA_000001405.29"
+        },
+        "release":{
+            "name":"2025-02",
+            "type":"integrated"
+        },
+        "taxonomy_id":"9606",
+        "assembly_provider": {
+            'name': 'Genome Reference Consortium',
+            'url': 'https://www.ncbi.nlm.nih.gov/grc',
+        },
+        "assembly_level":"chromosome",
+        "assembly_date":"2013-12",
+        "annotation_provider":{
+            "name":"Ensembl",
+            "url":"https://www.ensembl.org"
+        },
+        "annotation_method":"Ensembl Genebuild",
+        "annotation_version":"44",
+        "annotation_date":"2023-03",
+        "number_of_genomes_in_group":565
+    }
+
+
+
+
+@router.get("/genome/{genome_uuid}/ftplinks", name="genome_ftplinks")
+#@redis_cache("ftplinks", arg_keys=["genome_uuid"])
+async def get_genome_ftplinks(request: Request, genome_uuid: str):
+    try:
+        ftplinks_dict = data_get_ftplinks(genome_uuid)
+
+        # This is temporary solution to hide regulation ftp links
+        # It should be removed once the ftp links for regulation is fixed
+        ftplinks_no_regulation = {}
+        ftplinks_no_regulation["Links"] = [
+            link
+            for link in ftplinks_dict["Links"]
+            if link["datasetType"] != "regulation"
+        ]
+
+        ftplinks = FTPLinks(**ftplinks_no_regulation)
+        return responses.JSONResponse(ftplinks.model_dump().get("links", []))
+    except Exception as ex:
+        logging.error(ex)
+        return response_error_handler({"status": 500})
+
+
+# TODO: get data from DB
+def data_get_ftplinks(genome_uuid):
+    return {"Links": [
+        {
+            "datasetType":"assembly",
+            "path":"Homo_sapiens/GCA_000001405.29/genome"
+        },
+        {
+            "datasetType":"genebuild",
+            "path":"Homo_sapiens/GCA_000001405.29/ensembl/geneset/2023_03"
+        },
+        {
+            "datasetType":"homologies",
+            "path":"Homo_sapiens/GCA_000001405.29/ensembl/homology/2023_03"
+        },
+        {
+            "datasetType":"variation",
+            "path":"Homo_sapiens/GCA_000001405.29/ensembl/variation/2023_03"
+        }
+    ]
+    }
+
+
+def test_get_genome_ftplinks():
+    response = client.get("/genome/a7335667-93e7-11ec-a39d-005056b38ce3/ftplinks")
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "dataset":"assembly",
+            "url":"https://ftp.ebi.ac.uk/pub/ensemblorganisms/Homo_sapiens/GCA_000001405.29/genome"
+        },
+        {
+            "dataset":"genebuild",
+            "url":"https://ftp.ebi.ac.uk/pub/ensemblorganisms/Homo_sapiens/GCA_000001405.29/ensembl/geneset/2023_03"
+        },
+        {
+            "dataset":"homologies",
+            "url":"https://ftp.ebi.ac.uk/pub/ensemblorganisms/Homo_sapiens/GCA_000001405.29/ensembl/homology/2023_03"
+        },
+        {
+            "dataset":"variation",
+            "url":"https://ftp.ebi.ac.uk/pub/ensemblorganisms/Homo_sapiens/GCA_000001405.29/ensembl/variation/2023_03"
+        }
+    ]
+
+
+
+
+# TODO: get data from DB
+def data_get_brief_genome_details(genome_id_or_slug):
+    return {
+        "organism": {
+            "scientificName":"Homo sapiens",
+            "speciesTaxonomyId":"9606",
+            "commonName":"Human",
+        },
+        "genomeUuid":"a7335667-93e7-11ec-a39d-005056b38ce3",
+        "type":None,
+        "assembly":{
+            "accession":"GCA_000001405.29",
+            "name":"GRCh38.p14",
+            "url":"https://identifiers.org/insdc.gca/GCA_000001405.29",
+            "isReference":True,
+            "urlName": "grch38"
+        },
+        "release":{
+            "releaseLabel":"2025-02",
+            "releaseType":"integrated",
+            "isCurrent":True
+        },
+    }
+
+
+@router.get("/genome/{genome_id_or_slug}/explain", name="genome_explain")
+#@redis_cache(key_prefix="explain", arg_keys=['genome_id_or_slug'])
+async def explain_genome(request: Request, genome_id_or_slug: str):
+    try:
+        genome_details_dict = data_get_brief_genome_details(genome_id_or_slug)
+        if genome_details_dict:
+            genome_details = BriefGenomeDetails(**genome_details_dict)
+            response_dict = genome_details.model_dump(
+                include={
+                    "genome_id": True,
+                    "genome_tag": True,
+                    "scientific_name": True,
+                    "species_taxonomy_id": True,
+                    "common_name": True,
+                    "is_reference": True,
+                    "assembly": {"name", "accession_id"},
+                    "release": {"name", "type"},
+                    "type": True,
+                    "latest_genome": True,
+                }
+            )
+            response_data = responses.JSONResponse(response_dict, status_code=200)
+        else:
+            return response_error_handler({
+                "status": 404,
+                "details": f"Could not explain {genome_id_or_slug}"
+            })
+    except Exception as ex:
+        logging.error(ex)
+        return response_error_handler({"status": 500})
+    return response_data
+
+
+
+# TODO: get data from DB
+def data_get_region_checksum(genome_uuid, region_name):
+    return {"md5": "2648ae1bacce4ec4b6cf337dcae37816"}
+
+@router.get("/genome/{genome_uuid}/checksum/{region_name}", name="region_checksum")
+async def get_region_checksum(request: Request, genome_uuid: str, region_name: str):
+    try:
+        region_checksum_dict = data_get_region_checksum(
+                genome_uuid=genome_uuid, region_name=region_name
+            )
+        region_checksum = Checksum(**region_checksum_dict)
+        return responses.PlainTextResponse(region_checksum.md5)
+    except ValidationError as e:
+        error_type = e.errors()[0]["type"]
+        if error_type.index("missing") == 0:
+            return response_error_handler({"status": 404})
+    except Exception as ex:
+        logging.error(ex)
+        return response_error_handler({"status": 500})
+
+
+
+# TODO: get data from DB
+def data_get_dataset_attributes(genome_uuid, dataset_type, attribute_names):
+    return {
+    "releaseVersion":1.0,
+    "attributes":
+    [
+        {
+            "attributeName":"genebuild.stats.average_cds_length",
+            "attributeValue":"1191.97",
+            "datasetVersion":"GENCODE44",
+            "datasetUuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "datasetType":"genebuild"
+        }
+    ]
+}
+
+
+@router.get(
+    "/genome/{genome_uuid}/dataset/{dataset_type}/attributes", name="dataset_attributes"
+)
+async def get_genome_dataset_attributes(
+    request: Request,
+    genome_uuid: str,
+    dataset_type: str,
+    attribute_names: Annotated[list[str] | None, Query()] = None,
+):
+    try:
+        dataset_attributes = data_get_dataset_attributes(
+                genome_uuid,
+                dataset_type,
+                attribute_names
+            )
+        if len(dataset_attributes.get("attributes",[])) == 0:
+            return responses.JSONResponse(
+                {
+                    "message": f"Could not find details for genome {genome_uuid} and dataset {dataset_type}."
+                },
+                status_code=404,
+            )
+        dataset_attributes_object = DatasetAttributes(**dataset_attributes)
+        response_data = responses.JSONResponse(
+            dataset_attributes_object.dict(), status_code=200
+        )
+        return response_data
+
+    except Exception as ex:
+        logging.error(ex)
+        return response_error_handler({"status": 500})
+
+
+
+# TODO: get data from DB
+def data_get_genome_by_keyword(assembly_accession_id):
+    return [
+        {
+            "genomeUuid":"2b5fb047-5992-4dfb-b2fa-1fb4e18d1abb",
+            "assembly":{
+                "urlName": ""
+            },
+            "release":{
+                "releaseVersion":112.2,
+            }
+        }
+    ]
+
+@router.get("/genomeid")
+async def get_genome_by_keyword(request: Request, assembly_accession_id: str):
+    try:
+        genome_response = data_get_genome_by_keyword(assembly_accession_id)
+        latest_genome_by_keyword_object = GenomeByKeyword()
+        for arr in genome_response:
+            genome_by_keyword_object = GenomeByKeyword(**arr)
+            if (genome_by_keyword_object.release_version > latest_genome_by_keyword_object.release_version):
+                latest_genome_by_keyword_object = genome_by_keyword_object
+        if (latest_genome_by_keyword_object.genome_uuid):
+            return responses.JSONResponse(latest_genome_by_keyword_object.model_dump())
+        else:
+            logging.error(f"Assembly accession id {assembly_accession_id} not found")
+            return response_error_handler({"status": 404})
+
+    except Exception as ex:
+        logging.error(ex)
+        return response_error_handler({"status": 500})
+
+
+# TODO: get data from DB
+def data_get_vep_file_paths(genome_uuid):
+    return {
+        "faaLocation":"Homo_sapiens/GCA_000001405.29/vep/genome/softmasked.fa.bgz",
+        "gffLocation":"Homo_sapiens/GCA_000001405.29/vep/ensembl/geneset/2024_11/genes.gff3.bgz"
+    }
+
+@router.get("/genome/{genome_uuid}/vep/file_paths")
+async def get_vep_file_paths(
+    request: Request,
+    genome_uuid: str,
+):
+    try:
+        vep_file_paths = data_get_vep_file_paths(genome_uuid)
+        if len(vep_file_paths) == 0:
+            return responses.JSONResponse(
+                {
+                    "message": f"Could not find VEP file paths for genome {genome_uuid}."
+                },
+                status_code=404,
+            )
+
+        vep_file_paths_object = VepFilePaths(**vep_file_paths)
+        return responses.JSONResponse(
+            vep_file_paths_object.dict(), status_code=200
+        )
+
+    except Exception as ex:
+        logging.error(ex)
+        return response_error_handler({"status": 500})
+
+
+
+def data_get_release(release_label, current_only):
+    if (release_label and current_only):
+        result = (session.
+            query(EnsemblRelease).
+            where(EnsemblRelease.label.in_(release_label)).
+            where(EnsemblRelease.is_current == current_only).
+            all()
+        )
+    elif (release_label):
+        result = (session.
+            query(EnsemblRelease).
+            where(EnsemblRelease.label.in_(release_label)).
+            all()
+        )
+    elif (current_only):
+        result = (session.
+            query(EnsemblRelease).
+            where(EnsemblRelease.is_current == current_only).
+            all()
+        )
+    else:
+        result = (session.
+            query(EnsemblRelease).
+            all()
+        )
+
+    return result
+
+
+@router.get("/releases", name="get_releases")
+# @redis_cache("releases")
+async def get_releases(
+    request: Request,
+    release_name: list[str] = Query(None, description="Filter by release name(s)"),
+    current_only: bool = Query(False, description="Only current releases")
+):
+
+    try:
+        releases = data_get_release(
+            release_name,
+            current_only
+        )
+
+        releases_list = []
+        for release in releases:
+            release = Release(
+                releaseLabel=release.label,
+                releaseType=release.release_type,
+                isCurrent=release.is_current
+            )
+            releases_list.append(release)
+
+        if releases_list:
+            # Serialize each release into the desired format
+            response_list = []
+            for release in releases_list:
+                response_dict = release.model_dump(
+                    include={
+                        "name": True,
+                        "type": True,
+                        "is_current": True,
+                    }
+                )
+                response_list.append(response_dict)
+            response_data = responses.JSONResponse(response_list, status_code=200)
+        else:
+            return response_error_handler({
+                "status": 404,
+                "details": "No releases found matching criteria"
+            })
+    except Exception as e:
+        logging.error(e)
+        error_response = {"message": f"An error occurred: {str(e)}"}
+        response_data = responses.JSONResponse(error_response, status_code=500)
+
+    return response_data
+
+# TODO: get data from DB
+def data_get_genome_groups_with_reference(group_type, release_label):
+    return (
+        {
+            "genomeGroups":
+            [
+                {
+                    "groupId":"grch38-group",
+                    "groupType":"structural_variant",
+                    "groupName":None,
+                    "referenceGenome":{
+                        "organism": {
+                            "scientificName":"Homo sapiens",
+                            "speciesTaxonomyId":"9606",
+                            "commonName":"Human",
+                        },
+                        "genomeUuid":"a7335667-93e7-11ec-a39d-005056b38ce3",
+                        "type":None,
+                        "assembly":{
+                            "accession":"GCA_000001405.29",
+                            "name":"GRCh38.p14",
+                            "url":"https://identifiers.org/insdc.gca/GCA_000001405.29",
+                            "isReference":True,
+                            "urlName": "grch38"
+                        },
+                        "release":{
+                            "releaseLabel":"2025-02",
+                            "releaseType":"integrated",
+                            "isCurrent":True
+                        }
+                    }
+                }
+            ]
+        }
+    )
+
+
+@router.get("/genome_groups", name="genome_groups")
+#@redis_cache("genome_groups", arg_keys=["group_type", "release"])
+async def get_genome_groups(
+        group_type: str = Query(..., description="Group type, e.g. 'structural_variant'"),
+        release: str | None = Query(None, description="Optional release label, e.g. '2025-02'")
+):
+    try:
+        genome_groups_dict = data_get_genome_groups_with_reference(
+            group_type,
+            release
+        )
+        logging.debug(f"genome_groups_dict: {genome_groups_dict}")
+        if len(genome_groups_dict.get("genomeGroups", [])) == 0:
+            return response_error_handler({
+                "status": 404,
+                "details": "No genome groups found matching criteria"
+            })
+
+        genome_groups = GenomeGroupsResponse(**genome_groups_dict)
+        response_dict = genome_groups.model_dump()
+        return responses.JSONResponse(response_dict, status_code=200)
+    except Exception as ex:
+        logging.exception("Error in get_genome_groups")
+        return response_error_handler({"status": 500})
+
+
+# TODO: get data from DB
+def data_get_genomes_in_group(group_id, release_label):
+    return (
+        {
+            "genomes":
+            [
+                {
+                    "organism": {
+                        "scientificName":"Homo sapiens",
+                        "speciesTaxonomyId":"9606",
+                        "commonName":"Human",
+                    },
+                    "genomeUuid":"a7335667-93e7-11ec-a39d-005056b38ce3",
+                    "type":None,
+                    "assembly":{
+                        "accession":"GCA_000001405.29",
+                        "name":"GRCh38.p14",
+                        "url":"https://identifiers.org/insdc.gca/GCA_000001405.29",
+                        "isReference":True,
+                        "urlName": "grch38"
+                    },
+                    "release":{
+                        "releaseLabel":"2025-02",
+                        "releaseType":"integrated",
+                        "isCurrent":True
+                    }
+                }
+            ]
+        }
+    )
+
+@router.get("/genome_groups/{group_id}/genomes", name="genomes_in_group")
+#@redis_cache("genomes_in_group", arg_keys=["group_id", "release"])
+async def get_genomes_in_group(
+        group_id: str = Path(..., description="Group ID, e.g. 'grch38-group'"),
+        release: str | None = Query(None, description="Optional release label, e.g. '2025-02'")
+):
+    try:
+        genomes_in_group_dict = data_get_genomes_in_group(
+                group_id,
+                release
+            )
+        logging.debug(f"genomes_in_group_dict: {genomes_in_group_dict}")
+        if len(genomes_in_group_dict.get("genomes", [])) == 0:
+            return response_error_handler({
+                "status": 404,
+                "details": "No genomes found in specified group"
+            })
+
+        genomes_in_group = GenomesInGroupResponse(**genomes_in_group_dict)
+        response_dict = genomes_in_group.model_dump()
+        return responses.JSONResponse(response_dict, status_code=200)
+    except Exception as ex:
+        logging.exception("Error in get_genomes_in_group")
+        return response_error_handler({"status": 500})
+
+
+
+# TODO FIX: create stats data in DB and use
+def data_get_genome_counts(db_conn: Any, release_label: str | None):
+
+    try:
+        # The logic calling the ORM and fetching data from the DB
+        # will go here. For now, we return dummy data.
+        dummy_data = {
+            "total": 4758,
+            "counts": [
+                {
+                    "label": "Animals",
+                    "count": 4127,
+                },
+                {
+                    "label": "Green Plants",
+                    "count": 475,
+                },
+                {
+                    "label": "Fungi",
+                    "count": 116,
+                },
+                {
+                    "label": "Bacteria",
+                    "count": 1,
+                },
+                {
+                    "label": "Others",
+                    "count": 39,
+                }
+            ]
+        }
+
+        return dummy_data
+
+    except Exception:
+        # Dummy error handling until ORM logic is implemented.
+        logger.exception(
+            "Unexpected error while fetching genomes in group "
+            "(release_label=%r)",release_label
+        )
+        return None
+
+
+
+@router.get("/genome_counts", name="genome_counts")
+#@redis_cache(key_prefix="genome_counts", arg_keys=["release"])
+async def get_genome_counts(
+	adaptor: AdaptorDep,
+    release: str | None = Query(None, description="Optional release label to filter counts, e.g. '2025-02'")
+):
+    try:
+        genome_counts_dict = data_get_genome_counts(adaptor, release)
+        genome_counts = GenomeCountsResponse(**genome_counts_dict)
+        response_data = responses.JSONResponse(genome_counts.model_dump(), status_code=200)
+    except Exception as ex:
+        logging.exception("Error in get_genome_counts")
+        return response_error_handler({"status": 500})
+    return response_data
+
+
+
+
+app = FastAPI()
+app.include_router(router)
+
+
+client = TestClient(app)
+
+
+def test_explain_genome():
+    response = client.get("/genome/a7335667-93e7-11ec-a39d-005056b38ce3/explain")
+    assert response.status_code == 200
+    assert response.json() == {
+        "genome_id":"a7335667-93e7-11ec-a39d-005056b38ce3",
+        "genome_tag":"grch38",
+        "common_name":"Human",
+        "scientific_name":"Homo sapiens",
+        "species_taxonomy_id":"9606",
+        "type":None,
+        "is_reference":True,
+        "assembly":{
+            "accession_id":"GCA_000001405.29",
+            "name":"GRCh38.p14"
+        },
+        "release":{
+            "name":"2025-02",
+            "type":"integrated"
+        },
+        "latest_genome":None
+    }
+
+def test_get_region_checksum():
+    response = client.get("/genome/a7335667-93e7-11ec-a39d-005056b38ce3/checksum/1")
+    assert response.status_code == 200
+    assert response.content.decode("utf-8") == "2648ae1bacce4ec4b6cf337dcae37816"
+
+def test_get_genome_dataset_attributes():
+    response = client.get("/genome/a7335667-93e7-11ec-a39d-005056b38ce3/dataset/genebuild/attributes")
+    assert response.status_code == 200
+    assert response.json() == {
+    "attributes":
+    [
+        {
+            "name":"genebuild.stats.average_cds_length",
+            "value":"1191.97",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"
+        },
+    ],
+    "release_version":1.0
+}
+
+def test_get_genome_by_keyword():
+    response = client.get("/genomeid?assembly_accession_id=GCA_000001405.29")
+    assert response.status_code == 200
+    assert response.json() == {
+        "genome_uuid":"2b5fb047-5992-4dfb-b2fa-1fb4e18d1abb",
+        "release_version":112.2,
+        "genome_tag":""
+    }
+
+def test_get_vep_file_paths():
+    response = client.get("/genome/2b5fb047-5992-4dfb-b2fa-1fb4e18d1abb/vep/file_paths")
+    assert response.status_code == 200
+    assert response.json() == {
+        "faa_location":"Homo_sapiens/GCA_000001405.29/vep/genome/softmasked.fa.bgz",
+        "gff_location":"Homo_sapiens/GCA_000001405.29/vep/ensembl/geneset/2024_11/genes.gff3.bgz"
+    }
+
+def test_get_genomes_in_group():
+    response = client.get("/genome_groups/grch38-group/genomes")
+    assert response.status_code == 200
+    assert response.json() == (
+        {
+            "genomes":
+            [
+                {"genome_id":"a7335667-93e7-11ec-a39d-005056b38ce3",
+                 "genome_tag":"grch38",
+                 "common_name":"Human",
+                 "scientific_name":"Homo sapiens",
+                 "species_taxonomy_id":"9606",
+                 "type":None,
+                 "is_reference":True,
+                 "assembly":{
+                     "accession_id":"GCA_000001405.29",
+                     "name":"GRCh38.p14",
+                     "url":"https://identifiers.org/insdc.gca/GCA_000001405.29"
+                 },
+                 "release":{
+                     "name":"2025-02",
+                     "type":"integrated",
+                     "is_current":True
+                 }
+                }
+            ]
+        }
+    )
+
+def test_get_genome_groups():
+    response = client.get("/genome_groups?group_type=structural_variant")
+    assert response.status_code == 200
+    assert response.json() == (
+        {
+            "genome_groups":
+            [
+                {
+                    "id":"grch38-group",
+                    "type":"structural_variant",
+                    "name":None,
+                    "reference_genome":{
+                        "genome_id":"a7335667-93e7-11ec-a39d-005056b38ce3",
+                        "genome_tag":"grch38",
+                        "common_name":"Human",
+                        "scientific_name":"Homo sapiens",
+                        "species_taxonomy_id":"9606",
+                        "type":None,
+                        "is_reference":True,
+                        "assembly":{
+                            "accession_id":"GCA_000001405.29",
+                            "name":"GRCh38.p14",
+                            "url":"https://identifiers.org/insdc.gca/GCA_000001405.29"
+                        },
+                        "release":{
+                            "name":"2025-02",
+                            "type":"integrated",
+                            "is_current":True
+                        }
+                    }
+                }
+            ]
+        }
+    )
+
+def test_get_genome_counts():
+    response = client.get("/genome_counts")
+    assert response.status_code == 200
+    assert response.json() == (
+        {
+            "total":4758,
+            "counts":[
+                {"label":"Animals","count":4127},
+                {"label":"Green Plants","count":475},
+                {"label":"Fungi","count":116},
+                {"label":"Bacteria","count":1},
+                {"label":"Others","count":39}
+            ]
+        }
+    )
+
+    # TODO: the response data is wrong here
+    response = client.get("/genome_counts?release=2023-10-18")
+    assert response.status_code == 200
+    assert response.json() == (
+        {
+            "total":4758,
+            "counts":[
+                {"label":"Animals","count":4127},
+                {"label":"Green Plants","count":475},
+                {"label":"Fungi","count":116},
+                {"label":"Bacteria","count":1},
+                {"label":"Others","count":39}
+            ]
+        }
+    )
+
+def test_get_releases(benchmark):
+
+    response = client.get("/releases?release_name=2023-10-18")
+    assert response.status_code == 200
+    assert response.json() == [{"name": "2023-10-18",
+                                "type":"partial",
+                                "is_current":False}]
+
+    response = client.get("/releases?current_only=true")
+    assert response.status_code == 200
+    assert response.json() == [{"name": "2025-02",
+                                "type":"integrated",
+                                "is_current":True},
+                               {"name": "2026-01-26",
+                                "type":"partial",
+                                "is_current":True},
+                              ]
+
+    response = client.get("/releases?release_name=100000")
+    assert response.status_code == 404
+
+    response = client.get("/releases?release_name=2023-10-18&release_name=2024-09-18")
+    assert response.status_code == 200
+    assert response.json() == [{"name": "2023-10-18",
+                                "type":"partial",
+                                "is_current":False},
+                               {"name": "2024-09-18",
+                                "type":"partial",
+                                "is_current":False}
+                              ]
+
+    response = client.get("/releases")
+    assert response.status_code == 200
+    assert len(response.json()) == 24
+
+    runnable = lambda: client.get("/releases")
+    benchmark(runnable)
+
+
