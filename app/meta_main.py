@@ -1685,12 +1685,16 @@ def test_get_genome_karyotype():
     ]
 
 
+# OK
 @router.get("/popular_species", name="popular_species")
 #@redis_cache(key_prefix="popular_species")  # TTL defaults is 5 minutes
-async def get_popular_species(request: Request):
+async def get_popular_species(
+    adaptor: AdaptorDep,
+    request: Request
+):
     try:
-        popular_species_dict = data_get_popular_species()
-        popular_species = popular_species_dict["organismsGroupCount"]
+        popular_species_dict = get_organisms_group_count(adaptor, None)
+        popular_species = popular_species_dict["organisms_group_count"]
         popular_species_response = PopularSpeciesGroup(
             _base_url=request.headers["host"], popular_species=popular_species
         )
@@ -1700,46 +1704,255 @@ async def get_popular_species(request: Request):
         return response_error_handler({"status": 500})
 
 
-# TODO: get data from DB
-def data_get_popular_species():
-    return {
-        "organismsGroupCount" : [
-            {
-                "speciesTaxonomyId":"9606",
-                "commonName":"Human",
-                "count":565
-            },
-            {
-                "speciesTaxonomyId":"10090",
-                "commonName":"Mouse",
-                "count":31
-            }
+def get_organisms_group_count(db_conn, release_label):
+    count_result = db_conn.fetch_organisms_group_counts(release_label=release_label)
+    response_data = create_organisms_group_count(count_result, release_label)
+    # logger.debug(f"Response data: \n{response_data}")
+    return response_data
 
-        ]
+def create_organisms_group_count(data, release_label):
+    if data is None:
+        return None
+
+    organisms_list = []
+    for organism in data:
+        created_organism_group = {
+            'species_taxonomy_id':organism[0],
+            'common_name':organism[1],
+            'scientific_name':organism[2],
+            'order':organism[3],
+            'count':organism[4],
+        }
+        organisms_list.append(created_organism_group)
+
+    return {
+        'organisms_group_count':organisms_list,
+        'release_label':release_label
     }
+
 
 def test_get_popular_species():
     response = client.get("/popular_species")
     assert response.status_code == 200
     assert response.json() == {
-        "popular_species":[
+        "popular_species":
+        [
             {
                 "species_taxonomy_id":"9606",
                 "name":"Human",
                 "image":"//testserver/static/genome_images/9606.svg",
-                "genomes_count":565
-            },
+                "genomes_count":565},
             {
                 "species_taxonomy_id":"10090",
                 "name":"Mouse",
                 "image":"//testserver/static/genome_images/10090.svg",
-                "genomes_count":31
+                "genomes_count":31},
+            {
+                "species_taxonomy_id":"7955",
+                "name":"Zebrafish",
+                "image":"//testserver/static/genome_images/7955.svg",
+                "genomes_count":1},
+            {
+                "species_taxonomy_id":"4565",
+                "name":"Bread wheat",
+                "image":"//testserver/static/genome_images/4565.svg",
+                "genomes_count":20},
+            {
+                "species_taxonomy_id":"4530",
+                "name":"Japanese rice",
+                "image":"//testserver/static/genome_images/4530.svg",
+                "genomes_count":21},
+            {
+                "species_taxonomy_id":"3702",
+                "name":"Thale-cress",
+                "image":"//testserver/static/genome_images/3702.svg",
+                "genomes_count":1},
+            {
+                "species_taxonomy_id":"9913",
+                "name":"Cattle",
+                "image":"//testserver/static/genome_images/9913.svg",
+                "genomes_count":5},
+            {
+                "species_taxonomy_id":"10116",
+                "name":"Norway rat",
+                "image":"//testserver/static/genome_images/10116.svg",
+                "genomes_count":6},
+            {
+                "species_taxonomy_id":"9823",
+                "name":"Pig",
+                "image":"//testserver/static/genome_images/9823.svg",
+                "genomes_count":29},
+            {
+                "species_taxonomy_id":"4577",
+                "name":"Maize",
+                "image":"//testserver/static/genome_images/4577.svg",
+                "genomes_count":1},
+            {
+                "species_taxonomy_id":"9031",
+                "name":"Chicken",
+                "image":"//testserver/static/genome_images/9031.svg",
+                "genomes_count":5},
+            {
+                "species_taxonomy_id":"9612",
+                "name":"Dog",
+                "image":"//testserver/static/genome_images/9612.svg",
+                "genomes_count":7},
+            {
+                "species_taxonomy_id":"4513",
+                "name":"Domesticated barley",
+                "image":"//testserver/static/genome_images/4513.svg",
+                "genomes_count":69},
+            {
+                "species_taxonomy_id":"7227",
+                "name":"Fruit fly",
+                "image":"//testserver/static/genome_images/7227.svg",
+                "genomes_count":1},
+            {
+                "species_taxonomy_id":"8090",
+                "name":"Japanese medaka",
+                "image":"//testserver/static/genome_images/8090.svg",
+                "genomes_count":15},
+            {
+                "species_taxonomy_id":"9940",
+                "name":"Sheep",
+                "image":"//testserver/static/genome_images/9940.svg",
+                "genomes_count":22},
+            {
+                "species_taxonomy_id":"29760",
+                "name":"Wine grape",
+                "image":"//testserver/static/genome_images/29760.svg",
+                "genomes_count":2},
+            {
+                "species_taxonomy_id":"4081",
+                "name":"Tomato",
+                "image":"//testserver/static/genome_images/4081.svg",
+                "genomes_count":2},
+            {
+                "species_taxonomy_id":"9796",
+                "name":"Horse",
+                "image":"//testserver/static/genome_images/9796.svg",
+                "genomes_count":3},
+            {
+                "species_taxonomy_id":"3708",
+                "name":"Oilseed rape",
+                "image":"//testserver/static/genome_images/3708.svg",
+                "genomes_count":1},
+            {
+                "species_taxonomy_id":"4113",
+                "name":"Potato",
+                "image":"//testserver/static/genome_images/4113.svg",
+                "genomes_count":2},
+            {
+                "species_taxonomy_id":"9986",
+                "name":"Rabbit",
+                "image":"//testserver/static/genome_images/9986.svg",
+                "genomes_count":1},
+            {
+                "species_taxonomy_id":"4932",
+                "name":"Baker's yeast",
+                "image":"//testserver/static/genome_images/4932.svg",
+                "genomes_count":1},
+            {
+                "species_taxonomy_id":"6239",
+                "name":"Roundworm",
+                "image":"//testserver/static/genome_images/6239.svg",
+                "genomes_count":1},
+            {
+                "species_taxonomy_id":"9685",
+                "name":"Domestic cat",
+                "image":"//testserver/static/genome_images/9685.svg",
+                "genomes_count":3},
+            {
+                "species_taxonomy_id":"9544",
+                "name":"Macaque",
+                "image":"//testserver/static/genome_images/9544.svg",
+                "genomes_count":2},
+            {
+                "species_taxonomy_id":"7994",
+                "name":"Mexican tetra",
+                "image":"//testserver/static/genome_images/7994.svg",
+                "genomes_count":6},
+            {
+                "species_taxonomy_id":"4571",
+                "name":"Durum wheat",
+                "image":"//testserver/static/genome_images/4571.svg",
+                "genomes_count":1},
+            {
+                "species_taxonomy_id":"9598",
+                "name":"Chimpanzee",
+                "image":"//testserver/static/genome_images/9598.svg",
+                "genomes_count":3},
+            {
+                "species_taxonomy_id":"8128",
+                "name":"Nile tilapia",
+                "image":"//testserver/static/genome_images/8128.svg",
+                "genomes_count":1},
+            {
+                "species_taxonomy_id":"9925",
+                "name":"Goat",
+                "image":"//testserver/static/genome_images/9925.svg",
+                "genomes_count":4},
+            {
+                "species_taxonomy_id":"3712",
+                "name":"Wild cabbage",
+                "image":"//testserver/static/genome_images/3712.svg",
+                "genomes_count":1},
+            {
+                "species_taxonomy_id":"8364",
+                "name":"Tropical clawed frog",
+                "image":"//testserver/static/genome_images/8364.svg",
+                "genomes_count":1},
+            {
+                "species_taxonomy_id":"3847",
+                "name":"Soybeans",
+                "image":"//testserver/static/genome_images/3847.svg",
+                "genomes_count":1},
+            {
+                "species_taxonomy_id":"10029",
+                "name":"Chinese hamster",
+                "image":"//testserver/static/genome_images/10029.svg",
+                "genomes_count":3},
+            {
+                "species_taxonomy_id":"3880",
+                "name":"Barrel medic",
+                "image":"//testserver/static/genome_images/3880.svg",
+                "genomes_count":2},
+            {
+                "species_taxonomy_id":"3711",
+                "name":"Field mustard",
+                "image":"//testserver/static/genome_images/3711.svg",
+                "genomes_count":3},
+            {
+                "species_taxonomy_id":"4558",
+                "name":"Sorghum",
+                "image":"//testserver/static/genome_images/4558.svg",
+                "genomes_count":1},
+            {
+                "species_taxonomy_id":"8030",
+                "name":"Atlantic salmon",
+                "image":"//testserver/static/genome_images/8030.svg",
+                "genomes_count":4},
+            {
+                "species_taxonomy_id":"37682",
+                "name":"Tausch's goatgrass",
+                "image":"//testserver/static/genome_images/37682.svg",
+                "genomes_count":1},
+            {
+                "species_taxonomy_id":"562",
+                "name":"Escherichia coli K-12",
+                "image":"//testserver/static/genome_images/562.svg",
+                "genomes_count":1},
+            {
+                "species_taxonomy_id":"5833",
+                "name":"Malaria parasite",
+                "image":"//testserver/static/genome_images/5833.svg",
+                "genomes_count":2
             }
         ]
     }
 
 
-
+# WIP
 @router.get("/validate_location", name="validate_location")
 def validate_region(request: Request, genome_id: str, location: str):
     try:

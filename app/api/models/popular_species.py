@@ -18,12 +18,12 @@ from typing import ClassVar
 
 class PopularSpecies(BaseModel):
     _base_url: str = ClassVar[str]
-    species_taxonomy_id: str = Field(alias="speciesTaxonomyId")
+    species_taxonomy_id: str = Field(alias="species_taxonomy_id")
     name: str = Field(
         alias="commonName",
-        validation_alias=AliasChoices("commonName", "scientificName"),
+        validation_alias=AliasChoices("common_name", "scientific_name"),
     )
-    image: str = Field(alias="speciesTaxonomyId")
+    image: str = Field(alias="species_taxonomy_id")
     genomes_count: int = Field(alias="count")
 
     @validator("image", pre=True)
