@@ -1952,7 +1952,7 @@ def test_get_popular_species():
     }
 
 
-# WIP
+# OK
 @router.get("/validate_location", name="validate_location")
 def validate_region(
     adaptor: AdaptorDep,
@@ -1996,14 +1996,19 @@ def test_validate_region():
 
 
 
+# OK
 @router.get("/genome/{genome_id}/example_objects", name="example_objects")
 #@redis_cache("example_objects", arg_keys=["genome_id"])
-async def example_objects(request: Request, genome_id: str):
+async def example_objects(
+    adaptor: AdaptorDep,
+    request: Request,
+    genome_id: str
+):
     try:
-        attributes_info = data_get_attributes_info(genome_id)
+        attributes_info = get_attributes_by_genome_uuid(adaptor, genome_id, None)
         if attributes_info:
             example_objects = ExampleObjectList(
-                example_objects=attributes_info["attributesInfo"]
+                example_objects=attributes_info["attributes_info"]
             )
             response_data = responses.JSONResponse(
                 example_objects.model_dump()["example_objects"]
@@ -2018,14 +2023,33 @@ async def example_objects(request: Request, genome_id: str):
         return response_error_handler({"status": 500})
     return response_data
 
-# TODO: get data from DB
-def data_get_attributes_info(genome_uuid):
-    return {
-        "attributesInfo":
-            {"genebuildSampleGene":"ENSG00000221914",
-            "genebuildSampleLocation":"8:26291508-26372680",
-            "variationSampleVariant":"1:230710048:rs699"}
-    }
+
+def get_attributes_by_genome_uuid(db_conn, genome_uuid, release_version):
+    if not genome_uuid:
+        logger.warning("Missing or Empty Genome UUID field.")
+        return None
+
+    attrib_data_results = db_conn.fetch_genome_datasets(genome_uuid=genome_uuid,
+                                                        dataset_type_name="all",
+                                                        release_version=release_version)
+
+    logger.debug(f"Genome Datasets Retrieved: {attrib_data_results}")
+
+    if len(attrib_data_results) == 0:
+        logger.error(f"No Attributes were found: {genome_uuid}/{release_version}")
+    else:
+        if len(attrib_data_results) > 0:
+            attribs = []
+            for dataset in attrib_data_results[0].datasets:
+                attribs.extend(dataset.attributes)
+
+            attributes_info = create_attributes_info(attribs)
+            return {
+                'genome_uuid':genome_uuid,
+                'attributes_info':attributes_info
+            }
+    return None
+
 
 def test_example_objects():
     response = client.get("/genome/a7335667-93e7-11ec-a39d-005056b38ce3/example_objects")
@@ -2102,7 +2126,7 @@ def test_get_genome_details():
 
 
 
-
+# WIP
 @router.get("/genome/{genome_uuid}/ftplinks", name="genome_ftplinks")
 #@redis_cache("ftplinks", arg_keys=["genome_uuid"])
 async def get_genome_ftplinks(request: Request, genome_uuid: str):

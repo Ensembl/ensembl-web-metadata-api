@@ -386,15 +386,15 @@ class ExampleObjectList(BaseModel):
         extracted_example_objects = []
         try:
             example_gene = ExampleObject(
-                type="gene", id=genome_attributes["genebuildSampleGene"]
+                type="gene", id=genome_attributes["genebuild_sample_gene"]
             )
             extracted_example_objects.append(example_gene)
             example_location = ExampleObject(
-                type="location", id=genome_attributes["genebuildSampleLocation"]
+                type="location", id=genome_attributes["genebuild_sample_location"]
             )
             extracted_example_objects.append(example_location)
             example_variant = ExampleObject(
-                type="variant", id=genome_attributes["variationSampleVariant"]
+                type="variant", id=genome_attributes["variation_sample_variant"]
             )
             extracted_example_objects.append(example_variant)
         except Exception as ex:
