@@ -75,7 +75,7 @@ class BaseGenomeDetails(BaseModel):
     genome_id: str = Field(alias="genome_uuid")
     genome_tag: Optional[str] = Field(
         alias=AliasChoices(
-            AliasPath("assembly", "urlName"), AliasPath("assembly", "tolId")
+            AliasPath("assembly", "url_name"), AliasPath("assembly", "tol_id")
         ),
         default=None,
     )
@@ -100,7 +100,7 @@ class BaseGenomeDetails(BaseModel):
             return data
 
         org = data.get("organism") or {}
-        strain_type = org.get("strainType")
+        strain_type = org.get("strain_type")
         strain = org.get("strain")
 
         # only inject if we actually have both strain_type and strain
@@ -128,7 +128,7 @@ class BriefGenomeDetails(BaseGenomeDetails):
     As mentioned in this PR: https://github.com/Ensembl/ensembl-web-metadata-api/pull/60
     We're planning to extend the BriefGenomeDetails class later
     """
-    latest_genome: Optional[BaseGenomeDetails] = Field(alias="latestGenome", default=None)
+    latest_genome: Optional[BaseGenomeDetails] = Field(alias="latest_genome", default=None)
 
 
 class GenomeDetails(BaseGenomeDetails):
@@ -179,30 +179,30 @@ class GenomeDetails(BaseGenomeDetails):
 
 
 class DatasetAttribute(BaseModel):
-    name: str = Field(alias="attributeName")
-    value: str = Field(alias="attributeValue", default=None)
-    version: str = Field(alias="datasetVersion")
-    uuid: str = Field(alias="datasetUuid")
-    type: str = Field(alias="datasetType")
+    name: str = Field(alias="attribute_name")
+    value: str = Field(alias="attribute_value", default=None)
+    version: str = Field(alias="dataset_version")
+    uuid: str = Field(alias="dataset_uuid")
+    type: str = Field(alias="dataset_type")
 
 
 class DatasetAttributes(BaseModel):
     attributes: list[DatasetAttribute]
-    release_version: float = Field(alias="releaseVersion")
+    release_version: float = Field(alias="release_version")
 
 class GenomeByKeyword(BaseModel):
-    genome_uuid: str = Field(alias="genomeUuid", default="")
-    release_version: float = Field(alias=AliasPath("release", "releaseVersion"), default=0)
-    genome_tag: str = Field(alias=AliasPath("assembly", "urlName"), default="")
+    genome_uuid: str = Field(alias="genome_uuid", default="")
+    release_version: float = Field(alias=AliasPath("release", "release_version"), default=0)
+    genome_tag: str = Field(alias=AliasPath("assembly", "url_name"), default="")
 
 class GenomeGroup(BaseModel):
-    id: str = Field(alias="groupId")
-    type: str = Field(alias="groupType")
-    name: str | None = Field(alias="groupName", default=None)
-    reference_genome: BaseGenomeDetails = Field(alias="referenceGenome")
+    id: str = Field(alias="group_id")
+    type: str = Field(alias="group_type")
+    name: str | None = Field(alias="group_name", default=None)
+    reference_genome: BaseGenomeDetails = Field(alias="reference_genome")
 
 class GenomeGroupsResponse(BaseModel):
-    genome_groups: list[GenomeGroup] = Field(alias="genomeGroups")
+    genome_groups: list[GenomeGroup] = Field(alias="genome_groups")
 
 class GenomesInGroupResponse(BaseModel):
     genomes: list[BaseGenomeDetails] = Field(alias="genomes")

@@ -219,65 +219,6 @@ def get_genome_uuid(db_conn: GenomeAdaptor,
     return msg_factory.create_genome_uuid()
 
 
-# TODO
-def get_brief_genome_details_by_uuid(db_conn, genome_uuid_or_tag, release_version):
-    """
-    Fetch brief genome details by UUID or tag and release version.
-
-    Args:
-        db_conn: Database connection object.
-        genome_uuid_or_tag: Genome UUID or tag.
-        release_version: Release version to fetch.
-
-    Returns:
-        A dictionary containing brief genome details.
-    """
-    if not genome_uuid_or_tag:
-        logger.warning("Missing or Empty Genome UUID field.")
-        return msg_factory.create_brief_genome_details()
-
-    # If genome_uuid_or_tag is not a valid UUID, assume it's a tag and fetch genome_uuid
-    if not is_valid_uuid(genome_uuid_or_tag):
-        logger.debug(f"Invalid genome_uuid {genome_uuid_or_tag}, assuming it's a tag and using it to fetch genome_uuid")
-        # For tag (URL name), we only care about the latest integrated release.
-        # For archives, we will need to keep in mind the combination of release and tag
-        # that will take the user to the archived version of the genome.
-        genome_results = db_conn.fetch_genomes(
-            genome_tag=genome_uuid_or_tag,
-            # release_type="integrated", #  Add this once we have tags linked only to integrated releases
-            release_version=release_version
-        )
-    else:
-        genome_uuid = genome_uuid_or_tag
-        genome_results = db_conn.fetch_genomes(genome_uuid=genome_uuid, release_version=release_version)
-
-    if not genome_results:
-        logger.error(f"No Genome/Release found: {genome_uuid_or_tag}/{release_version}")
-        return msg_factory.create_brief_genome_details()
-
-    if len(genome_results) > 1:
-        logger.warning(f"Multiple results found for Genome UUID/Release version: {genome_uuid_or_tag}/{release_version}")
-        # means that this genome is released in both a partial and integrated release
-        # we get the integrated release specifically since it's the one we are interested in
-        genome_results = [res for res in genome_results if res.EnsemblRelease.release_type == "integrated"]
-
-    # Get the current (requested) genome
-    current_genome = genome_results[0]
-    assembly_name = current_genome.Assembly.name
-    # Fetch all genomes with the same assembly name, sorted by release date
-    all_genomes_with_same_assembly = db_conn.fetch_genomes(assembly_name=assembly_name)
-
-    # Find the genome with the most recent release date
-    latest_genome = None
-    if all_genomes_with_same_assembly:
-        # First genome should be the latest due to ordering in fetch_genomes
-        if all_genomes_with_same_assembly[0].Genome.genome_uuid != current_genome.Genome.genome_uuid:
-            latest_genome = all_genomes_with_same_assembly[0]
-            logger.debug(f"Found newer genome: {latest_genome.Genome.genome_uuid}")
-
-    # Return the requested genome together with the latest genome details (or None if current is latest)
-    return msg_factory.create_brief_genome_details(current_genome, latest_genome)
-
 
 # TODO
 def get_attributes_by_genome_uuid(db_conn, genome_uuid, release_version):
@@ -2244,38 +2185,16 @@ def test_get_genome_ftplinks():
 
 
 
-
-# TODO: get data from DB
-def data_get_brief_genome_details(genome_id_or_slug):
-    return {
-        "organism": {
-            "scientificName":"Homo sapiens",
-            "speciesTaxonomyId":"9606",
-            "commonName":"Human",
-        },
-        "genomeUuid":"a7335667-93e7-11ec-a39d-005056b38ce3",
-        "type":None,
-        "assembly":{
-            "accession":"GCA_000001405.29",
-            "name":"GRCh38.p14",
-            "url":"https://identifiers.org/insdc.gca/GCA_000001405.29",
-            "isReference":True,
-            "urlName": "grch38"
-        },
-        "release":{
-            "releaseLabel":"2025-02",
-            "releaseType":"integrated",
-            "isCurrent":True
-        },
-    }
-
-
-# WIP
+# OK
 @router.get("/genome/{genome_id_or_slug}/explain", name="genome_explain")
 #@redis_cache(key_prefix="explain", arg_keys=['genome_id_or_slug'])
-async def explain_genome(request: Request, genome_id_or_slug: str):
+async def explain_genome(
+    adaptor: AdaptorDep,
+    request: Request,
+    genome_id_or_slug: str
+):
     try:
-        genome_details_dict = data_get_brief_genome_details(genome_id_or_slug)
+        genome_details_dict = get_brief_genome_details_by_uuid(adaptor, genome_id_or_slug, None)
         if genome_details_dict:
             genome_details = BriefGenomeDetails(**genome_details_dict)
             response_dict = genome_details.model_dump(
@@ -2302,6 +2221,93 @@ async def explain_genome(request: Request, genome_id_or_slug: str):
         logging.error(ex)
         return response_error_handler({"status": 500})
     return response_data
+
+
+def get_brief_genome_details_by_uuid(db_conn, genome_uuid_or_tag, release_version):
+    """
+    Fetch brief genome details by UUID or tag and release version.
+
+    Args:
+        db_conn: Database connection object.
+        genome_uuid_or_tag: Genome UUID or tag.
+        release_version: Release version to fetch.
+
+    Returns:
+        A dictionary containing brief genome details.
+    """
+    if not genome_uuid_or_tag:
+        logger.warning("Missing or Empty Genome UUID field.")
+        return None
+
+    # If genome_uuid_or_tag is not a valid UUID, assume it's a tag and fetch genome_uuid
+    if not is_valid_uuid(genome_uuid_or_tag):
+        logger.debug(f"Invalid genome_uuid {genome_uuid_or_tag}, assuming it's a tag and using it to fetch genome_uuid")
+        # For tag (URL name), we only care about the latest integrated release.
+        # For archives, we will need to keep in mind the combination of release and tag
+        # that will take the user to the archived version of the genome.
+        genome_results = db_conn.fetch_genomes(
+            genome_tag=genome_uuid_or_tag,
+            # release_type="integrated", #  Add this once we have tags linked only to integrated releases
+            release_version=release_version
+        )
+    else:
+        genome_uuid = genome_uuid_or_tag
+        genome_results = db_conn.fetch_genomes(genome_uuid=genome_uuid, release_version=release_version)
+
+    if not genome_results:
+        logger.error(f"No Genome/Release found: {genome_uuid_or_tag}/{release_version}")
+        return None
+
+    if len(genome_results) > 1:
+        logger.warning(f"Multiple results found for Genome UUID/Release version: {genome_uuid_or_tag}/{release_version}")
+        # means that this genome is released in both a partial and integrated release
+        # we get the integrated release specifically since it's the one we are interested in
+        genome_results = [res for res in genome_results if res.EnsemblRelease.release_type == "integrated"]
+
+    # Get the current (requested) genome
+    current_genome = genome_results[0]
+    assembly_name = current_genome.Assembly.name
+    # Fetch all genomes with the same assembly name, sorted by release date
+    all_genomes_with_same_assembly = db_conn.fetch_genomes(assembly_name=assembly_name)
+
+    # Find the genome with the most recent release date
+    latest_genome = None
+    if all_genomes_with_same_assembly:
+        # First genome should be the latest due to ordering in fetch_genomes
+        if all_genomes_with_same_assembly[0].Genome.genome_uuid != current_genome.Genome.genome_uuid:
+            latest_genome = all_genomes_with_same_assembly[0]
+            logger.debug(f"Found newer genome: {latest_genome.Genome.genome_uuid}")
+
+    # Return the requested genome together with the latest genome details (or None if current is latest)
+    return create_brief_genome_details(current_genome, latest_genome)
+
+
+def create_brief_genome_details(data=None, latest_genome=None):
+    if data is None:
+        return None
+
+    # current genome
+    assembly = create_assembly(data)
+    taxon = create_taxon(data)
+    organism = create_organism(data)
+    release = create_release(data)
+
+    # add latest_genome details
+    latest_genome_data = None
+    if latest_genome and latest_genome.Genome.genome_uuid != data.Genome.genome_uuid:
+        latest_genome_data = create_brief_genome_details(latest_genome, None)
+
+    brief_genome_details = {
+        'genome_uuid':data.Genome.genome_uuid,
+        'created':str(data.Genome.created),
+        'assembly':assembly,
+        'taxon':taxon,
+        'organism':organism,
+        'release':release,
+        'latest_genome':latest_genome_data
+    }
+    return brief_genome_details
+
 
 
 
@@ -2717,7 +2723,7 @@ def test_explain_genome():
     assert response.status_code == 200
     assert response.json() == {
         "genome_id":"a7335667-93e7-11ec-a39d-005056b38ce3",
-        "genome_tag":"grch38",
+        "genome_tag":None,
         "common_name":"Human",
         "scientific_name":"Homo sapiens",
         "species_taxonomy_id":"9606",
@@ -2731,8 +2737,27 @@ def test_explain_genome():
             "name":"2025-02",
             "type":"integrated"
         },
-        "latest_genome":None
+        "latest_genome":{
+            "genome_id":"be73075e-0633-471d-b7c8-4f8ca7752a04",
+            "genome_tag":None,
+            "common_name":"Human",
+            "scientific_name":"Homo sapiens",
+            "species_taxonomy_id":"9606",
+            "type":None,
+            "is_reference":True,
+            "assembly":{
+                "accession_id":"GCA_000001405.29",
+                "name":"GRCh38.p14",
+                "url":"https://identifiers.org/insdc.gca/GCA_000001405.29"
+            },
+            "release":{
+                "name":"2026-01-26",
+                "type":"partial",
+                "is_current":True
+            }
+        }
     }
+
 
 def test_get_region_checksum():
     response = client.get("/genome/a7335667-93e7-11ec-a39d-005056b38ce3/checksum/1")
