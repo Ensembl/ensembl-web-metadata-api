@@ -2126,20 +2126,29 @@ def test_get_genome_details():
 
 
 
-# WIP
+# OK
 @router.get("/genome/{genome_uuid}/ftplinks", name="genome_ftplinks")
 #@redis_cache("ftplinks", arg_keys=["genome_uuid"])
-async def get_genome_ftplinks(request: Request, genome_uuid: str):
+async def get_genome_ftplinks(
+    adaptor: AdaptorDep,
+    request: Request,
+    genome_uuid: str
+):
     try:
-        ftplinks_dict = data_get_ftplinks(genome_uuid)
+        ftplinks_dict = get_ftp_links(
+            adaptor,
+            genome_uuid,
+            "all",
+            None
+        )
 
         # This is temporary solution to hide regulation ftp links
         # It should be removed once the ftp links for regulation is fixed
         ftplinks_no_regulation = {}
-        ftplinks_no_regulation["Links"] = [
+        ftplinks_no_regulation["links"] = [
             link
-            for link in ftplinks_dict["Links"]
-            if link["datasetType"] != "regulation"
+            for link in sorted(ftplinks_dict["links"], key=lambda d: d['dataset_type'])
+            if link["dataset_type"] != "regulation"
         ]
 
         ftplinks = FTPLinks(**ftplinks_no_regulation)
@@ -2149,26 +2158,65 @@ async def get_genome_ftplinks(request: Request, genome_uuid: str):
         return response_error_handler({"status": 500})
 
 
-# TODO: get data from DB
-def data_get_ftplinks(genome_uuid):
-    return {"Links": [
-        {
-            "datasetType":"assembly",
-            "path":"Homo_sapiens/GCA_000001405.29/genome"
-        },
-        {
-            "datasetType":"genebuild",
-            "path":"Homo_sapiens/GCA_000001405.29/ensembl/geneset/2023_03"
-        },
-        {
-            "datasetType":"homologies",
-            "path":"Homo_sapiens/GCA_000001405.29/ensembl/homology/2023_03"
-        },
-        {
-            "datasetType":"variation",
-            "path":"Homo_sapiens/GCA_000001405.29/ensembl/variation/2023_03"
+
+def get_ftp_links(db_conn, genome_uuid, dataset_type, release_version):
+    # Request is sending an empty string '' instead of None when
+    # an input parameter is not supplied by the user
+    if not genome_uuid:
+        logger.warning("Missing or Empty Genome UUID field.")
+        return None
+    if not dataset_type:
+        dataset_type = 'all'
+    if not release_version:
+        release_version = None
+
+    # Find the Genome
+    with db_conn.metadata_db.session_scope() as session:
+        genome = session.query(Genome).filter(Genome.genome_uuid == genome_uuid).first()
+
+        # Return empty links if Genome is not found
+        if genome is None:
+            logger.debug("No Genome found.")
+            return None
+
+        # Find the links for the given dataset.
+        # Find the links for the given dataset.
+        # Note: release_version filtration is not implemented in the API yet
+        try:
+            links = db_conn.get_public_path(
+                genome_uuid=genome_uuid,
+                dataset_type=dataset_type
+            )
+        except (ValueError, RuntimeError) as error:
+            # log the errors to error log and return empty list of links
+            logger.error(f"Error fetching links: {error}")
+            return None
+
+    if len(links) > 0:
+        response_data = create_paths(data=links)
+        # logger.debug(f"Response data: \n{response_data}")
+        return response_data
+
+    logger.debug("No Genome found.")
+    return None
+
+
+def create_paths(data=None):
+    if data is None:
+        return {
+            'links':[]
         }
-    ]
+
+    ftp_links_list = []
+    for ftp_link in data:
+        created_ftp_link = {
+            'dataset_type':ftp_link["dataset_type"],
+            'path':ftp_link["path"]
+        }
+        ftp_links_list.append(created_ftp_link)
+
+    return {
+        'links':ftp_links_list
     }
 
 
@@ -2222,6 +2270,7 @@ def data_get_brief_genome_details(genome_id_or_slug):
     }
 
 
+# WIP
 @router.get("/genome/{genome_id_or_slug}/explain", name="genome_explain")
 #@redis_cache(key_prefix="explain", arg_keys=['genome_id_or_slug'])
 async def explain_genome(request: Request, genome_id_or_slug: str):

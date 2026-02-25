@@ -18,7 +18,7 @@ from core.config import FTP_BASE_URL
 
 
 class FTPLink(BaseModel):
-    dataset: str = Field(..., validation_alias="datasetType")
+    dataset: str = Field(..., validation_alias="dataset_type")
     url: str = Field(..., validation_alias="path")
 
     @field_serializer("url")
@@ -27,4 +27,4 @@ class FTPLink(BaseModel):
 
 
 class FTPLinks(BaseModel):
-    links: list[FTPLink] = Field(..., validation_alias="Links")
+    links: list[FTPLink] = Field(..., validation_alias="links")
