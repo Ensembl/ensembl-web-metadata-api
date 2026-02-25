@@ -1954,10 +1954,15 @@ def test_get_popular_species():
 
 # WIP
 @router.get("/validate_location", name="validate_location")
-def validate_region(request: Request, genome_id: str, location: str):
+def validate_region(
+    adaptor: AdaptorDep,
+    request: Request,
+    genome_id: str,
+    location: str
+):
     try:
         rgv = RegionValidation(genome_uuid=genome_id, location_input=location)
-        rgv.validate_region()
+        rgv.validate_region(adaptor)
         return responses.JSONResponse(rgv.model_dump())
     except Exception as e:
         logging.error(e)

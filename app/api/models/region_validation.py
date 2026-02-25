@@ -17,7 +17,10 @@ from typing import Any, Optional
 
 from core.logging import InterceptHandler
 
+from ensembl.production.metadata.api.adaptors import GenomeAdaptor
+
 logging.getLogger().handlers = [InterceptHandler()]
+logger = logging.getLogger()
 
 
 class RegionValidation(BaseModel):
@@ -53,49 +56,85 @@ class RegionValidation(BaseModel):
             logging.error(ex)
         return region, start, end
 
-    def _validate_region_name(self):
 
-        # TODO FIXME - this is a "mocked" protobuf object for a
-        # GenomeAssemblySequenceRegion, but only with data we actually use
-        # Do the actual validation vs DB, remove this
-        class GenReg:
-            length: int
-            chromosomal: bool
 
-        genome_region = GenReg()
-        genome_region.length = 26372680
-        genome_region.chromosomal = True
+    def get_region(self, genome_uuid: str, region_name: str, db_conn: GenomeAdaptor):
+        genome_seq_region = self.genome_assembly_sequence_region(
+            genome_uuid=genome_uuid,
+            sequence_region_name=region_name,
+            db_conn=db_conn,
+        )
+        return genome_seq_region
 
+
+    def genome_assembly_sequence_region(self, genome_uuid, sequence_region_name, db_conn):
+        if not genome_uuid or not sequence_region_name:
+            logger.warning("Missing or Empty Genome UUID or Sequence region name field.")
+            return None
+
+        assembly_sequence_results = db_conn.fetch_sequences(
+            genome_uuid=genome_uuid,
+            assembly_sequence_name=sequence_region_name
+        )
+
+
+        if len(assembly_sequence_results) == 0:
+            logger.error(f"Assembly sequence not found for {genome_uuid}/{sequence_region_name}")
+        else:
+            if len(assembly_sequence_results) > 1:
+                logger.warning(f"Multiple results returned for {genome_uuid}/{sequence_region_name}")
+            response_data = self.create_genome_assembly_sequence_region(assembly_sequence_results[0])
+            return response_data
+        return None
+
+
+    def create_genome_assembly_sequence_region(self, data=None):
+        if data is None:
+            return None
+
+        genome_assembly_sequence_region = {
+            'name':data.AssemblySequence.name,
+            'md5':data.AssemblySequence.md5,
+            'length':data.AssemblySequence.length,
+            'sha512t24u':data.AssemblySequence.sha512t24u,
+            'chromosomal':data.AssemblySequence.chromosomal
+        }
+
+        return genome_assembly_sequence_region
+
+
+
+    def _validate_region_name(self, db_conn):
         if self.name:
             try:
-                if self.end is None:
-                    self.end = genome_region.length
-                # TODO FIXME - this checked for empty protobuf content before.
-                # Does this still make sense? Maybe just remove
-                if genome_region.length == 0:
+                genome_region = self.get_region(self.genome_uuid, self.name, db_conn)
+                logger.error(f"DBG: {genome_region}")
+                if genome_region is None:
                     self._is_valid[0] = False
                     self._region_name_error = "Could not find region {} for {}".format(
                         self.name, self.genome_uuid
                     )
                     return False
+
+                if self.end is None:
+                    self.end = genome_region.get('length')
+                self._is_valid[0] = True
+                if genome_region.get('chromosomal'):
+                    self._region_code = "chromosome"
                 else:
-                    self._is_valid[0] = True
-                    if genome_region.chromosomal:
-                        self._region_code = "chromosome"
-                    else:
-                        self._region_code = "non-chormosome"
+                    self._region_code = "non-chormosome"
             except Exception as ex:
                 logging.error(ex)
                 return False
 
             try:
                 start_value = int(self.start)
-                if (start_value > 0) and (start_value < genome_region.length):
+                if (start_value > 0) and (start_value < genome_region.get('length')):
                     self._is_valid[1] = True
                 else:
                     self._is_valid[1] = False
                     self._start_error = "start should be between 1 and {}".format(
-                        genome_region.length
+                        genome_region.get('length')
                     )
             except ValueError as ve:
                 self._is_valid[1] = False
@@ -104,14 +143,14 @@ class RegionValidation(BaseModel):
             try:
                 end_value = int(self.end)
                 if self._is_valid[1]:
-                    if (end_value <= genome_region.length) and (
+                    if (end_value <= genome_region.get('length')) and (
                         end_value > start_value
                     ):
                         self._is_valid[2] = True
                     else:
                         self._is_valid[2] = False
                         self._end_error = "end should be between 1 and {} and end ({}) > start ({})".format(
-                            genome_region.length, self.end, self.start
+                            genome_region.get('length'), self.end, self.start
                         )
             except ValueError as ve:
                 self._is_valid[2] = False
@@ -122,13 +161,16 @@ class RegionValidation(BaseModel):
 
         return all(self._is_valid)
 
-    def validate_region(self):
+
+
+    def validate_region(self, db_conn):
         if self.genome_uuid:
-            if self._validate_region_name():
+            if self._validate_region_name(db_conn):
                 return True
             else:
                 return False
         return False
+
 
     @model_serializer
     def region_validation_serliaiser(self) -> dict[str, Any]:
