@@ -375,28 +375,48 @@ class ExampleObjectList(BaseModel):
 
     @root_validator(pre=True)
     def set_region_parameters(cls, values):
+        attributes_info = values.get("attributesInfo") or {}
+        genome_uuid = values.get("genomeUuid")
         extracted_example_objects = cls.extract_example_objects(
-            values.get("example_objects")
+            genome_uuid ,attributes_info
         )
         values["example_objects"] = extracted_example_objects
         return values
 
     @staticmethod
-    def extract_example_objects(genome_attributes):
+    def extract_example_objects(genome_uuid ,attributes_info):
         extracted_example_objects = []
         try:
             example_gene = ExampleObject(
-                type="gene", id=genome_attributes["genebuildSampleGene"]
+                type="gene", id=attributes_info["genebuildSampleGene"]
             )
             extracted_example_objects.append(example_gene)
             example_location = ExampleObject(
-                type="location", id=genome_attributes["genebuildSampleLocation"]
+                type="location", id=attributes_info["genebuildSampleLocation"]
             )
             extracted_example_objects.append(example_location)
             example_variant = ExampleObject(
-                type="variant", id=genome_attributes["variationSampleVariant"]
+                type="variant", id=attributes_info["variationSampleVariant"]
             )
             extracted_example_objects.append(example_variant)
+
+            # We are hardcoding SV alignment locations for T2T and GrCh38
+            # This is temporary until we have this data in the metadata DB
+            # T2T
+            if genome_uuid == "4c07817b-c7c5-463f-8624-982286bc4355":
+                example_sv_alignment_location = ExampleObject(
+                    type="structural_variants_alignment_location",
+                    id="11:48674445-49222385"
+                )
+                extracted_example_objects.append(example_sv_alignment_location)
+            # GRCh38
+            elif genome_uuid == "a7335667-93e7-11ec-a39d-005056b38ce3":
+                example_sv_alignment_location = ExampleObject(
+                    type="structural_variants_alignment_location",
+                    id="11:49321844-49869784"
+                )
+                extracted_example_objects.append(example_sv_alignment_location)
+
         except Exception as ex:
             logging.error(ex)
         return extracted_example_objects
