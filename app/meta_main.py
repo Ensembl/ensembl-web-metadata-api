@@ -2303,25 +2303,7 @@ def test_get_region_checksum():
     assert response.content.decode("utf-8") == "2648ae1bacce4ec4b6cf337dcae37816"
 
 
-
-## TODO: get data from DB
-#def data_get_dataset_attributes(genome_uuid, dataset_type, attribute_names):
-#    return {
-#    "releaseVersion":1.0,
-#    "attributes":
-#    [
-#        {
-#            "attributeName":"genebuild.stats.average_cds_length",
-#            "attributeValue":"1191.97",
-#            "datasetVersion":"GENCODE44",
-#            "datasetUuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
-#            "datasetType":"genebuild"
-#        }
-#    ]
-#}
-
-
-# WIP
+# OK
 @router.get(
     "/genome/{genome_uuid}/dataset/{dataset_type}/attributes", name="dataset_attributes"
 )
@@ -2953,25 +2935,26 @@ def test_get_genome_dataset_attributes():
 
 
 
-
-# TODO: get data from DB
-def data_get_genome_by_keyword(assembly_accession_id):
-    return [
-        {
-            "genomeUuid":"2b5fb047-5992-4dfb-b2fa-1fb4e18d1abb",
-            "assembly":{
-                "urlName": ""
-            },
-            "release":{
-                "releaseVersion":112.2,
-            }
-        }
-    ]
-
+# OK
 @router.get("/genomeid")
-async def get_genome_by_keyword(request: Request, assembly_accession_id: str):
+async def get_genome_by_keyword(
+    adaptor: AdaptorDep,
+    request: Request,
+    assembly_accession_id: str
+):
     try:
-        genome_response = data_get_genome_by_keyword(assembly_accession_id)
+        genome_response = get_genomes_by_specific_keyword_iterator(
+            db_conn=adaptor,
+            tolid=None,
+            assembly_accession_id=assembly_accession_id,
+            assembly_name=None,
+            ensembl_name=None,
+            common_name=None,
+            scientific_name=None,
+            scientific_parlance_name=None,
+            species_taxonomy_id=None,
+            release_version=None
+        )
         latest_genome_by_keyword_object = GenomeByKeyword()
         for arr in genome_response:
             genome_by_keyword_object = GenomeByKeyword(**arr)
@@ -2986,6 +2969,82 @@ async def get_genome_by_keyword(request: Request, assembly_accession_id: str):
     except Exception as ex:
         logging.error(ex)
         return response_error_handler({"status": 500})
+
+
+def get_genomes_by_specific_keyword_iterator(
+    db_conn, tolid, assembly_accession_id, assembly_name, ensembl_name,
+    common_name, scientific_name, scientific_parlance_name, species_taxonomy_id,
+    release_version=None
+):
+    if (not (tolid or assembly_accession_id or assembly_name or ensembl_name or
+            common_name or scientific_name or scientific_parlance_name or species_taxonomy_id)):
+        logger.warning("Missing required field")
+        return None
+
+    try:
+        genome_results = db_conn.fetch_genome_by_specific_keyword(
+            tolid, assembly_accession_id, assembly_name, ensembl_name,
+            common_name, scientific_name, scientific_parlance_name,
+            species_taxonomy_id, release_version
+        )
+
+        if len(genome_results) > 0:
+            # Create an empty list to store the genomes list
+            genomes_list = []
+            # sort genomes based on the `assembly_accession` field since we are going to group by it
+            genome_results.sort(key=lambda r: r.Assembly.accession)
+            # Group `genome_results` based on the `assembly_accession` field
+            for _, genome_release_group in itertools.groupby(genome_results, lambda r: r.Assembly.accession):
+                # Sort the genomes in each group based on the `genome_uuid` field to prepare for grouping
+                sorted_genomes = sorted(genome_release_group, key=lambda g: g.Genome.genome_uuid)
+                # group by genome uuid incase of partial and integrated releases
+                for _, genome_uuid_group in itertools.groupby(sorted_genomes, lambda g: g.Genome.genome_uuid):
+                    genome_uuid_group = list(genome_uuid_group)
+                    if len(genome_uuid_group) > 1:
+                        # sort by release date descending. The last code checked if EnsemblRelease exists. If it doesn't it uses a default date and not genome uuid
+                        sorted_genome_uuid_group = sorted(
+                            genome_uuid_group,
+                            key=lambda g: getattr(g.EnsemblRelease, 'release_date', datetime.strptime('1900-01-01', '%Y-%m-%d')) if g.EnsemblRelease else datetime.strptime('1900-01-01', '%Y-%m-%d'),
+                            reverse=True
+                        )
+                        # check for integrated release in group
+                        integrated_genome = [
+                            g for g in sorted_genome_uuid_group
+                            if g.EnsemblRelease and getattr(g.EnsemblRelease, 'release_type', None) == 'integrated'
+                        ]
+                        if len(integrated_genome) > 0:
+                            genomes_list.append(integrated_genome[0])
+
+                        # if no integrated release, just take the first one, which is the most recent partial release
+                        else:
+                            genomes_list.append(sorted_genome_uuid_group[0])
+                    # if only one genome in the group, just add it to the list
+                    else:
+                        genomes_list.append(list(genome_uuid_group)[0])
+
+            for genome_row in genomes_list:
+                yield create_genome(data=genome_row)
+
+    except Exception as e:
+        logger.error(f"Error fetching genomes: {e}")
+        return None
+
+    logger.debug("No genomes were found.")
+    return None
+
+
+
+
+def test_get_genome_by_keyword():
+    response = client.get("/genomeid?assembly_accession_id=GCA_000001405.29")
+    assert response.status_code == 200
+    assert response.json() == {
+        "genome_uuid":"be73075e-0633-471d-b7c8-4f8ca7752a04",
+        "release_version":115.3,
+        "genome_tag":""
+    }
+
+
 
 
 # TODO: get data from DB
@@ -3329,15 +3388,6 @@ def test_explain_genome():
     }
 
 
-
-def test_get_genome_by_keyword():
-    response = client.get("/genomeid?assembly_accession_id=GCA_000001405.29")
-    assert response.status_code == 200
-    assert response.json() == {
-        "genome_uuid":"2b5fb047-5992-4dfb-b2fa-1fb4e18d1abb",
-        "release_version":112.2,
-        "genome_tag":""
-    }
 
 def test_get_vep_file_paths():
     response = client.get("/genome/2b5fb047-5992-4dfb-b2fa-1fb4e18d1abb/vep/file_paths")
