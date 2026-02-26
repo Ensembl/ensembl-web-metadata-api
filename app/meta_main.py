@@ -50,6 +50,7 @@ from api.models.statistics import GenomeStatistics, ExampleObjectList
 from api.models.vep import VepFilePaths
 
 from ensembl.production.metadata.api.adaptors import GenomeAdaptor, BaseAdaptor, ReleaseAdaptor
+from ensembl.production.metadata.api.adaptors.vep import VepAdaptor
 from ensembl.production.metadata.api.models import Genome
 from ensembl.production.metadata.grpc.config import MetadataConfig
 
@@ -60,13 +61,17 @@ from ensembl.utils.database import DBConnection
 
 TEST_DB_URL = "duckdb:///./duck_meta.db"
 meta_conn = DBConnection(TEST_DB_URL)
-adaptor = GenomeAdaptor(meta_conn)
+genome_adaptor = GenomeAdaptor(meta_conn)
+vep_adaptor = VepAdaptor(meta_conn)
 
-def get_adaptor():
-	yield adaptor
+def get_genome_adaptor():
+	yield genome_adaptor
 
-AdaptorDep = Annotated[GenomeAdaptor, Depends(get_adaptor)]
+def get_vep_adaptor():
+	yield vep_adaptor
 
+GenomeAdaptorDep = Annotated[GenomeAdaptor, Depends(get_genome_adaptor)]
+VepAdaptorDep = Annotated[VepAdaptor, Depends(get_vep_adaptor)]
 
 logging.getLogger().handlers = [InterceptHandler()]
 
@@ -554,21 +559,6 @@ def get_release_version_by_uuid(db_conn, genome_uuid, dataset_type, release_vers
     return msg_factory.create_release_version()
 
 
-
-# TODO
-def get_vep_paths_by_uuid(db_conn, genome_uuid):
-    if not genome_uuid:
-        logger.warning("Missing or Empty Genome UUID field.")
-        return msg_factory.create_vep_file_paths()
-
-    try:
-        vep_paths = db_conn.fetch_vep_locations(genome_uuid=genome_uuid)
-        if vep_paths:
-            return msg_factory.create_vep_file_paths(vep_paths)
-    except (ValueError, RuntimeError) as error:
-        logger.error(error)
-
-    return msg_factory.create_vep_file_paths()
 
 
 # TODO
@@ -1341,7 +1331,7 @@ def get_top_level_statistics_by_uuid(db_conn, genome_uuid):
 @router.get("/genome/{genome_uuid}/stats", name="statistics")
 #@redis_cache("stats", arg_keys=["genome_uuid"])
 async def get_metadata_statistics(
-    adaptor: AdaptorDep,
+    adaptor: GenomeAdaptorDep,
     request: Request,
     genome_uuid: str
 ):
@@ -1448,7 +1438,7 @@ def test_get_metadata_statistics():
 @router.get("/genome/{genome_uuid}/karyotype", name="karyotype")
 # @redis_cache("karyotype", arg_keys=["genome_uuid"])
 async def get_genome_karyotype(
-    adaptor: AdaptorDep,
+    adaptor: GenomeAdaptorDep,
     request: Request,
     genome_uuid: str
 ):
@@ -1559,7 +1549,7 @@ def test_get_genome_karyotype():
 @router.get("/popular_species", name="popular_species")
 #@redis_cache(key_prefix="popular_species")  # TTL defaults is 5 minutes
 async def get_popular_species(
-    adaptor: AdaptorDep,
+    adaptor: GenomeAdaptorDep,
     request: Request
 ):
     try:
@@ -1825,7 +1815,7 @@ def test_get_popular_species():
 # OK
 @router.get("/validate_location", name="validate_location")
 def validate_region(
-    adaptor: AdaptorDep,
+    adaptor: GenomeAdaptorDep,
     request: Request,
     genome_id: str,
     location: str
@@ -1870,7 +1860,7 @@ def test_validate_region():
 @router.get("/genome/{genome_id}/example_objects", name="example_objects")
 #@redis_cache("example_objects", arg_keys=["genome_id"])
 async def example_objects(
-    adaptor: AdaptorDep,
+    adaptor: GenomeAdaptorDep,
     request: Request,
     genome_id: str
 ):
@@ -1932,7 +1922,7 @@ def test_example_objects():
 @router.get("/genome/{genome_uuid}/details", name="genome_details")
 #@redis_cache("details", arg_keys=["genome_uuid"])
 async def get_genome_details(
-    adaptor: AdaptorDep,
+    adaptor: GenomeAdaptorDep,
     request: Request,
     genome_uuid: str):
     try:
@@ -2000,7 +1990,7 @@ def test_get_genome_details():
 @router.get("/genome/{genome_uuid}/ftplinks", name="genome_ftplinks")
 #@redis_cache("ftplinks", arg_keys=["genome_uuid"])
 async def get_genome_ftplinks(
-    adaptor: AdaptorDep,
+    adaptor: GenomeAdaptorDep,
     request: Request,
     genome_uuid: str
 ):
@@ -2118,7 +2108,7 @@ def test_get_genome_ftplinks():
 @router.get("/genome/{genome_id_or_slug}/explain", name="genome_explain")
 #@redis_cache(key_prefix="explain", arg_keys=['genome_id_or_slug'])
 async def explain_genome(
-    adaptor: AdaptorDep,
+    adaptor: GenomeAdaptorDep,
     request: Request,
     genome_id_or_slug: str
 ):
@@ -2241,7 +2231,7 @@ def create_brief_genome_details(data=None, latest_genome=None):
 # OK
 @router.get("/genome/{genome_uuid}/checksum/{region_name}", name="region_checksum")
 async def get_region_checksum(
-    adaptor: AdaptorDep,
+    adaptor: GenomeAdaptorDep,
     request: Request,
     genome_uuid: str,
     region_name: str
@@ -2308,7 +2298,7 @@ def test_get_region_checksum():
     "/genome/{genome_uuid}/dataset/{dataset_type}/attributes", name="dataset_attributes"
 )
 async def get_genome_dataset_attributes(
-    adaptor: AdaptorDep,
+    adaptor: GenomeAdaptorDep,
     request: Request,
     genome_uuid: str,
     dataset_type: str,
@@ -2938,7 +2928,7 @@ def test_get_genome_dataset_attributes():
 # OK
 @router.get("/genomeid")
 async def get_genome_by_keyword(
-    adaptor: AdaptorDep,
+    adaptor: GenomeAdaptorDep,
     request: Request,
     assembly_accession_id: str
 ):
@@ -3047,20 +3037,15 @@ def test_get_genome_by_keyword():
 
 
 
-# TODO: get data from DB
-def data_get_vep_file_paths(genome_uuid):
-    return {
-        "faaLocation":"Homo_sapiens/GCA_000001405.29/vep/genome/softmasked.fa.bgz",
-        "gffLocation":"Homo_sapiens/GCA_000001405.29/vep/ensembl/geneset/2024_11/genes.gff3.bgz"
-    }
-
+# WIP
 @router.get("/genome/{genome_uuid}/vep/file_paths")
 async def get_vep_file_paths(
+    adaptor: VepAdaptorDep,
     request: Request,
     genome_uuid: str,
 ):
     try:
-        vep_file_paths = data_get_vep_file_paths(genome_uuid)
+        vep_file_paths = get_vep_paths_by_uuid(adaptor, genome_uuid)
         if len(vep_file_paths) == 0:
             return responses.JSONResponse(
                 {
@@ -3077,6 +3062,41 @@ async def get_vep_file_paths(
     except Exception as ex:
         logging.error(ex)
         return response_error_handler({"status": 500})
+
+
+def get_vep_paths_by_uuid(db_conn: VepAdaptor, genome_uuid: str):
+    if not genome_uuid:
+        logger.warning("Missing or Empty Genome UUID field.")
+        return None
+
+    try:
+        vep_paths = db_conn.fetch_vep_locations(genome_uuid=genome_uuid)
+        if vep_paths:
+            return create_vep_file_paths(vep_paths)
+    except (ValueError, RuntimeError) as error:
+        logger.error(error)
+
+    return None
+
+
+def create_vep_file_paths(data=None):
+    if data is None:
+        return None
+
+    return {
+        'faa_location':data['faa_location'],
+        'gff_location':data['gff_location']
+    }
+
+
+def test_get_vep_file_paths():
+    response = client.get("/genome/2b5fb047-5992-4dfb-b2fa-1fb4e18d1abb/vep/file_paths")
+    assert response.status_code == 200
+    assert response.json() == {
+        "faa_location":"Homo_sapiens/GCA_000001405.29/vep/genome/softmasked.fa.bgz",
+        "gff_location":"Homo_sapiens/GCA_000001405.29/vep/ensembl/geneset/2024_11/genes.gff3.bgz"
+    }
+
 
 
 
@@ -3325,7 +3345,7 @@ def data_get_genome_counts(db_conn: Any, release_label: str | None):
 @router.get("/genome_counts", name="genome_counts")
 #@redis_cache(key_prefix="genome_counts", arg_keys=["release"])
 async def get_genome_counts(
-	adaptor: AdaptorDep,
+	adaptor: GenomeAdaptorDep,
     release: str | None = Query(None, description="Optional release label to filter counts, e.g. '2025-02'")
 ):
     try:
@@ -3388,14 +3408,6 @@ def test_explain_genome():
     }
 
 
-
-def test_get_vep_file_paths():
-    response = client.get("/genome/2b5fb047-5992-4dfb-b2fa-1fb4e18d1abb/vep/file_paths")
-    assert response.status_code == 200
-    assert response.json() == {
-        "faa_location":"Homo_sapiens/GCA_000001405.29/vep/genome/softmasked.fa.bgz",
-        "gff_location":"Homo_sapiens/GCA_000001405.29/vep/ensembl/geneset/2024_11/genes.gff3.bgz"
-    }
 
 def test_get_genomes_in_group():
     response = client.get("/genome_groups/grch38-group/genomes")

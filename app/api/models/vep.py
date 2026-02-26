@@ -16,5 +16,5 @@ from pydantic import BaseModel, Field
 
 
 class VepFilePaths(BaseModel):
-    faa_location: str = Field(alias="faaLocation")
-    gff_location: str = Field(alias="gffLocation")
+    faa_location: str = Field(alias="faa_location")
+    gff_location: str = Field(alias="gff_location")
