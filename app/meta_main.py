@@ -49,7 +49,7 @@ from api.models.region_validation import RegionValidation
 from api.models.statistics import GenomeStatistics, ExampleObjectList
 from api.models.vep import VepFilePaths
 
-from ensembl.production.metadata.api.adaptors import GenomeAdaptor, BaseAdaptor, ReleaseAdaptor
+from ensembl.production.metadata.api.adaptors import GenomeAdaptor, ReleaseAdaptor
 from ensembl.production.metadata.api.adaptors.vep import VepAdaptor
 from ensembl.production.metadata.api.models import Genome
 from ensembl.production.metadata.grpc.config import MetadataConfig
@@ -63,6 +63,7 @@ TEST_DB_URL = "duckdb:///./duck_meta.db"
 meta_conn = DBConnection(TEST_DB_URL)
 genome_adaptor = GenomeAdaptor(meta_conn)
 vep_adaptor = VepAdaptor(meta_conn)
+release_adaptor = ReleaseAdaptor(meta_conn)
 
 def get_genome_adaptor():
 	yield genome_adaptor
@@ -70,8 +71,12 @@ def get_genome_adaptor():
 def get_vep_adaptor():
 	yield vep_adaptor
 
+def get_release_adaptor():
+	yield release_adaptor
+
 GenomeAdaptorDep = Annotated[GenomeAdaptor, Depends(get_genome_adaptor)]
 VepAdaptorDep = Annotated[VepAdaptor, Depends(get_vep_adaptor)]
+ReleaseAdaptorDep = Annotated[ReleaseAdaptor, Depends(get_release_adaptor)]
 
 logging.getLogger().handlers = [InterceptHandler()]
 
@@ -128,435 +133,6 @@ def get_alternative_names(db_conn, taxon_id):
     # sort before returning (otherwise the test breaks)
     sorted_unique_alternative_names = sorted(unique_alternative_names)
     return sorted_unique_alternative_names
-
-
-# TODO
-def get_assembly_information(db_conn, assembly_uuid):
-    if not assembly_uuid:
-        logger.warning("Missing or Empty Assembly UUID field.")
-        return msg_factory.create_assembly_info()
-
-    assembly_results = db_conn.fetch_sequences(
-        assembly_uuid=assembly_uuid
-    )
-    if len(assembly_results) > 0:
-        response_data = msg_factory.create_assembly_info(assembly_results[0])
-        # logger.debug(f"Response data: \n{response_data}")
-        return response_data
-
-    logger.debug("No assembly information was found.")
-    return msg_factory.create_assembly_info()
-
-
-
-# TODO
-def get_genomes_from_assembly_accession_iterator(db_conn, assembly_accession):
-    if not assembly_accession:
-        logger.warning("Missing or Empty Assembly accession field.")
-        return msg_factory.create_genome()
-    # TODO: Add try except to the other functions as well
-    try:
-        genome_results = db_conn.fetch_genomes(assembly_accession=assembly_accession)
-    except Exception as e:
-        logger.error(f"Error fetching genomes: {e}")
-        raise
-
-    for genome in genome_results:
-        yield msg_factory.create_genome(data=genome)
-
-    return msg_factory.create_genome()
-
-
-
-
-# TODO
-def get_sub_species_info(db_conn, organism_uuid, group):
-    if not organism_uuid:
-        logger.warning("Missing or Empty Organism UUID field.")
-        return msg_factory.create_sub_species()
-    sub_species_results = db_conn.fetch_genomes(organism_uuid=organism_uuid, group=group)
-
-    species_name = []
-    species_type = []
-    if len(sub_species_results) > 0:
-        for result in sub_species_results:
-            if result.OrganismGroup.type not in species_type:
-                species_type.append(result.OrganismGroup.type)
-            if result.OrganismGroup.name not in species_name:
-                species_name.append(result.OrganismGroup.name)
-
-        response_data = msg_factory.create_sub_species({
-            'organism_uuid': organism_uuid,
-            'species_type': species_type,
-            'species_name': species_name
-        })
-        # logger.debug(f"Response data: \n{response_data}")
-        return response_data
-
-    logger.debug("No sub-species information was found.")
-    return msg_factory.create_sub_species()
-
-
-# TODO
-def get_genome_uuid(db_conn: GenomeAdaptor,
-                    production_name: str,
-                    assembly_name: str,
-                    genebuild_date: str = None,
-                    use_default: bool = False,
-                    release_version: str = None):
-    if production_name and assembly_name:
-        genome_uuid_result = db_conn.fetch_genomes_by_assembly_name_genebuild(assembly=assembly_name,
-                                                                              genebuild=genebuild_date,
-                                                                              production_name=production_name,
-                                                                              use_default=use_default,
-                                                                              release_version=release_version)
-
-        if len(genome_uuid_result) == 0:
-            logger.error(f"No Genome found for params {production_name}")
-        else:
-            if len(genome_uuid_result) > 1:
-                logger.warning(f"Multiple results returned. {genome_uuid_result}")
-            response_data = msg_factory.create_genome_uuid(
-                {"genome_uuid": genome_uuid_result[0].Genome.genome_uuid}
-            )
-            return response_data
-    logger.warning("Missing or Empty production_name or assembly_name field.")
-    return msg_factory.create_genome_uuid()
-
-
-
-# TODO
-def get_attributes_by_genome_uuid(db_conn, genome_uuid, release_version):
-    if not genome_uuid:
-        logger.warning("Missing or Empty Genome UUID field.")
-        return msg_factory.create_attributes_by_genome_uuid()
-
-    attrib_data_results = db_conn.fetch_genome_datasets(genome_uuid=genome_uuid,
-                                                        dataset_type_name="all",
-                                                        release_version=release_version)
-
-    logger.debug(f"Genome Datasets Retrieved: {attrib_data_results}")
-
-    if len(attrib_data_results) == 0:
-        logger.error(f"No Attributes were found: {genome_uuid}/{release_version}")
-
-    else:
-        if len(attrib_data_results) > 0:
-            attribs = []
-            for dataset in attrib_data_results[0].datasets:
-                attribs.extend(dataset.attributes)
-
-            attributes_info = msg_factory.create_attributes_info(attribs)
-            return msg_factory.create_attributes_by_genome_uuid(
-                genome_uuid=genome_uuid,
-                attributes_info=attributes_info
-            )
-    return msg_factory.create_attributes_by_genome_uuid()
-
-
-# TODO
-def get_genomes_by_specific_keyword_iterator(
-    db_conn, tolid, assembly_accession_id, assembly_name, ensembl_name,
-    common_name, scientific_name, scientific_parlance_name, species_taxonomy_id,
-    release_version=None
-):
-    if (not tolid and assembly_accession_id and assembly_name and ensembl_name and
-            common_name and scientific_name and scientific_parlance_name and species_taxonomy_id):
-        logger.warning("Missing required field")
-        return msg_factory.create_genome()
-
-    try:
-        genome_results = db_conn.fetch_genome_by_specific_keyword(
-            tolid, assembly_accession_id, assembly_name, ensembl_name,
-            common_name, scientific_name, scientific_parlance_name,
-            species_taxonomy_id, release_version
-        )
-
-        if len(genome_results) > 0:
-            # Create an empty list to store the genomes list
-            genomes_list = []
-            # sort genomes based on the `assembly_accession` field since we are going to group by it
-            genome_results.sort(key=lambda r: r.Assembly.accession)
-            # Group `genome_results` based on the `assembly_accession` field
-            for _, genome_release_group in itertools.groupby(genome_results, lambda r: r.Assembly.accession):
-                # Sort the genomes in each group based on the `genome_uuid` field to prepare for grouping
-                sorted_genomes = sorted(genome_release_group, key=lambda g: g.Genome.genome_uuid)
-                # group by genome uuid incase of partial and integrated releases
-                for _, genome_uuid_group in itertools.groupby(sorted_genomes, lambda g: g.Genome.genome_uuid):
-                    genome_uuid_group = list(genome_uuid_group)
-                    if len(genome_uuid_group) > 1:
-                        # sort by release date descending. The last code checked if EnsemblRelease exists. If it doesn't it uses a default date and not genome uuid
-                        sorted_genome_uuid_group = sorted(
-                            genome_uuid_group,
-                            key=lambda g: getattr(g.EnsemblRelease, 'release_date', datetime.strptime('1900-01-01', '%Y-%m-%d')) if g.EnsemblRelease else datetime.strptime('1900-01-01', '%Y-%m-%d'),
-                            reverse=True
-                        )
-                        # check for integrated release in group
-                        integrated_genome = [
-                            g for g in sorted_genome_uuid_group
-                            if g.EnsemblRelease and getattr(g.EnsemblRelease, 'release_type', None) == 'integrated'
-                        ]
-                        if len(integrated_genome) > 0:
-                            genomes_list.append(integrated_genome[0])
-
-                        # if no integrated release, just take the first one, which is the most recent partial release
-                        else:
-                            genomes_list.append(sorted_genome_uuid_group[0])
-                    # if only one genome in the group, just add it to the list
-                    else:
-                        genomes_list.append(list(genome_uuid_group)[0])
-
-            for genome_row in genomes_list:
-                yield msg_factory.create_genome(data=genome_row)
-
-    except Exception as e:
-        logger.error(f"Error fetching genomes: {e}")
-        return msg_factory.create_genome()
-
-    logger.debug("No genomes were found.")
-    return msg_factory.create_genome()
-
-
-# TODO
-def get_genomes_by_release_version_iterator(
-    db_conn,release_version
-):
-    if (not release_version):
-        logger.warning("Missing required release_version")
-        return msg_factory.create_brief_genome_details()
-
-    genome_results = db_conn.fetch_genome_by_release_version(release_version)
-
-    if len(genome_results) > 0:
-        for genome_row in genome_results:
-            yield msg_factory.create_brief_genome_details(data=genome_row)
-    else:
-        logger.debug("No genomes were found.")
-        return msg_factory.create_brief_genome_details()
-
-
-# TODO
-def get_genome_by_name(db_conn, biosample_id, site_name, release_version):
-    if not biosample_id and not site_name:
-        logger.warning("Missing or Empty ensembl_name and site_name field.")
-        return msg_factory.create_genome()
-    genome_results = db_conn.fetch_genomes(biosample_id=biosample_id, site_name=site_name,
-                                           release_version=release_version)
-    if len(genome_results) == 0:
-        logger.error(f"Genome not found for biosample. {biosample_id}")
-    else:
-        if len(genome_results) > 1:
-            logger.warning(f"Multiple results returned. {genome_results}")
-        response_data = create_genome_with_attributes_and_count(
-            db_conn=db_conn, genome=genome_results[0], release_version=release_version
-        )
-        return response_data
-    return msg_factory.create_genome()
-
-
-# TODO
-def get_datasets_list_by_uuid(db_conn, genome_uuid, release_version):
-    if not genome_uuid:
-        logger.warning("Missing or Empty Genome UUID field.")
-        return msg_factory.create_datasets()
-
-    datasets_results = db_conn.fetch_genome_datasets(genome_uuid=genome_uuid, dataset_type_name="all",
-                                                     release_version=release_version)
-    if len(datasets_results) > 0:
-        # FIXME dataset_results can contain multiple genomes?
-        datasets_info = msg_factory.populate_dataset_info(datasets_results[0])
-        response_data = msg_factory.create_datasets({
-            'genome_uuid': genome_uuid,
-            'datasets': datasets_info
-        })
-        # logger.debug(f"Response data: \n{response_data}")
-        return response_data
-
-    logger.debug("No datasets found.")
-    return msg_factory.create_datasets()
-
-
-# TODO
-def genome_sequence_iterator(db_conn, genome_uuid, chromosomal_only):
-    if not genome_uuid:
-        logger.warning("Missing or Empty Genome UUID field.")
-        return
-
-    assembly_sequence_results = db_conn.fetch_sequences(
-        genome_uuid=genome_uuid,
-        chromosomal_only=chromosomal_only,
-    )
-    for result in assembly_sequence_results:
-        logger.debug(f"Processing assembly: {result.AssemblySequence.name}")
-        yield msg_factory.create_genome_sequence(result)
-
-
-# TODO
-def assembly_region_iterator(db_conn, genome_uuid, chromosomal_only):
-    if not genome_uuid:
-        logger.warning("Missing or Empty Genome UUID field.")
-        return
-
-    assembly_sequence_results = db_conn.fetch_sequences(
-        genome_uuid=genome_uuid,
-        chromosomal_only=chromosomal_only,
-    )
-    for result in assembly_sequence_results:
-        logger.debug(f"Processing assembly: {result.AssemblySequence.name}")
-        yield msg_factory.create_assembly_region(result)
-
-
-
-
-# TODO
-def release_iterator(metadata_db, site_name, release_label, current_only):
-    conn = ReleaseAdaptor(metadata_uri=MetadataConfig().metadata_uri)
-
-    # set release_label and site_name to None if it's an empty list
-    release_label = release_label or None
-    site_name = site_name or None
-
-    release_results = conn.fetch_releases(
-        site_name=site_name,
-        release_label=release_label,
-        current_only=current_only
-    )
-
-    for result in release_results:
-        logger.debug(
-            f"Processing release: {result.EnsemblRelease.version if hasattr(result, 'EnsemblRelease') else None}")
-        yield msg_factory.create_release(result)
-
-
-# TODO
-def release_by_uuid_iterator(metadata_db, genome_uuid):
-    if not genome_uuid:
-        return
-
-    conn = ReleaseAdaptor(metadata_uri=MetadataConfig().metadata_uri)
-    release_results = conn.fetch_releases_for_genome(
-        genome_uuid=genome_uuid,
-    )
-
-    for result in release_results:
-        logger.debug(
-            f"Processing release: {result.EnsemblRelease.version if hasattr(result, 'EnsemblRelease') else None}")
-        yield msg_factory.create_release(result)
-
-
-# TODO
-def get_dataset_by_genome_and_dataset_type(db_conn, genome_uuid, requested_dataset_type='assembly'):
-    if not genome_uuid:
-        logger.warning("Missing or Empty Genome UUID field.")
-        return msg_factory.populate_dataset_info()
-
-    dataset_results = db_conn.fetch_genome_datasets(genome_uuid=genome_uuid,
-                                                    dataset_type_name=requested_dataset_type)
-    logger.debug("dataset Results %s", dataset_results)
-    if len(dataset_results) == 0:
-        logger.error(f"No data for {genome_uuid} / {requested_dataset_type}")
-        return {}
-    else:
-        # FIXME it's possible that multiple datasets are returned here. released multiple times.
-        if len(dataset_results) > 1:
-            logger.warning(f"Multiple results for {genome_uuid} / {requested_dataset_type}")
-
-        datasets_info = msg_factory.populate_dataset_info(dataset_results[0])
-        response_data = msg_factory.create_datasets({
-            'genome_uuid': genome_uuid,
-            'datasets': datasets_info
-        })
-        return response_data
-
-
-# TODO
-def get_organisms_group_count(db_conn, release_label):
-    count_result = db_conn.fetch_organisms_group_counts(release_label=release_label)
-    response_data = msg_factory.create_organisms_group_count(count_result, release_label)
-    # logger.debug(f"Response data: \n{response_data}")
-    return response_data
-
-
-# TODO
-def get_genome_uuid_by_tag(db_conn, genome_tag):
-    if not genome_tag:
-        logger.warning("Missing or Empty Genome tag field.")
-        return msg_factory.create_genome_uuid()
-
-    genome_uuid_result = db_conn.fetch_genomes(genome_tag=genome_tag)
-    if len(genome_uuid_result) == 0:
-        logger.error(f"No Genome UUID found. {genome_tag}")
-    else:
-        if len(genome_uuid_result) > 1:
-            logger.warning(f"Multiple results returned. {genome_uuid_result}")
-        response_data = msg_factory.create_genome_uuid(
-            {"genome_uuid": genome_uuid_result[0].Genome.genome_uuid}
-        )
-        return response_data
-    return msg_factory.create_genome_uuid()
-
-
-# TODO
-def get_ftp_links(db_conn, genome_uuid, dataset_type, release_version):
-    # Request is sending an empty string '' instead of None when
-    # an input parameter is not supplied by the user
-    if not genome_uuid:
-        logger.warning("Missing or Empty Genome UUID field.")
-        return msg_factory.create_paths()
-    if not dataset_type:
-        dataset_type = 'all'
-    if not release_version:
-        release_version = None
-
-    # Find the Genome
-    with db_conn.metadata_db.session_scope() as session:
-        genome = session.query(Genome).filter(Genome.genome_uuid == genome_uuid).first()
-
-        # Return empty links if Genome is not found
-        if genome is None:
-            logger.debug("No Genome found.")
-            return msg_factory.create_paths()
-
-        # Find the links for the given dataset.
-        # Find the links for the given dataset.
-        # Note: release_version filtration is not implemented in the API yet
-        try:
-            links = db_conn.get_public_path(
-                genome_uuid=genome_uuid,
-                dataset_type=dataset_type
-            )
-        except (ValueError, RuntimeError) as error:
-            # log the errors to error log and return empty list of links
-            logger.error(f"Error fetching links: {error}")
-            return msg_factory.create_paths()
-
-    if len(links) > 0:
-        response_data = msg_factory.create_paths(data=links)
-        # logger.debug(f"Response data: \n{response_data}")
-        return response_data
-
-    logger.debug("No Genome found.")
-    return msg_factory.create_paths()
-
-
-# TODO
-def get_release_version_by_uuid(db_conn, genome_uuid, dataset_type, release_version):
-    if not genome_uuid:
-        logger.warning("Missing or Empty Genome UUID field.")
-        return msg_factory.create_release_version()
-
-    release_version_result = db_conn.fetch_genome_datasets(genome_uuid=genome_uuid,
-                                                           dataset_type_name=dataset_type,
-                                                           release_version=release_version)
-
-    if len(release_version_result) == 0:
-        logger.error(f"No result found for {genome_uuid}/{dataset_type}/{release_version}")
-    else:
-        if len(release_version_result) > 1:
-            logger.warning(f"Multiple results returned. {release_version_result}")
-        response_data = msg_factory.create_release_version(release_version_result[0])
-        return response_data
-    return msg_factory.create_release_version()
 
 
 
@@ -2103,7 +1679,6 @@ def test_get_genome_ftplinks():
     ]
 
 
-
 # OK
 @router.get("/genome/{genome_id_or_slug}/explain", name="genome_explain")
 #@redis_cache(key_prefix="explain", arg_keys=['genome_id_or_slug'])
@@ -2924,7 +2499,6 @@ def test_get_genome_dataset_attributes():
 }
 
 
-
 # OK
 @router.get("/genomeid")
 async def get_genome_by_keyword(
@@ -3023,8 +2597,6 @@ def get_genomes_by_specific_keyword_iterator(
     return None
 
 
-
-
 def test_get_genome_by_keyword():
     response = client.get("/genomeid?assembly_accession_id=GCA_000001405.29")
     assert response.status_code == 200
@@ -3035,9 +2607,7 @@ def test_get_genome_by_keyword():
     }
 
 
-
-
-# WIP
+# OK
 @router.get("/genome/{genome_uuid}/vep/file_paths")
 async def get_vep_file_paths(
     adaptor: VepAdaptorDep,
@@ -3072,21 +2642,11 @@ def get_vep_paths_by_uuid(db_conn: VepAdaptor, genome_uuid: str):
     try:
         vep_paths = db_conn.fetch_vep_locations(genome_uuid=genome_uuid)
         if vep_paths:
-            return create_vep_file_paths(vep_paths)
+            return vep_paths
     except (ValueError, RuntimeError) as error:
         logger.error(error)
 
     return None
-
-
-def create_vep_file_paths(data=None):
-    if data is None:
-        return None
-
-    return {
-        'faa_location':data['faa_location'],
-        'gff_location':data['gff_location']
-    }
 
 
 def test_get_vep_file_paths():
@@ -3098,58 +2658,26 @@ def test_get_vep_file_paths():
     }
 
 
-
-
-def data_get_release(release_label, current_only):
-    if (release_label and current_only):
-        result = (session.
-            query(EnsemblRelease).
-            where(EnsemblRelease.label.in_(release_label)).
-            where(EnsemblRelease.is_current == current_only).
-            all()
-        )
-    elif (release_label):
-        result = (session.
-            query(EnsemblRelease).
-            where(EnsemblRelease.label.in_(release_label)).
-            all()
-        )
-    elif (current_only):
-        result = (session.
-            query(EnsemblRelease).
-            where(EnsemblRelease.is_current == current_only).
-            all()
-        )
-    else:
-        result = (session.
-            query(EnsemblRelease).
-            all()
-        )
-
-    return result
-
-
+# OK
 @router.get("/releases", name="get_releases")
-# @redis_cache("releases")
+#@redis_cache("releases")
 async def get_releases(
+	adaptor: ReleaseAdaptorDep,
     request: Request,
     release_name: list[str] = Query(None, description="Filter by release name(s)"),
     current_only: bool = Query(False, description="Only current releases")
 ):
-
     try:
-        releases = data_get_release(
-            release_name,
-            current_only
+        releases_stream = release_iterator(
+			adaptor,
+			site_name=None,
+            release_label=release_name,
+            current_only=current_only
         )
 
         releases_list = []
-        for release in releases:
-            release = Release(
-                releaseLabel=release.label,
-                releaseType=release.release_type,
-                isCurrent=release.is_current
-            )
+        for release_msg in releases_stream:
+            release = Release(**release_msg)
             releases_list.append(release)
 
         if releases_list:
@@ -3176,6 +2704,64 @@ async def get_releases(
         response_data = responses.JSONResponse(error_response, status_code=500)
 
     return response_data
+
+
+def release_iterator(db_conn: ReleaseAdaptor, site_name, release_label, current_only):
+
+    # set release_label and site_name to None if it's an empty list
+    release_label = release_label or None
+    site_name = site_name or None
+
+    release_results = db_conn.fetch_releases(
+        site_name=site_name,
+        release_label=release_label,
+        current_only=current_only
+    )
+
+    for result in release_results:
+        logger.debug(
+            f"Processing release: {result.EnsemblRelease.version if hasattr(result, 'EnsemblRelease') else None}")
+        yield create_release(result)
+
+
+def test_get_releases(benchmark):
+
+    response = client.get("/releases?release_name=2023-10-18")
+    assert response.status_code == 200
+    assert response.json() == [{"name": "2023-10-18",
+                                "type":"partial",
+                                "is_current":False}]
+
+    response = client.get("/releases?current_only=true")
+    assert response.status_code == 200
+    assert response.json() == [{"name": "2025-02",
+                                "type":"integrated",
+                                "is_current":True},
+                               {"name": "2026-01-26",
+                                "type":"partial",
+                                "is_current":True},
+                              ]
+
+    response = client.get("/releases?release_name=100000")
+    assert response.status_code == 404
+
+    response = client.get("/releases?release_name=2023-10-18&release_name=2024-09-18")
+    assert response.status_code == 200
+    assert response.json() == [{"name": "2023-10-18",
+                                "type":"partial",
+                                "is_current":False},
+                               {"name": "2024-09-18",
+                                "type":"partial",
+                                "is_current":False}
+                              ]
+
+    response = client.get("/releases")
+    assert response.status_code == 200
+    assert len(response.json()) == 20
+
+    runnable = lambda: client.get("/releases")
+    benchmark(runnable)
+
 
 # TODO: get data from DB
 def data_get_genome_groups_with_reference(group_type, release_label):
@@ -3504,43 +3090,4 @@ def test_get_genome_counts():
             ]
         }
     )
-
-def test_get_releases(benchmark):
-
-    response = client.get("/releases?release_name=2023-10-18")
-    assert response.status_code == 200
-    assert response.json() == [{"name": "2023-10-18",
-                                "type":"partial",
-                                "is_current":False}]
-
-    response = client.get("/releases?current_only=true")
-    assert response.status_code == 200
-    assert response.json() == [{"name": "2025-02",
-                                "type":"integrated",
-                                "is_current":True},
-                               {"name": "2026-01-26",
-                                "type":"partial",
-                                "is_current":True},
-                              ]
-
-    response = client.get("/releases?release_name=100000")
-    assert response.status_code == 404
-
-    response = client.get("/releases?release_name=2023-10-18&release_name=2024-09-18")
-    assert response.status_code == 200
-    assert response.json() == [{"name": "2023-10-18",
-                                "type":"partial",
-                                "is_current":False},
-                               {"name": "2024-09-18",
-                                "type":"partial",
-                                "is_current":False}
-                              ]
-
-    response = client.get("/releases")
-    assert response.status_code == 200
-    assert len(response.json()) == 24
-
-    runnable = lambda: client.get("/releases")
-    benchmark(runnable)
-
 
