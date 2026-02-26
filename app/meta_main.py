@@ -401,24 +401,6 @@ def assembly_region_iterator(db_conn, genome_uuid, chromosomal_only):
         yield msg_factory.create_assembly_region(result)
 
 
-# TODO
-def genome_assembly_sequence_region(db_conn, genome_uuid, sequence_region_name):
-    if not genome_uuid or not sequence_region_name:
-        logger.warning("Missing or Empty Genome UUID or Sequence region name field.")
-        return msg_factory.create_genome_assembly_sequence_region()
-
-    assembly_sequence_results = db_conn.fetch_sequences(
-        genome_uuid=genome_uuid,
-        assembly_sequence_name=sequence_region_name
-    )
-    if len(assembly_sequence_results) == 0:
-        logger.error(f"Assembly sequence not found for {genome_uuid}/{sequence_region_name}")
-    else:
-        if len(assembly_sequence_results) > 1:
-            logger.warning(f"Multiple results returned for {genome_uuid}/{sequence_region_name}")
-        response_data = msg_factory.create_genome_assembly_sequence_region(assembly_sequence_results[0])
-        return response_data
-    return msg_factory.create_genome_assembly_sequence_region()
 
 
 # TODO
@@ -571,59 +553,6 @@ def get_release_version_by_uuid(db_conn, genome_uuid, dataset_type, release_vers
         return response_data
     return msg_factory.create_release_version()
 
-
-# TODO
-def get_attributes_values_by_uuid(db_conn, genome_uuid, dataset_type, release_version, attribute_names, latest_only):
-    """
-    Retrieve attribute values for a given genome UUID from the database.
-
-    This function fetches genome datasets based on the provided genome UUID, dataset type, and release version.
-    If a single dataset result is found, it creates and returns the attribute values. If no or multiple datasets
-    are found, appropriate warnings or debug messages are logged.
-
-    Args:
-        db_conn: Database connection object.
-        genome_uuid (str): The UUID of the genome to fetch data for. Must not be empty.
-        dataset_type (str): The type of dataset to retrieve.
-        release_version (str): The release version of the dataset to retrieve.
-        attribute_names (list): A list of attribute names to filter the results by.
-        latest_only (bool): Whether to fetch the latest dataset or not (default is `False`).
-
-    Returns:
-        object: A response object containing the attribute values. If no valid dataset is found,
-                an empty attribute value object is returned.
-    """
-    if not genome_uuid:
-        logger.warning("Missing or Empty Genome UUID field.")
-        return msg_factory.create_attribute_value()
-
-    genome_datasets_results = db_conn.fetch_genome_datasets(
-        genome_uuid=genome_uuid,
-        dataset_type_name=dataset_type,
-        release_version=release_version
-    )
-
-    if len(genome_datasets_results) > 1:
-        logger.debug("Multiple results returned.")
-        # if we get more than one genome, it means it's attached to both partial and integrated releases
-        # we pick the integrated genome because it's the one taking precedence
-        genome_datasets_results = [gd for gd in genome_datasets_results if gd.release.release_type == 'integrated']
-
-    if len(genome_datasets_results) == 1:
-        response_data = msg_factory.create_attribute_value(
-            data=genome_datasets_results,
-            # There is no point in filtering by attribute_names in the API because it returns the whole dataset object
-            # which will contain all the attributes (we should be altering them from within the API)
-            attribute_names=attribute_names,
-            latest_only=latest_only
-        )
-        logger.debug(f"Response data: \n{response_data}")
-        return response_data
-    else:
-        logger.debug("Genome not found.")
-
-    logger.debug("No attribute values were found.")
-    return msg_factory.create_attribute_value()
 
 
 # TODO
@@ -2309,18 +2238,20 @@ def create_brief_genome_details(data=None, latest_genome=None):
     return brief_genome_details
 
 
-
-
-# TODO: get data from DB
-def data_get_region_checksum(genome_uuid, region_name):
-    return {"md5": "2648ae1bacce4ec4b6cf337dcae37816"}
-
+# OK
 @router.get("/genome/{genome_uuid}/checksum/{region_name}", name="region_checksum")
-async def get_region_checksum(request: Request, genome_uuid: str, region_name: str):
+async def get_region_checksum(
+    adaptor: AdaptorDep,
+    request: Request,
+    genome_uuid: str,
+    region_name: str
+):
     try:
-        region_checksum_dict = data_get_region_checksum(
-                genome_uuid=genome_uuid, region_name=region_name
-            )
+        region_checksum_dict = genome_assembly_sequence_region(
+            db_conn=adaptor,
+            genome_uuid=genome_uuid,
+            sequence_region_name=region_name
+        )
         region_checksum = Checksum(**region_checksum_dict)
         return responses.PlainTextResponse(region_checksum.md5)
     except ValidationError as e:
@@ -2332,35 +2263,78 @@ async def get_region_checksum(request: Request, genome_uuid: str, region_name: s
         return response_error_handler({"status": 500})
 
 
+def genome_assembly_sequence_region(db_conn, genome_uuid, sequence_region_name):
+    if not genome_uuid or not sequence_region_name:
+        logger.warning("Missing or Empty Genome UUID or Sequence region name field.")
+        return None
 
-# TODO: get data from DB
-def data_get_dataset_attributes(genome_uuid, dataset_type, attribute_names):
-    return {
-    "releaseVersion":1.0,
-    "attributes":
-    [
-        {
-            "attributeName":"genebuild.stats.average_cds_length",
-            "attributeValue":"1191.97",
-            "datasetVersion":"GENCODE44",
-            "datasetUuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
-            "datasetType":"genebuild"
-        }
-    ]
-}
+    assembly_sequence_results = db_conn.fetch_sequences(
+        genome_uuid=genome_uuid,
+        assembly_sequence_name=sequence_region_name
+    )
+    if len(assembly_sequence_results) == 0:
+        logger.error(f"Assembly sequence not found for {genome_uuid}/{sequence_region_name}")
+    else:
+        if len(assembly_sequence_results) > 1:
+            logger.warning(f"Multiple results returned for {genome_uuid}/{sequence_region_name}")
+        response_data = create_genome_assembly_sequence_region(assembly_sequence_results[0])
+        return response_data
+    return None
 
 
+def create_genome_assembly_sequence_region(data=None):
+    if data is None:
+        return None
+
+    genome_assembly_sequence_region = {
+        'name':data.AssemblySequence.name,
+        'md5':data.AssemblySequence.md5,
+        'length':data.AssemblySequence.length,
+        'sha512t24u':data.AssemblySequence.sha512t24u,
+        'chromosomal':data.AssemblySequence.chromosomal
+    }
+
+    return genome_assembly_sequence_region
+
+
+def test_get_region_checksum():
+    response = client.get("/genome/a7335667-93e7-11ec-a39d-005056b38ce3/checksum/1")
+    assert response.status_code == 200
+    assert response.content.decode("utf-8") == "2648ae1bacce4ec4b6cf337dcae37816"
+
+
+
+## TODO: get data from DB
+#def data_get_dataset_attributes(genome_uuid, dataset_type, attribute_names):
+#    return {
+#    "releaseVersion":1.0,
+#    "attributes":
+#    [
+#        {
+#            "attributeName":"genebuild.stats.average_cds_length",
+#            "attributeValue":"1191.97",
+#            "datasetVersion":"GENCODE44",
+#            "datasetUuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+#            "datasetType":"genebuild"
+#        }
+#    ]
+#}
+
+
+# WIP
 @router.get(
     "/genome/{genome_uuid}/dataset/{dataset_type}/attributes", name="dataset_attributes"
 )
 async def get_genome_dataset_attributes(
+    adaptor: AdaptorDep,
     request: Request,
     genome_uuid: str,
     dataset_type: str,
     attribute_names: Annotated[list[str] | None, Query()] = None,
 ):
     try:
-        dataset_attributes = data_get_dataset_attributes(
+        dataset_attributes = get_dataset_attributes(
+                adaptor,
                 genome_uuid,
                 dataset_type,
                 attribute_names
@@ -2381,6 +2355,602 @@ async def get_genome_dataset_attributes(
     except Exception as ex:
         logging.error(ex)
         return response_error_handler({"status": 500})
+
+
+def get_dataset_attributes(
+    adaptor: GenomeAdaptor,
+    genome_uuid: str,
+    dataset_type: str,
+    attribute_names: list
+):
+    release_version = None
+    latest_only = False
+    return get_attributes_values_by_uuid(
+        adaptor,
+        genome_uuid,
+        dataset_type,
+        release_version,
+        attribute_names,
+        latest_only
+    )
+
+
+
+def get_attributes_values_by_uuid(db_conn, genome_uuid, dataset_type, release_version, attribute_names, latest_only):
+    """
+    Retrieve attribute values for a given genome UUID from the database.
+
+    This function fetches genome datasets based on the provided genome UUID, dataset type, and release version.
+    If a single dataset result is found, it creates and returns the attribute values. If no or multiple datasets
+    are found, appropriate warnings or debug messages are logged.
+
+    Args:
+        db_conn: Database connection object.
+        genome_uuid (str): The UUID of the genome to fetch data for. Must not be empty.
+        dataset_type (str): The type of dataset to retrieve.
+        release_version (str): The release version of the dataset to retrieve.
+        attribute_names (list): A list of attribute names to filter the results by.
+        latest_only (bool): Whether to fetch the latest dataset or not (default is `False`).
+
+    Returns:
+        object: A response object containing the attribute values. If no valid dataset is found,
+                an empty attribute value object is returned.
+    """
+    if not genome_uuid:
+        logger.warning("Missing or Empty Genome UUID field.")
+        return None
+
+    genome_datasets_results = db_conn.fetch_genome_datasets(
+        genome_uuid=genome_uuid,
+        dataset_type_name=dataset_type,
+        release_version=release_version
+    )
+
+    if len(genome_datasets_results) > 1:
+        logger.debug("Multiple results returned.")
+        # if we get more than one genome, it means it's attached to both partial and integrated releases
+        # we pick the integrated genome because it's the one taking precedence
+        genome_datasets_results = [gd for gd in genome_datasets_results if gd.release.release_type == 'integrated']
+
+    if len(genome_datasets_results) == 1:
+        response_data = create_attribute_value(
+            data=genome_datasets_results,
+            # There is no point in filtering by attribute_names in the API because it returns the whole dataset object
+            # which will contain all the attributes (we should be altering them from within the API)
+            attribute_names=attribute_names,
+            latest_only=latest_only
+        )
+        logger.debug(f"Response data: \n{response_data}")
+        return response_data
+    else:
+        logger.debug("Genome not found.")
+
+    logger.debug("No attribute values were found.")
+    return None
+
+
+
+def create_attribute_value(data=None, attribute_names=None, latest_only=False):
+    """
+    Creates a DatasetAttributesValues message from the provided data.
+
+    If no data is provided, returns an empty DatasetAttributeValue message with an empty attributes list.
+
+    Args:
+        data (optional): A list of objects containing dataset attributes.
+            The expected structure is that `data` is a list containing an object with a `datasets` attribute,
+            which is a list containing an object with an `attributes` attribute. The `attributes` attribute
+            is a list of objects each having `name` and `value` attributes.
+            it's many nested objects, and we need to go deep in the rabit hole to fetch the data we need
+            The nested objects look something like this:
+            [GenomeDatasetsListItem]
+                [GenomeDatasetItem]
+                    [DatasetAttributeItem] <- this is the attributes list we want to extract
+                    Dataset
+                    GenomeDataset
+                Genome
+                EnsemblRelease
+
+        attribute_names (optional): A List of attributes names to filter by
+        latest_only (optional): Whether to fetch the latest dataset or not (default is `False`)
+
+    Returns:
+        ensembl_metadata_pb2.DatasetAttributesValues: A message containing a list of DatasetAttributeValue
+        messages, each corresponding to the attributes from the input data.
+    """
+    def add_attributes(ds_item, attributes_list, dataset_version, dataset_uuid, attribute_names, dataset_type):
+        """
+        Adds attributes from a dataset item to the attributes list.
+        """
+        for attrib in ds_item.attributes:
+            # (1) if attribute_names is not provided,
+            # (2) Or attribute_name from the DB is in the provided attribute_names
+            # append it to the list of the returned result
+            # if (1) is true, we will be fetching all the attributes
+            # if (2) is true, we will be fetching the requested attributes only
+            if not attribute_names or attrib.name in attribute_names:
+                created_attribute = {
+                    'attribute_name':attrib.name,
+                    'attribute_value':attrib.value,
+                    'dataset_version':dataset_version,
+                    'dataset_uuid':dataset_uuid,
+                    'dataset_type':dataset_type
+                }
+                attributes_list.append(created_attribute)
+
+    if data is None:
+        return {
+            'attributes':[]
+        }
+
+    attributes_list = []
+    # we can have more than one dataset
+    for ds_item in data[0].datasets:
+        # that we can distinguish by version or dataset_uuid
+        dataset_version = ds_item.dataset.version
+        dataset_uuid = ds_item.dataset.dataset_uuid
+        dataset_type = ds_item.dataset.dataset_type.name
+
+        # get the latest if latest_only is True
+        if latest_only:
+            if ds_item.release.is_current:
+                add_attributes(ds_item, attributes_list, dataset_version, dataset_uuid, attribute_names, dataset_type)
+        else:
+            add_attributes(ds_item, attributes_list, dataset_version, dataset_uuid, attribute_names, dataset_type)
+
+    return {
+        'attributes':attributes_list,
+        'release_version':data[0].release.version
+    }
+
+
+def test_get_genome_dataset_attributes():
+    response = client.get("/genome/a7335667-93e7-11ec-a39d-005056b38ce3/dataset/genebuild/attributes")
+    assert response.status_code == 200
+    assert response.json() == {
+    "attributes":[
+        {
+            "name":"genebuild.stats.average_cds_length",
+            "value":"1191.97",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.average_coding_exons_per_coding_transcript",
+            "value":"7.98",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.average_coding_exons_per_transcript",
+            "value":"8.13",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.average_coding_exon_length",
+            "value":"149.38",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.average_exon_length",
+            "value":"250.15",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.average_genomic_span",
+            "value":"67396.48",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.average_intron_length",
+            "value":"6172.48",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.average_sequence_legth",
+            "value":"3566.92",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.coding_genes",
+            "value":"20481",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.coding_transcripts",
+            "value":"111076",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.coding_transcripts_per_gene",
+            "value":"5.42",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.initial_release_date",
+            "value":"2014-07",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.last_geneset_update",
+            "value":"2023-03",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.level",
+            "value":"toplevel",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.longest_gene_length",
+            "value":"2473539",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.method",
+            "value":"full_genebuild",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.method_display",
+            "value":"Ensembl Genebuild",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.nc_average_exons_per_transcript",
+            "value":"3.50",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.nc_average_exon_length",
+            "value":"339.13",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.nc_average_genomic_span",
+            "value":"22981.34",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.nc_average_sequence_length",
+            "value":"967.28",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.nc_longest_gene_length",
+            "value":"1375317",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.nc_long_non_coding_genes",
+            "value":"18874",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.nc_misc_non_coding_genes",
+            "value":"2221",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.nc_non_coding_genes",
+            "value":"25959",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.nc_shortest_gene_length",
+            "value":"41",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.nc_small_non_coding_genes",
+            "value":"4864",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.nc_total_introns",
+            "value":"160555",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.nc_total_transcripts",
+            "value":"64262",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.nc_transcripts_per_gene",
+            "value":"2.48",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.ps_average_exons_per_transcript",
+            "value":"2.11",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.ps_average_exon_length",
+            "value":"371.37",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.ps_average_genomic_span",
+            "value":"3412.92",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.ps_average_intron_length",
+            "value":"4117.36",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.ps_average_sequence_length",
+            "value":"725.47",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.ps_longest_gene_length",
+            "value":"909387",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.ps_pseudogenes",
+            "value":"15239",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.ps_shortest_gene_length",
+            "value":"23",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.ps_total_exons",
+            "value":"35229",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.ps_total_introns",
+            "value":"18526",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.ps_total_transcripts",
+            "value":"16703",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.ps_transcripts_per_gene",
+            "value":"1.10",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.shortest_gene_length",
+            "value":"8",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.start_date",
+            "value":"2014-01-Ensembl",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.total_coding_exons",
+            "value":"886243",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.total_exons",
+            "value":"1388435",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.total_introns",
+            "value":"1217602",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.total_transcripts",
+            "value":"170833",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.transcripts_per_gene",
+            "value":"8.34",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.version",
+            "value":"GENCODE44",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.sample_gene",
+            "value":"ENSG00000221914",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.sample_location",
+            "value":"8:26291508-26372680",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.id",
+            "value":"39",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.nc_average_intron_length",
+            "value":"14932.57",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.havana_datafreeze_date",
+            "value":"19-12-2022",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.provider_name",
+            "value":"Ensembl",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.provider_url",
+            "value":"https://www.ensembl.org",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.annotation_source",
+            "value":"ensembl",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.stats.nc_total_exons",
+            "value":"224817",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.provider_version",
+            "value":"44",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"vep.faa_location",
+            "value":"Homo_sapiens/GCA_000001405.29/vep/genome/softmasked.fa.bgz",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"vep.gff_location",
+            "value":"Homo_sapiens/GCA_000001405.29/vep/ensembl/geneset/2023_03/genes.gff3.bgz",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.busco_version",
+            "value":"5.4.7",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.busco_dataset",
+            "value":"euarchontoglires_odb10",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.busco",
+            "value":"C:99.7%[S:98.1%,D:1.6%],F:0.0%,M:0.3%,n:12692",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.busco_mode",
+            "value":"protein",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.busco_completeness",
+            "value":"12652",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.busco_single_copy",
+            "value":"12445",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.busco_duplicated",
+            "value":"207",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.busco_fragmented",
+            "value":"2",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.busco_missing",
+            "value":"38",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.busco_total",
+            "value":"12692",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"},
+        {
+            "name":"genebuild.team_responsible",
+            "value":"Genebuild",
+            "version":"GENCODE44",
+            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
+            "type":"genebuild"}
+    ],
+    "release_version":1.0
+}
+
 
 
 
@@ -2759,27 +3329,6 @@ def test_explain_genome():
     }
 
 
-def test_get_region_checksum():
-    response = client.get("/genome/a7335667-93e7-11ec-a39d-005056b38ce3/checksum/1")
-    assert response.status_code == 200
-    assert response.content.decode("utf-8") == "2648ae1bacce4ec4b6cf337dcae37816"
-
-def test_get_genome_dataset_attributes():
-    response = client.get("/genome/a7335667-93e7-11ec-a39d-005056b38ce3/dataset/genebuild/attributes")
-    assert response.status_code == 200
-    assert response.json() == {
-    "attributes":
-    [
-        {
-            "name":"genebuild.stats.average_cds_length",
-            "value":"1191.97",
-            "version":"GENCODE44",
-            "uuid":"949defef-c4d2-4ab1-8a73-f41d2b3c7719",
-            "type":"genebuild"
-        },
-    ],
-    "release_version":1.0
-}
 
 def test_get_genome_by_keyword():
     response = client.get("/genomeid?assembly_accession_id=GCA_000001405.29")
