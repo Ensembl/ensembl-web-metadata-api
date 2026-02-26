@@ -6,6 +6,7 @@ from pydantic import (
     validator,
     field_serializer,
     root_validator,
+    model_validator,
     AliasChoices,
 )
 from core.logging import InterceptHandler
@@ -373,7 +374,8 @@ class ExampleObject(BaseModel):
 class ExampleObjectList(BaseModel):
     example_objects: list[ExampleObject] = []
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def set_region_parameters(cls, values):
         attributes_info = values.get("attributesInfo") or {}
         genome_uuid = values.get("genomeUuid")
