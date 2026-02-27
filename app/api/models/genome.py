@@ -75,7 +75,7 @@ class BaseGenomeDetails(BaseModel):
     genome_id: str = Field(alias="genome_uuid")
     genome_tag: Optional[str] = Field(
         alias=AliasChoices(
-            AliasPath("assembly", "url_name"), AliasPath("assembly", "tol_id")
+            AliasPath("genome", "url_name"), AliasPath("organism", "tol_id")
         ),
         default=None,
     )
@@ -193,7 +193,7 @@ class DatasetAttributes(BaseModel):
 class GenomeByKeyword(BaseModel):
     genome_uuid: str = Field(alias="genome_uuid", default="")
     release_version: float = Field(alias=AliasPath("release", "release_version"), default=0)
-    genome_tag: str = Field(alias=AliasPath("assembly", "url_name"), default="")
+    genome_tag: str = Field(alias=AliasPath("genome", "url_name"), default="")
 
 class GenomeGroup(BaseModel):
     id: str = Field(alias="group_id")

@@ -135,525 +135,7 @@ def get_alternative_names(db_conn, taxon_id):
     return sorted_unique_alternative_names
 
 
-
-
-# TODO
-def get_genome_groups_by_reference(
-    db_conn: Any,
-    group_type: str,
-    release_label: str | None = None,
-):
-    if not group_type or group_type != 'structural_variant': # accepting only structural_variant for now
-        logger.warning("Missing or Wrong Group type field.")
-        return msg_factory.create_genome_groups_by_reference()
-
-    # The logic calling the ORM and fetching data from the DB
-    # will go here, we are returning dummy data for now
-    # /!\ Remember to handle the release label
-
-    try:
-        # The logic calling the ORM and fetching data from the DB
-        # will go here. For now, we return dummy data.
-        dummy_data = [
-            {
-                "group_id": "grch38-group",
-                "group_type": group_type,
-                "group_name": "",
-                "reference_genome": {
-                    "genome_uuid": "a7335667-93e7-11ec-a39d-005056b38ce3",
-                    "assembly": {
-                        "accession": "GCA_000001405.29",
-                        "name": "GRCh38.p14",
-                        "ucsc_name": "hg38",
-                        "level": "chromosome",
-                        "ensembl_name": "GRCh38.p14",
-                        "assembly_uuid": "fd7fea38-981a-4d73-a879-6f9daef86f08",
-                        "is_reference": True,
-                        "url_name": "grch38",
-                        "tol_id": "",
-                    },
-                    "taxon": {
-                        "taxonomy_id": 9606,
-                        "scientific_name": "Homo sapiens",
-                        "strain": "",
-                        "alternative_names": [],
-                    },
-                    "created": "2023-09-22 15:04:45",
-                    "organism": {
-                        "common_name": "Human",
-                        "strain": "",
-                        "scientific_name": "Homo sapiens",
-                        "ensembl_name": "SAMN12121739",
-                        "scientific_parlance_name": "Human",
-                        "organism_uuid": "1d336185-affe-4a91-85bb-04ebd73cbb56",
-                        "strain_type": "",
-                        "taxonomy_id": 9606,
-                        "species_taxonomy_id": 9606,
-                    },
-                    "release": {
-                        "release_version": 1,
-                        "release_date": "2025-02-27",
-                        "release_label": "2025-02",
-                        "release_type": "integrated",
-                        "is_current": True,
-                        "site_name": "Ensembl",
-                        "site_label": "MVP ENsembl",
-                        "site_uri": "https://beta.ensembl.org",
-                    },
-                },
-            },
-            {
-                "group_id": "t2t-group",
-                "group_type": group_type,
-                "group_name": "",
-                "reference_genome": {
-                    "genome_uuid": "4c07817b-c7c5-463f-8624-982286bc4355",
-                    "assembly": {
-                        "accession": "GCA_009914755.4",
-                        "name": "T2T-CHM13v2.0",
-                        "ucsc_name": "",
-                        "level": "primary_assembly",
-                        "ensembl_name": "T2T-CHM13v2.0",
-                        "assembly_uuid": "fc20ebd6-f756-45da-b941-b3b17e11515f",
-                        "is_reference": False,
-                        "url_name": "t2t-chm13",
-                        "tol_id": "",
-                    },
-                    "taxon": {
-                        "taxonomy_id": 9606,
-                        "scientific_name": "Homo sapiens",
-                        "strain": "",
-                        "alternative_names": [],
-                    },
-                    "created": "2023-09-22 15:06:39",
-                    "organism": {
-                        "common_name": "Human",
-                        "strain": "",
-                        "scientific_name": "Homo sapiens",
-                        "ensembl_name": "SAMN03255769",
-                        "scientific_parlance_name": "Human",
-                        "organism_uuid": "9df68864-e9fe-4c02-ab8c-8190baad16c6",
-                        "strain_type": "",
-                        "taxonomy_id": 9606,
-                        "species_taxonomy_id": 9606,
-                    },
-                    "release": {
-                        "release_version": 1,
-                        "release_date": "2025-02-27",
-                        "release_label": "2025-02",
-                        "release_type": "integrated",
-                        "is_current": True,
-                        "site_name": "Ensembl",
-                        "site_label": "MVP ENsembl",
-                        "site_uri": "https://beta.ensembl.org",
-                    },
-                },
-            },
-        ]
-
-        # Very simple use of release_label even in dummy mode
-        # TODO: move this filtering into the ORM query once the real implementation is added.
-        if release_label:
-            dummy_data = [
-                g
-                for g in dummy_data
-                if g["reference_genome"]["release"]["release_label"] == release_label
-            ]
-
-        return msg_factory.create_genome_groups_by_reference(dummy_data)
-
-    except Exception:
-        # Dummy error handling until the real ORM logic is in place
-        logger.exception(
-            "Unexpected error while fetching genome groups "
-            "(group_type=%r, release_label=%r)",
-            group_type,
-            release_label,
-        )
-        # Return an empty message to avoid propagating the error to callers.
-        return msg_factory.create_genome_groups_by_reference([])
-
-
-# TODO
-def get_genomes_in_group(
-    db_conn: Any,
-    group_id: str,
-    release_label: str | None,
-):
-    if not group_id:
-        logger.warning("Missing or Empty Group type field.")
-        return msg_factory.create_genomes_in_group()
-
-    try:
-        # The logic calling the ORM and fetching data from the DB using group_id
-        # will go here. We return dummy data for now.
-        # /!\ Remember to handle the release label in the real query.
-
-        # TODO: remove this once we have the real data from the DB.
-        dummy_data = [
-            {
-                "genome_uuid": "a7335667-93e7-11ec-a39d-005056b38ce3",
-                "assembly": {
-                    "accession": "GCA_000001405.29",
-                    "name": "GRCh38.p14",
-                    "ucsc_name": "hg38",
-                    "level": "chromosome",
-                    "ensembl_name": "GRCh38.p14",
-                    "assembly_uuid": "fd7fea38-981a-4d73-a879-6f9daef86f08",
-                    "is_reference": True,
-                    "url_name": "grch38",
-                    "tol_id": "",
-                },
-                "taxon": {
-                    "taxonomy_id": 9606,
-                    "scientific_name": "Homo sapiens",
-                    "strain": "",
-                    "alternative_names": [],
-                },
-                "created": "2023-09-22 15:04:45",
-                "organism": {
-                    "common_name": "Human",
-                    "strain": "",
-                    "scientific_name": "Homo sapiens",
-                    "ensembl_name": "SAMN12121739",
-                    "scientific_parlance_name": "Human",
-                    "organism_uuid": "1d336185-affe-4a91-85bb-04ebd73cbb56",
-                    "strain_type": "",
-                    "taxonomy_id": 9606,
-                    "species_taxonomy_id": 9606,
-                },
-                "release": {
-                    "release_version": 1,
-                    "release_date": "2025-02-27",
-                    "release_label": "2025-02",
-                    "release_type": "integrated",
-                    "is_current": True,
-                    "site_name": "Ensembl",
-                    "site_label": "MVP ENsembl",
-                    "site_uri": "https://beta.ensembl.org",
-                },
-            },
-            {
-                "genome_uuid": "4c07817b-c7c5-463f-8624-982286bc4355",
-                "assembly": {
-                    "accession": "GCA_009914755.4",
-                    "name": "T2T-CHM13v2.0",
-                    "ucsc_name": "",
-                    "level": "primary_assembly",
-                    "ensembl_name": "T2T-CHM13v2.0",
-                    "assembly_uuid": "fc20ebd6-f756-45da-b941-b3b17e11515f",
-                    "is_reference": False,
-                    "url_name": "t2t-chm13",
-                    "tol_id": "",
-                },
-                "taxon": {
-                    "taxonomy_id": 9606,
-                    "scientific_name": "Homo sapiens",
-                    "strain": "",
-                    "alternative_names": [],
-                },
-                "created": "2023-09-22 15:06:39",
-                "organism": {
-                    "common_name": "Human",
-                    "strain": "",
-                    "scientific_name": "Homo sapiens",
-                    "ensembl_name": "SAMN03255769",
-                    "scientific_parlance_name": "Human",
-                    "organism_uuid": "9df68864-e9fe-4c02-ab8c-8190baad16c6",
-                    "strain_type": "",
-                    "taxonomy_id": 9606,
-                    "species_taxonomy_id": 9606,
-                },
-                "release": {
-                    "release_version": 1,
-                    "release_date": "2025-02-27",
-                    "release_label": "2025-02",
-                    "release_type": "integrated",
-                    "is_current": True,
-                    "site_name": "Ensembl",
-                    "site_label": "MVP ENsembl",
-                    "site_uri": "https://beta.ensembl.org",
-                },
-            },
-            {
-                "genome_uuid": "9d3b2ead-a987-4f08-8d18-10a1eb1e0fb0",
-                "assembly": {
-                    "accession": "GCA_018503275.2",
-                    "name": "NA19240_mat_hprc_f2",
-                    "ucsc_name": "",
-                    "level": "primary_assembly",
-                    "ensembl_name": "",
-                    "assembly_uuid": "561a1451-cfe4-451d-ad8f-00310645e1fd",
-                    "is_reference": False,
-                    "url_name": "",
-                    "tol_id": ""
-                },
-                "taxon": {
-                    "taxonomy_id": 9606,
-                    "scientific_name": "Homo sapiens",
-                    "strain": "Yoruban in Nigeria",
-                    "alternative_names": []
-                },
-                "created": "2025-09-23 19:07:22",
-                "organism": {
-                    "common_name": "Human",
-                    "strain": "Yoruban in Nigeria",
-                    "scientific_name": "Homo sapiens",
-                    "ensembl_name": "SAMN03838746",
-                    "scientific_parlance_name": "Human",
-                    "organism_uuid": "14a967b2-6d62-49f8-b0b7-c3836a87cffa",
-                    "strain_type": "population",
-                    "taxonomy_id": 9606,
-                    "species_taxonomy_id": 9606
-                },
-                "release": {
-                    "release_version": 114.9,
-                    "release_date": "2025-10-21",
-                    "release_label": "2025-10-21",
-                    "release_type": "partial",
-                    "is_current": False,
-                    "site_name": "Ensembl",
-                    "site_label": "MVP ENsembl",
-                    "site_uri": "https://beta.ensembl.org"
-                }
-            },
-            {
-                "genome_uuid": "27be510b-c431-434c-a6f5-158d8c138507",
-                "assembly": {
-                    "accession": "GCA_018506975.2",
-                    "name": "HG00733_mat_hprc_f2",
-                    "ucsc_name": "",
-                    "level": "primary_assembly",
-                    "ensembl_name": "",
-                    "assembly_uuid": "0fb76cdf-6c6b-4c20-beef-7f7d4151651b",
-                    "is_reference": False,
-                    "url_name": "",
-                    "tol_id": ""
-                },
-                "taxon": {
-                    "taxonomy_id": 9606,
-                    "scientific_name": "Homo sapiens",
-                    "strain": "Puerto Rican in Puerto Rico",
-                    "alternative_names": []
-                },
-                "created": "2025-09-23 22:58:45",
-                "organism": {
-                    "common_name": "Human",
-                    "strain": "Puerto Rican in Puerto Rico",
-                    "scientific_name": "Homo sapiens",
-                    "ensembl_name": "SAMN00006581",
-                    "scientific_parlance_name": "Human",
-                    "organism_uuid": "07314e4e-9ac5-4ed7-b2ae-b8e257e1e6d7",
-                    "strain_type": "population",
-                    "taxonomy_id": 9606,
-                    "species_taxonomy_id": 9606
-                },
-                "release": {
-                    "release_version": 114.9,
-                    "release_date": "2025-10-21",
-                    "release_label": "2025-10-21",
-                    "release_type": "partial",
-                    "is_current": False,
-                    "site_name": "Ensembl",
-                    "site_label": "MVP ENsembl",
-                    "site_uri": "https://beta.ensembl.org"
-                }
-            },
-            {
-                "genome_uuid": "7e09bad9-aa22-46e4-ab8f-1b2a64202967",
-                "assembly": {
-                    "accession": "GCA_042077495.1",
-                    "name": "NA19036_hap1_hprc_f2",
-                    "ucsc_name": "",
-                    "level": "primary_assembly",
-                    "ensembl_name": "",
-                    "assembly_uuid": "11ed863b-5b0a-45e6-b3e6-f0788be79706",
-                    "is_reference": False,
-                    "url_name": "",
-                    "tol_id": ""
-                },
-                "taxon": {
-                    "taxonomy_id": 9606,
-                    "scientific_name": "Homo sapiens",
-                    "strain": "",
-                    "alternative_names": []
-                },
-                "created": "2025-03-14 00:00:45",
-                "organism": {
-                    "common_name": "Human",
-                    "strain": "",
-                    "scientific_name": "Homo sapiens",
-                    "ensembl_name": "SAMN41021642",
-                    "scientific_parlance_name": "Human",
-                    "organism_uuid": "eec7d10e-3ef4-4f14-8d2e-3233978dd0ce",
-                    "strain_type": "",
-                    "taxonomy_id": 9606,
-                    "species_taxonomy_id": 9606
-                },
-                "release": {
-                    "release_version": 114.1,
-                    "release_date": "2025-05-28",
-                    "release_label": "2025-05-28",
-                    "release_type": "partial",
-                    "is_current": False,
-                    "site_name": "Ensembl",
-                    "site_label": "MVP ENsembl",
-                    "site_uri": "https://beta.ensembl.org"
-                }
-            },
-            {
-                "genome_uuid": "30094672-c48c-425a-84e0-4049073a68d3",
-                "assembly": {
-                    "accession": "GCA_018469665.2",
-                    "name": "HG01123_mat_hprc_f2",
-                    "ucsc_name": "",
-                    "level": "primary_assembly",
-                    "ensembl_name": "",
-                    "assembly_uuid": "6ab0e3a4-4e11-443d-a18a-81ff1e68d42d",
-                    "is_reference": False,
-                    "url_name": "",
-                    "tol_id": ""
-                },
-                "taxon": {
-                    "taxonomy_id": 9606,
-                    "scientific_name": "Homo sapiens",
-                    "strain": "Colombian in Medellin",
-                    "alternative_names": []
-                },
-                "created": "2025-09-24 11:47:25",
-                "organism": {
-                    "common_name": "Human",
-                    "strain": "Colombian in Medellin",
-                    "scientific_name": "Homo sapiens",
-                    "ensembl_name": "SAMN17861232",
-                    "scientific_parlance_name": "Human",
-                    "organism_uuid": "c9bd9d75-c746-4515-ad37-40d054eeaa91",
-                    "strain_type": "population",
-                    "taxonomy_id": 9606,
-                    "species_taxonomy_id": 9606
-                },
-                "release": {
-                    "release_version": 114.9,
-                    "release_date": "2025-10-21",
-                    "release_label": "2025-10-21",
-                    "release_type": "partial",
-                    "is_current": False,
-                    "site_name": "Ensembl",
-                    "site_label": "MVP ENsembl",
-                    "site_uri": "https://beta.ensembl.org"
-                }
-            },
-            {
-                "genome_uuid": "82b440be-8f7d-47fe-a363-a40cea709ea2",
-                "assembly": {
-                    "accession": "GCA_018472595.2",
-                    "name": "HG00438_pat_hprc_f2",
-                    "ucsc_name": "",
-                    "level": "primary_assembly",
-                    "ensembl_name": "",
-                    "assembly_uuid": "179f190d-17f9-4692-9353-374976c62e20",
-                    "is_reference": False,
-                    "url_name": "",
-                    "tol_id": ""
-                },
-                "taxon": {
-                    "taxonomy_id": 9606,
-                    "scientific_name": "Homo sapiens",
-                    "strain": "Han Chinese South",
-                    "alternative_names": []
-                },
-                "created": "2025-09-25 09:01:42",
-                "organism": {
-                    "common_name": "Human",
-                    "strain": "Han Chinese South",
-                    "scientific_name": "Homo sapiens",
-                    "ensembl_name": "SAMN17861652",
-                    "scientific_parlance_name": "Human",
-                    "organism_uuid": "b6f5e927-22f1-4e12-8bc5-77880de41211",
-                    "strain_type": "population",
-                    "taxonomy_id": 9606,
-                    "species_taxonomy_id": 9606
-                },
-                "release": {
-                    "release_version": 114.9,
-                    "release_date": "2025-10-21",
-                    "release_label": "2025-10-21",
-                    "release_type": "partial",
-                    "is_current": False,
-                    "site_name": "Ensembl",
-                    "site_label": "MVP ENsembl",
-                    "site_uri": "https://beta.ensembl.org"
-                }
-            },
-            {
-                "genome_uuid": "ddfadcb5-3b4a-48ca-9dcd-e75884445bd1",
-                "assembly": {
-                    "accession": "GCA_018472695.2",
-                    "name": "HG01928_mat_hprc_f2",
-                    "ucsc_name": "",
-                    "level": "primary_assembly",
-                    "ensembl_name": "",
-                    "assembly_uuid": "c4b526fd-4919-459f-b25e-9f1f658e0c53",
-                    "is_reference": False,
-                    "url_name": "",
-                    "tol_id": ""
-                },
-                "taxon": {
-                    "taxonomy_id": 9606,
-                    "scientific_name": "Homo sapiens",
-                    "strain": "Peruvian in Lima",
-                    "alternative_names": []
-                },
-                "created": "2025-09-26 17:12:04",
-                "organism": {
-                    "common_name": "Human",
-                    "strain": "Peruvian in Lima",
-                    "scientific_name": "Homo sapiens",
-                    "ensembl_name": "SAMN17861660",
-                    "scientific_parlance_name": "Human",
-                    "organism_uuid": "c0ce970e-a1ab-492e-8838-684854ed22fb",
-                    "strain_type": "population",
-                    "taxonomy_id": 9606,
-                    "species_taxonomy_id": 9606
-                },
-                "release": {
-                    "release_version": 114.9,
-                    "release_date": "2025-10-21",
-                    "release_label": "2025-10-21",
-                    "release_type": "partial",
-                    "is_current": False,
-                    "site_name": "Ensembl",
-                    "site_label": "MVP ENsembl",
-                    "site_uri": "https://beta.ensembl.org"
-                }
-            }
-        ]
-
-        # Use release_label even in dummy mode: filter to matching releases.
-        if release_label:
-            dummy_data = [
-                g
-                for g in dummy_data
-                if "release" in g
-                   and g["release"].get("release_label") == release_label
-            ]
-
-        return msg_factory.create_genomes_in_group(dummy_data)
-
-    except Exception:
-        # Dummy error handling until ORM logic is implemented.
-        logger.exception(
-            "Unexpected error while fetching genomes in group "
-            "(group_id=%r, release_label=%r)",
-            group_id,
-            release_label,
-        )
-        return msg_factory.create_genomes_in_group([])
-
-
-# END TODO
-
-
+# OK
 def create_genome(data=None, attributes=None, count=0, alternative_names=[], datasets=[]):
     if data is None:
             return None
@@ -680,6 +162,7 @@ def create_genome(data=None, attributes=None, count=0, alternative_names=[], dat
     return genome
 
 
+# OK
 def create_assembly(data=None):
     if data is None:
         return None
@@ -696,6 +179,7 @@ def create_assembly(data=None):
     return assembly
 
 
+# OK
 def create_taxon(data=None, alternative_names=[]):
     if data is None:
         return None
@@ -709,6 +193,7 @@ def create_taxon(data=None, alternative_names=[]):
     return taxon
 
 
+# OK
 def create_organism(data=None):
     if data is None:
         return None
@@ -727,6 +212,7 @@ def create_organism(data=None):
     return organism
 
 
+# OK
 def create_attribute(data=None):
     if data is None:
         return None
@@ -740,6 +226,7 @@ def create_attribute(data=None):
     return attribute
 
 
+# OK
 def create_attributes_info(data=None):
     if data is None:
         return None
@@ -788,6 +275,7 @@ def create_attributes_info(data=None):
     }
 
 
+# OK
 def create_release(data=None):
     if data is None or data.EnsemblRelease is None:
         return None
@@ -805,6 +293,7 @@ def create_release(data=None):
     return release
 
 
+# OK
 def create_genome_with_attributes_and_count(db_conn, genome, release_version):
     attrib_data_results = db_conn.fetch_genome_datasets(genome_uuid=genome.Genome.genome_uuid,
                                                         dataset_type_name="all",
@@ -831,7 +320,7 @@ def create_genome_with_attributes_and_count(db_conn, genome, release_version):
 
 
 
-def data_get_genome_by_uuid(db_conn, genome_uuid, release_version):
+def get_genome_by_uuid(db_conn, genome_uuid, release_version):
     if not genome_uuid:
         logger.warning("Missing or Empty Genome UUID field.")
         return None
@@ -853,27 +342,6 @@ def data_get_genome_by_uuid(db_conn, genome_uuid, release_version):
     return None
 
 
-
-#def get_top_level_statistics(db_conn, organism_uuid):
-#    if not organism_uuid:
-#        logger.warning("Missing or Empty Organism UUID field.")
-#        return None
-#    # FIXME get best genome for organism and fetch from genome
-#    genomes = db_conn.fetch_genomes(organism_uuid=organism_uuid)
-#    #Todo fetch_genome returns duplicate genome uuids  if a genome assigned to multiple release and param allow_unreleased set to true
-#    stats_results = db_conn.fetch_genome_datasets(genome_uuid=list({genome.Genome.genome_uuid for genome in genomes}),
-#                                                  dataset_type_name="all")
-#
-#    if len(stats_results) > 0:
-#        response_data = {
-#            'organism_uuid': organism_uuid,
-#            'stats_by_genome_uuid': stats_results
-#        }
-#        # logger.debug(f"Response data: \n{response_data}")
-#        return response_data
-#
-#    logger.debug("No top level stats found.")
-#    return None
 
 def get_top_level_statistics_by_uuid(db_conn, genome_uuid):
     if not genome_uuid:
@@ -1019,7 +487,7 @@ async def get_genome_karyotype(
     genome_uuid: str
 ):
     try:
-        top_level_regions = data_get_top_level_regions(adaptor, genome_uuid)
+        top_level_regions = get_top_level_regions(adaptor, genome_uuid)
 
         # Temporary hack for e.coli and remov when the correct schema/data is available in metadata-database
         if genome_uuid == "a73351f7-93e7-11ec-a39d-005056b38ce3":
@@ -1034,7 +502,7 @@ async def get_genome_karyotype(
         return response_error_handler({"status": 500})
 
 
-def data_get_top_level_regions(adaptor: GenomeAdaptor, genome_uuid: str):
+def get_top_level_regions(adaptor: GenomeAdaptor, genome_uuid: str):
     chromosomal_only=True
     top_level_regions = assembly_region_iterator(
         adaptor, genome_uuid, chromosomal_only
@@ -1502,7 +970,7 @@ async def get_genome_details(
     request: Request,
     genome_uuid: str):
     try:
-        genome_details_dict = data_get_genome_by_uuid(adaptor, genome_uuid, None)
+        genome_details_dict = get_genome_by_uuid(adaptor, genome_uuid, None)
 
         if genome_details_dict:
             genome_details = GenomeDetails(**genome_details_dict)
@@ -1801,6 +1269,46 @@ def create_brief_genome_details(data=None, latest_genome=None):
         'latest_genome':latest_genome_data
     }
     return brief_genome_details
+
+def test_explain_genome():
+    response = client.get("/genome/a7335667-93e7-11ec-a39d-005056b38ce3/explain")
+    assert response.status_code == 200
+    assert response.json() == {
+        "genome_id":"a7335667-93e7-11ec-a39d-005056b38ce3",
+        "genome_tag":None,
+        "common_name":"Human",
+        "scientific_name":"Homo sapiens",
+        "species_taxonomy_id":"9606",
+        "type":None,
+        "is_reference":True,
+        "assembly":{
+            "accession_id":"GCA_000001405.29",
+            "name":"GRCh38.p14"
+        },
+        "release":{
+            "name":"2025-02",
+            "type":"integrated"
+        },
+        "latest_genome":{
+            "genome_id":"be73075e-0633-471d-b7c8-4f8ca7752a04",
+            "genome_tag":None,
+            "common_name":"Human",
+            "scientific_name":"Homo sapiens",
+            "species_taxonomy_id":"9606",
+            "type":None,
+            "is_reference":True,
+            "assembly":{
+                "accession_id":"GCA_000001405.29",
+                "name":"GRCh38.p14",
+                "url":"https://identifiers.org/insdc.gca/GCA_000001405.29"
+            },
+            "release":{
+                "name":"2026-01-26",
+                "type":"partial",
+                "is_current":True
+            }
+        }
+    }
 
 
 # OK
@@ -2763,56 +2271,22 @@ def test_get_releases(benchmark):
     benchmark(runnable)
 
 
-# TODO: get data from DB
-def data_get_genome_groups_with_reference(group_type, release_label):
-    return (
-        {
-            "genomeGroups":
-            [
-                {
-                    "groupId":"grch38-group",
-                    "groupType":"structural_variant",
-                    "groupName":None,
-                    "referenceGenome":{
-                        "organism": {
-                            "scientificName":"Homo sapiens",
-                            "speciesTaxonomyId":"9606",
-                            "commonName":"Human",
-                        },
-                        "genomeUuid":"a7335667-93e7-11ec-a39d-005056b38ce3",
-                        "type":None,
-                        "assembly":{
-                            "accession":"GCA_000001405.29",
-                            "name":"GRCh38.p14",
-                            "url":"https://identifiers.org/insdc.gca/GCA_000001405.29",
-                            "isReference":True,
-                            "urlName": "grch38"
-                        },
-                        "release":{
-                            "releaseLabel":"2025-02",
-                            "releaseType":"integrated",
-                            "isCurrent":True
-                        }
-                    }
-                }
-            ]
-        }
-    )
-
-
+# OK
 @router.get("/genome_groups", name="genome_groups")
 #@redis_cache("genome_groups", arg_keys=["group_type", "release"])
 async def get_genome_groups(
-        group_type: str = Query(..., description="Group type, e.g. 'structural_variant'"),
-        release: str | None = Query(None, description="Optional release label, e.g. '2025-02'")
+    adaptor: GenomeAdaptorDep,
+    group_type: str = Query(..., description="Group type, e.g. 'structural_variant'"),
+    release: str | None = Query(None, description="Optional release label, e.g. '2025-02'")
 ):
     try:
-        genome_groups_dict = data_get_genome_groups_with_reference(
+        genome_groups_dict = get_genome_groups_by_reference(
+            adaptor,
             group_type,
             release
         )
         logging.debug(f"genome_groups_dict: {genome_groups_dict}")
-        if len(genome_groups_dict.get("genomeGroups", [])) == 0:
+        if len(genome_groups_dict.get("genome_groups", [])) == 0:
             return response_error_handler({
                 "status": 404,
                 "details": "No genome groups found matching criteria"
@@ -2825,49 +2299,217 @@ async def get_genome_groups(
         logging.exception("Error in get_genome_groups")
         return response_error_handler({"status": 500})
 
+def get_genome_groups_by_reference(
+    db_conn: Any,
+    group_type: str,
+    release_label: str | None = None,
+):
+    if not group_type or group_type != 'structural_variant': # accepting only structural_variant for now
+        logger.warning("Missing or Wrong Group type field.")
+        return None
 
-# TODO: get data from DB
-def data_get_genomes_in_group(group_id, release_label):
-    return (
-        {
-            "genomes":
-            [
-                {
+    # The logic calling the ORM and fetching data from the DB
+    # will go here, we are returning dummy data for now
+    # /!\ Remember to handle the release label
+
+    try:
+        # The logic calling the ORM and fetching data from the DB
+        # will go here. For now, we return dummy data.
+        dummy_data = [
+            {
+                "group_id": "grch38-group",
+                "group_type": group_type,
+                "group_name": None,
+                "reference_genome": {
+                    "genome_uuid": "a7335667-93e7-11ec-a39d-005056b38ce3",
+                    "genome": {
+                        "url_name": "grch38",
+                    },
+                    "assembly": {
+                        "accession": "GCA_000001405.29",
+                        "name": "GRCh38.p14",
+                        "ucsc_name": "hg38",
+                        "level": "chromosome",
+                        "ensembl_name": "GRCh38.p14",
+                        "assembly_uuid": "fd7fea38-981a-4d73-a879-6f9daef86f08",
+                        "is_reference": True,
+                    },
+                    "taxon": {
+                        "taxonomy_id": 9606,
+                        "scientific_name": "Homo sapiens",
+                        "strain": "",
+                        "alternative_names": [],
+                    },
+                    "created": "2023-09-22 15:04:45",
                     "organism": {
-                        "scientificName":"Homo sapiens",
-                        "speciesTaxonomyId":"9606",
-                        "commonName":"Human",
+                        "common_name": "Human",
+                        "strain": "",
+                        "scientific_name": "Homo sapiens",
+                        "ensembl_name": "SAMN12121739",
+                        "scientific_parlance_name": "Human",
+                        "organism_uuid": "1d336185-affe-4a91-85bb-04ebd73cbb56",
+                        "strain_type": None,
+                        "taxonomy_id": 9606,
+                        "species_taxonomy_id": 9606,
                     },
-                    "genomeUuid":"a7335667-93e7-11ec-a39d-005056b38ce3",
+                    "release": {
+                        "release_version": 1,
+                        "release_date": "2025-02-27",
+                        "release_label": "2025-02",
+                        "release_type": "integrated",
+                        "is_current": True,
+                        "site_name": "Ensembl",
+                        "site_label": "MVP ENsembl",
+                        "site_uri": "https://beta.ensembl.org",
+                    },
+                },
+            },
+            {
+                "group_id": "t2t-group",
+                "group_type": group_type,
+                "group_name": None,
+                "reference_genome": {
+                    "genome_uuid": "4c07817b-c7c5-463f-8624-982286bc4355",
+                    "genome": {
+                        "url_name": "t2t-chm13",
+                    },
+                    "assembly": {
+                        "accession": "GCA_009914755.4",
+                        "name": "T2T-CHM13v2.0",
+                        "ucsc_name": "",
+                        "level": "primary_assembly",
+                        "ensembl_name": "T2T-CHM13v2.0",
+                        "assembly_uuid": "fc20ebd6-f756-45da-b941-b3b17e11515f",
+                        "is_reference": False,
+                    },
+                    "taxon": {
+                        "taxonomy_id": 9606,
+                        "scientific_name": "Homo sapiens",
+                        "strain": "",
+                        "alternative_names": [],
+                    },
+                    "created": "2023-09-22 15:06:39",
+                    "organism": {
+                        "common_name": "Human",
+                        "strain": "",
+                        "scientific_name": "Homo sapiens",
+                        "ensembl_name": "SAMN03255769",
+                        "scientific_parlance_name": "Human",
+                        "organism_uuid": "9df68864-e9fe-4c02-ab8c-8190baad16c6",
+                        "strain_type": None,
+                        "taxonomy_id": 9606,
+                        "species_taxonomy_id": 9606,
+                    },
+                    "release": {
+                        "release_version": 1,
+                        "release_date": "2025-02-27",
+                        "release_label": "2025-02",
+                        "release_type": "integrated",
+                        "is_current": True,
+                        "site_name": "Ensembl",
+                        "site_label": "MVP ENsembl",
+                        "site_uri": "https://beta.ensembl.org",
+                    },
+                },
+            },
+        ]
+
+        # Very simple use of release_label even in dummy mode
+        # TODO: move this filtering into the ORM query once the real implementation is added.
+        if release_label:
+            dummy_data = [
+                g
+                for g in dummy_data
+                if g["reference_genome"]["release"]["release_label"] == release_label
+            ]
+
+        return {
+            "genome_groups" : dummy_data
+        }
+
+    except Exception:
+        # Dummy error handling until the real ORM logic is in place
+        logger.exception(
+            "Unexpected error while fetching genome groups "
+            "(group_type=%r, release_label=%r)",
+            group_type,
+            release_label,
+        )
+        # Return an empty message to avoid propagating the error to callers.
+        return None
+
+
+def test_get_genome_groups():
+    response = client.get("/genome_groups?group_type=structural_variant")
+    assert response.status_code == 200
+    assert response.json() == {
+        "genome_groups":
+        [
+            {
+                "id":"grch38-group",
+                "type":"structural_variant",
+                "name":None,
+                "reference_genome":{
+                    "genome_id":"a7335667-93e7-11ec-a39d-005056b38ce3",
+                    "genome_tag":"grch38",
+                    "common_name":"Human",
+                    "scientific_name":"Homo sapiens",
+                    "species_taxonomy_id":"9606",
                     "type":None,
+                    "is_reference":True,
                     "assembly":{
-                        "accession":"GCA_000001405.29",
+                        "accession_id":"GCA_000001405.29",
                         "name":"GRCh38.p14",
-                        "url":"https://identifiers.org/insdc.gca/GCA_000001405.29",
-                        "isReference":True,
-                        "urlName": "grch38"
-                    },
+                        "url":"https://identifiers.org/insdc.gca/GCA_000001405.29"},
                     "release":{
-                        "releaseLabel":"2025-02",
-                        "releaseType":"integrated",
-                        "isCurrent":True
+                        "name":"2025-02",
+                        "type":"integrated",
+                        "is_current":True
                     }
                 }
-            ]
-        }
-    )
+            },
+            {
+                "id":"t2t-group",
+                "type":"structural_variant",
+                "name":None,
+                "reference_genome":{
+                    "genome_id":"4c07817b-c7c5-463f-8624-982286bc4355",
+                    "genome_tag":"t2t-chm13",
+                    "common_name":"Human",
+                    "scientific_name":"Homo sapiens",
+                    "species_taxonomy_id":"9606",
+                    "type":None,
+                    "is_reference":False,
+                    "assembly":{
+                        "accession_id":"GCA_009914755.4",
+                        "name":"T2T-CHM13v2.0",
+                        "url":"https://identifiers.org/insdc.gca/GCA_009914755.4"},
+                    "release":{
+                        "name":"2025-02",
+                        "type":"integrated",
+                        "is_current":True
+                    }
+                }
+            }
+        ]
+    }
+
+
+
 
 @router.get("/genome_groups/{group_id}/genomes", name="genomes_in_group")
 #@redis_cache("genomes_in_group", arg_keys=["group_id", "release"])
 async def get_genomes_in_group(
-        group_id: str = Path(..., description="Group ID, e.g. 'grch38-group'"),
-        release: str | None = Query(None, description="Optional release label, e.g. '2025-02'")
+    adaptor: GenomeAdaptorDep,
+    group_id: str = Path(..., description="Group ID, e.g. 'grch38-group'"),
+    release: str | None = Query(None, description="Optional release label, e.g. '2025-02'")
 ):
     try:
         genomes_in_group_dict = data_get_genomes_in_group(
-                group_id,
-                release
-            )
+            adaptor,
+            group_id,
+            release
+        )
         logging.debug(f"genomes_in_group_dict: {genomes_in_group_dict}")
         if len(genomes_in_group_dict.get("genomes", [])) == 0:
             return response_error_handler({
@@ -2882,6 +2524,626 @@ async def get_genomes_in_group(
         logging.exception("Error in get_genomes_in_group")
         return response_error_handler({"status": 500})
 
+
+# Dummy methods as found in upstream. Need to be properly connected to DB
+def data_get_genomes_in_group(
+    db_conn: Any,
+    group_id: str,
+    release_label: str | None,
+):
+    if not group_id:
+        logger.warning("Missing or Empty Group type field.")
+        return None
+
+    try:
+        # The logic calling the ORM and fetching data from the DB using group_id
+        # will go here. We return dummy data for now.
+        # /!\ Remember to handle the release label in the real query.
+
+        # TODO: remove this once we have the real data from the DB.
+        dummy_data = [
+            {
+                "genome_uuid": "a7335667-93e7-11ec-a39d-005056b38ce3",
+                "genome": {
+                    "url_name": "grch38",
+                },
+                "assembly": {
+                    "accession": "GCA_000001405.29",
+                    "name": "GRCh38.p14",
+                    "ucsc_name": "hg38",
+                    "level": "chromosome",
+                    "ensembl_name": "GRCh38.p14",
+                    "assembly_uuid": "fd7fea38-981a-4d73-a879-6f9daef86f08",
+                    "is_reference": True,
+                    "url_name": "grch38",
+                    "tol_id": "",
+                },
+                "taxon": {
+                    "taxonomy_id": 9606,
+                    "scientific_name": "Homo sapiens",
+                    "strain": "",
+                    "alternative_names": [],
+                },
+                "created": "2023-09-22 15:04:45",
+                "organism": {
+                    "common_name": "Human",
+                    "strain": "",
+                    "scientific_name": "Homo sapiens",
+                    "ensembl_name": "SAMN12121739",
+                    "scientific_parlance_name": "Human",
+                    "organism_uuid": "1d336185-affe-4a91-85bb-04ebd73cbb56",
+                    "strain_type": None,
+                    "taxonomy_id": 9606,
+                    "species_taxonomy_id": 9606,
+                },
+                "release": {
+                    "release_version": 1,
+                    "release_date": "2025-02-27",
+                    "release_label": "2025-02",
+                    "release_type": "integrated",
+                    "is_current": True,
+                    "site_name": "Ensembl",
+                    "site_label": "MVP ENsembl",
+                    "site_uri": "https://beta.ensembl.org",
+                },
+            },
+            {
+                "genome_uuid": "4c07817b-c7c5-463f-8624-982286bc4355",
+                "genome": {
+                    "url_name": "t2t-chm13",
+                },
+                "assembly": {
+                    "accession": "GCA_009914755.4",
+                    "name": "T2T-CHM13v2.0",
+                    "ucsc_name": "",
+                    "level": "primary_assembly",
+                    "ensembl_name": "T2T-CHM13v2.0",
+                    "assembly_uuid": "fc20ebd6-f756-45da-b941-b3b17e11515f",
+                    "is_reference": False,
+                    "url_name": "t2t-chm13",
+                    "tol_id": "",
+                },
+                "taxon": {
+                    "taxonomy_id": 9606,
+                    "scientific_name": "Homo sapiens",
+                    "strain": "",
+                    "alternative_names": [],
+                },
+                "created": "2023-09-22 15:06:39",
+                "organism": {
+                    "common_name": "Human",
+                    "strain": "",
+                    "scientific_name": "Homo sapiens",
+                    "ensembl_name": "SAMN03255769",
+                    "scientific_parlance_name": "Human",
+                    "organism_uuid": "9df68864-e9fe-4c02-ab8c-8190baad16c6",
+                    "strain_type": None,
+                    "taxonomy_id": 9606,
+                    "species_taxonomy_id": 9606,
+                },
+                "release": {
+                    "release_version": 1,
+                    "release_date": "2025-02-27",
+                    "release_label": "2025-02",
+                    "release_type": "integrated",
+                    "is_current": True,
+                    "site_name": "Ensembl",
+                    "site_label": "MVP ENsembl",
+                    "site_uri": "https://beta.ensembl.org",
+                },
+            },
+            {
+                "genome_uuid": "9d3b2ead-a987-4f08-8d18-10a1eb1e0fb0",
+                "genome": {
+                    "url_name": "t2t-chm13",
+                },
+                "assembly": {
+                    "accession": "GCA_018503275.2",
+                    "name": "NA19240_mat_hprc_f2",
+                    "ucsc_name": "",
+                    "level": "primary_assembly",
+                    "ensembl_name": "",
+                    "assembly_uuid": "561a1451-cfe4-451d-ad8f-00310645e1fd",
+                    "is_reference": False,
+                    "url_name": "",
+                    "tol_id": ""
+                },
+                "taxon": {
+                    "taxonomy_id": 9606,
+                    "scientific_name": "Homo sapiens",
+                    "strain": "Yoruban in Nigeria",
+                    "alternative_names": []
+                },
+                "created": "2025-09-23 19:07:22",
+                "organism": {
+                    "common_name": "Human",
+                    "strain": "Yoruban in Nigeria",
+                    "scientific_name": "Homo sapiens",
+                    "ensembl_name": "SAMN03838746",
+                    "scientific_parlance_name": "Human",
+                    "organism_uuid": "14a967b2-6d62-49f8-b0b7-c3836a87cffa",
+                    "strain_type": "population",
+                    "taxonomy_id": 9606,
+                    "species_taxonomy_id": 9606
+                },
+                "release": {
+                    "release_version": 114.9,
+                    "release_date": "2025-10-21",
+                    "release_label": "2025-10-21",
+                    "release_type": "partial",
+                    "is_current": False,
+                    "site_name": "Ensembl",
+                    "site_label": "MVP ENsembl",
+                    "site_uri": "https://beta.ensembl.org"
+                }
+            },
+            {
+                "genome_uuid": "27be510b-c431-434c-a6f5-158d8c138507",
+                "genome": {
+                    "url_name": "t2t-chm13",
+                },
+                "assembly": {
+                    "accession": "GCA_018506975.2",
+                    "name": "HG00733_mat_hprc_f2",
+                    "ucsc_name": "",
+                    "level": "primary_assembly",
+                    "ensembl_name": "",
+                    "assembly_uuid": "0fb76cdf-6c6b-4c20-beef-7f7d4151651b",
+                    "is_reference": False,
+                    "url_name": "",
+                    "tol_id": ""
+                },
+                "taxon": {
+                    "taxonomy_id": 9606,
+                    "scientific_name": "Homo sapiens",
+                    "strain": "Puerto Rican in Puerto Rico",
+                    "alternative_names": []
+                },
+                "created": "2025-09-23 22:58:45",
+                "organism": {
+                    "common_name": "Human",
+                    "strain": "Puerto Rican in Puerto Rico",
+                    "scientific_name": "Homo sapiens",
+                    "ensembl_name": "SAMN00006581",
+                    "scientific_parlance_name": "Human",
+                    "organism_uuid": "07314e4e-9ac5-4ed7-b2ae-b8e257e1e6d7",
+                    "strain_type": "population",
+                    "taxonomy_id": 9606,
+                    "species_taxonomy_id": 9606
+                },
+                "release": {
+                    "release_version": 114.9,
+                    "release_date": "2025-10-21",
+                    "release_label": "2025-10-21",
+                    "release_type": "partial",
+                    "is_current": False,
+                    "site_name": "Ensembl",
+                    "site_label": "MVP ENsembl",
+                    "site_uri": "https://beta.ensembl.org"
+                }
+            },
+            {
+                "genome_uuid": "7e09bad9-aa22-46e4-ab8f-1b2a64202967",
+                "genome": {
+                    "url_name": "t2t-chm13",
+                },
+                "assembly": {
+                    "accession": "GCA_042077495.1",
+                    "name": "NA19036_hap1_hprc_f2",
+                    "ucsc_name": "",
+                    "level": "primary_assembly",
+                    "ensembl_name": "",
+                    "assembly_uuid": "11ed863b-5b0a-45e6-b3e6-f0788be79706",
+                    "is_reference": False,
+                    "url_name": "",
+                    "tol_id": ""
+                },
+                "taxon": {
+                    "taxonomy_id": 9606,
+                    "scientific_name": "Homo sapiens",
+                    "strain": "",
+                    "alternative_names": []
+                },
+                "created": "2025-03-14 00:00:45",
+                "organism": {
+                    "common_name": "Human",
+                    "strain": "",
+                    "scientific_name": "Homo sapiens",
+                    "ensembl_name": "SAMN41021642",
+                    "scientific_parlance_name": "Human",
+                    "organism_uuid": "eec7d10e-3ef4-4f14-8d2e-3233978dd0ce",
+                    "strain_type": None,
+                    "taxonomy_id": 9606,
+                    "species_taxonomy_id": 9606
+                },
+                "release": {
+                    "release_version": 114.1,
+                    "release_date": "2025-05-28",
+                    "release_label": "2025-05-28",
+                    "release_type": "partial",
+                    "is_current": False,
+                    "site_name": "Ensembl",
+                    "site_label": "MVP ENsembl",
+                    "site_uri": "https://beta.ensembl.org"
+                }
+            },
+            {
+                "genome_uuid": "30094672-c48c-425a-84e0-4049073a68d3",
+                "genome": {
+                    "url_name": "t2t-chm13",
+                },
+                "assembly": {
+                    "accession": "GCA_018469665.2",
+                    "name": "HG01123_mat_hprc_f2",
+                    "ucsc_name": "",
+                    "level": "primary_assembly",
+                    "ensembl_name": "",
+                    "assembly_uuid": "6ab0e3a4-4e11-443d-a18a-81ff1e68d42d",
+                    "is_reference": False,
+                    "url_name": "",
+                    "tol_id": ""
+                },
+                "taxon": {
+                    "taxonomy_id": 9606,
+                    "scientific_name": "Homo sapiens",
+                    "strain": "Colombian in Medellin",
+                    "alternative_names": []
+                },
+                "created": "2025-09-24 11:47:25",
+                "organism": {
+                    "common_name": "Human",
+                    "strain": "Colombian in Medellin",
+                    "scientific_name": "Homo sapiens",
+                    "ensembl_name": "SAMN17861232",
+                    "scientific_parlance_name": "Human",
+                    "organism_uuid": "c9bd9d75-c746-4515-ad37-40d054eeaa91",
+                    "strain_type": "population",
+                    "taxonomy_id": 9606,
+                    "species_taxonomy_id": 9606
+                },
+                "release": {
+                    "release_version": 114.9,
+                    "release_date": "2025-10-21",
+                    "release_label": "2025-10-21",
+                    "release_type": "partial",
+                    "is_current": False,
+                    "site_name": "Ensembl",
+                    "site_label": "MVP ENsembl",
+                    "site_uri": "https://beta.ensembl.org"
+                }
+            },
+            {
+                "genome_uuid": "82b440be-8f7d-47fe-a363-a40cea709ea2",
+                "genome": {
+                    "url_name": "t2t-chm13",
+                },
+                "assembly": {
+                    "accession": "GCA_018472595.2",
+                    "name": "HG00438_pat_hprc_f2",
+                    "ucsc_name": "",
+                    "level": "primary_assembly",
+                    "ensembl_name": "",
+                    "assembly_uuid": "179f190d-17f9-4692-9353-374976c62e20",
+                    "is_reference": False,
+                    "url_name": "",
+                    "tol_id": ""
+                },
+                "taxon": {
+                    "taxonomy_id": 9606,
+                    "scientific_name": "Homo sapiens",
+                    "strain": "Han Chinese South",
+                    "alternative_names": []
+                },
+                "created": "2025-09-25 09:01:42",
+                "organism": {
+                    "common_name": "Human",
+                    "strain": "Han Chinese South",
+                    "scientific_name": "Homo sapiens",
+                    "ensembl_name": "SAMN17861652",
+                    "scientific_parlance_name": "Human",
+                    "organism_uuid": "b6f5e927-22f1-4e12-8bc5-77880de41211",
+                    "strain_type": "population",
+                    "taxonomy_id": 9606,
+                    "species_taxonomy_id": 9606
+                },
+                "release": {
+                    "release_version": 114.9,
+                    "release_date": "2025-10-21",
+                    "release_label": "2025-10-21",
+                    "release_type": "partial",
+                    "is_current": False,
+                    "site_name": "Ensembl",
+                    "site_label": "MVP ENsembl",
+                    "site_uri": "https://beta.ensembl.org"
+                }
+            },
+            {
+                "genome_uuid": "ddfadcb5-3b4a-48ca-9dcd-e75884445bd1",
+                "genome": {
+                    "url_name": "t2t-chm13",
+                },
+                "assembly": {
+                    "accession": "GCA_018472695.2",
+                    "name": "HG01928_mat_hprc_f2",
+                    "ucsc_name": "",
+                    "level": "primary_assembly",
+                    "ensembl_name": "",
+                    "assembly_uuid": "c4b526fd-4919-459f-b25e-9f1f658e0c53",
+                    "is_reference": False,
+                    "url_name": "",
+                    "tol_id": ""
+                },
+                "taxon": {
+                    "taxonomy_id": 9606,
+                    "scientific_name": "Homo sapiens",
+                    "strain": "Peruvian in Lima",
+                    "alternative_names": []
+                },
+                "created": "2025-09-26 17:12:04",
+                "organism": {
+                    "common_name": "Human",
+                    "strain": "Peruvian in Lima",
+                    "scientific_name": "Homo sapiens",
+                    "ensembl_name": "SAMN17861660",
+                    "scientific_parlance_name": "Human",
+                    "organism_uuid": "c0ce970e-a1ab-492e-8838-684854ed22fb",
+                    "strain_type": "population",
+                    "taxonomy_id": 9606,
+                    "species_taxonomy_id": 9606
+                },
+                "release": {
+                    "release_version": 114.9,
+                    "release_date": "2025-10-21",
+                    "release_label": "2025-10-21",
+                    "release_type": "partial",
+                    "is_current": False,
+                    "site_name": "Ensembl",
+                    "site_label": "MVP ENsembl",
+                    "site_uri": "https://beta.ensembl.org"
+                }
+            }
+        ]
+
+        # Use release_label even in dummy mode: filter to matching releases.
+        if release_label:
+            dummy_data = [
+                g
+                for g in dummy_data
+                if "release" in g
+                   and g["release"].get("release_label") == release_label
+            ]
+
+        return {
+            "genomes" : dummy_data
+        }
+
+    except Exception:
+        # Dummy error handling until ORM logic is implemented.
+        logger.exception(
+            "Unexpected error while fetching genomes in group "
+            "(group_id=%r, release_label=%r)",
+            group_id,
+            release_label,
+        )
+        return None
+
+
+
+
+def test_get_genomes_in_group():
+    response = client.get("/genome_groups/grch38-group/genomes")
+    assert response.status_code == 200
+    assert response.json() == {
+		"genomes":[
+			{
+				"genome_id":"a7335667-93e7-11ec-a39d-005056b38ce3",
+				"genome_tag":"grch38",
+				"common_name":"Human",
+				"scientific_name":"Homo sapiens",
+				"species_taxonomy_id":"9606",
+				"type":None,
+				"is_reference":True,
+				"assembly":{
+					"accession_id":"GCA_000001405.29",
+					"name":"GRCh38.p14",
+					"url":"https://identifiers.org/insdc.gca/GCA_000001405.29"},
+				"release":{
+					"name":"2025-02",
+					"type":"integrated",
+					"is_current":True}
+			},
+			{
+				"genome_id":"4c07817b-c7c5-463f-8624-982286bc4355",
+				"genome_tag":"t2t-chm13",
+				"common_name":"Human",
+				"scientific_name":"Homo sapiens",
+				"species_taxonomy_id":"9606",
+				"type":None,
+				"is_reference":False,
+				"assembly":{
+					"accession_id":"GCA_009914755.4",
+					"name":"T2T-CHM13v2.0",
+					"url":"https://identifiers.org/insdc.gca/GCA_009914755.4"},
+				"release":{
+					"name":"2025-02",
+					"type":"integrated",
+					"is_current":True}
+			},
+			{
+				"genome_id":"9d3b2ead-a987-4f08-8d18-10a1eb1e0fb0",
+				"genome_tag":None,
+				"common_name":"Human",
+				"scientific_name":"Homo sapiens",
+				"species_taxonomy_id":"9606",
+				"type":{
+					"kind":"population",
+					"value":"Yoruban in Nigeria"},
+				"is_reference":False,
+				"assembly":{
+					"accession_id":"GCA_018503275.2",
+					"name":"NA19240_mat_hprc_f2",
+					"url":"https://identifiers.org/insdc.gca/GCA_018503275.2"},
+				"release":{
+					"name":"2025-10-21",
+					"type":"partial",
+					"is_current":False}
+			},
+			{
+				"genome_id":"27be510b-c431-434c-a6f5-158d8c138507",
+				"genome_tag":None,
+				"common_name":"Human",
+				"scientific_name":"Homo sapiens",
+				"species_taxonomy_id":"9606",
+				"type":{
+					"kind":"population",
+					"value":"Puerto Rican in Puerto Rico"},
+				"is_reference":False,
+				"assembly":{
+					"accession_id":"GCA_018506975.2",
+					"name":"HG00733_mat_hprc_f2",
+					"url":"https://identifiers.org/insdc.gca/GCA_018506975.2"},
+				"release":{
+					"name":"2025-10-21",
+					"type":"partial",
+					"is_current":False}
+			},
+			{
+				"genome_id":"7e09bad9-aa22-46e4-ab8f-1b2a64202967",
+				"genome_tag":None,
+				"common_name":"Human",
+				"scientific_name":"Homo sapiens",
+				"species_taxonomy_id":"9606",
+				"type":None,
+				"is_reference":False,
+				"assembly":{
+					"accession_id":"GCA_042077495.1",
+					"name":"NA19036_hap1_hprc_f2",
+					"url":"https://identifiers.org/insdc.gca/GCA_042077495.1"},
+				"release":{
+					"name":"2025-05-28",
+					"type":"partial",
+					"is_current":False}
+			},
+			{
+				"genome_id":"30094672-c48c-425a-84e0-4049073a68d3",
+				"genome_tag":None,
+				"common_name":"Human",
+				"scientific_name":"Homo sapiens",
+				"species_taxonomy_id":"9606",
+				"type":{
+					"kind":"population",
+					"value":"Colombian in Medellin"},
+				"is_reference":False,
+				"assembly":{
+					"accession_id":"GCA_018469665.2",
+					"name":"HG01123_mat_hprc_f2",
+					"url":"https://identifiers.org/insdc.gca/GCA_018469665.2"},
+				"release":{
+					"name":"2025-10-21",
+					"type":"partial",
+					"is_current":False}
+			},
+			{
+				"genome_id":"82b440be-8f7d-47fe-a363-a40cea709ea2",
+				"genome_tag":None,
+				"common_name":"Human",
+				"scientific_name":"Homo sapiens",
+				"species_taxonomy_id":"9606",
+				"type":{
+					"kind":"population",
+					"value":"Han Chinese South"},
+				"is_reference":False,
+				"assembly":{
+					"accession_id":"GCA_018472595.2",
+					"name":"HG00438_pat_hprc_f2",
+					"url":"https://identifiers.org/insdc.gca/GCA_018472595.2"},
+				"release":{
+					"name":"2025-10-21",
+					"type":"partial",
+					"is_current":False}
+			},
+			{
+				"genome_id":"ddfadcb5-3b4a-48ca-9dcd-e75884445bd1",
+				"genome_tag":None,
+				"common_name":"Human",
+				"scientific_name":"Homo sapiens",
+				"species_taxonomy_id":"9606",
+				"type":{
+					"kind":"population",
+					"value":"Peruvian in Lima"},
+				"is_reference":False,
+				"assembly":{
+					"accession_id":"GCA_018472695.2",
+					"name":"HG01928_mat_hprc_f2",
+					"url":"https://identifiers.org/insdc.gca/GCA_018472695.2"},
+				"release":{
+					"name":"2025-10-21",
+					"type":"partial",
+					"is_current":False
+				}
+			}
+		]
+	}
+
+
+
+@router.get("/genome_counts", name="genome_counts")
+#@redis_cache(key_prefix="genome_counts", arg_keys=["release"])
+async def get_genome_counts(
+	adaptor: GenomeAdaptorDep,
+    release: str | None = Query(None, description="Optional release label to filter counts, e.g. '2025-02'")
+):
+    try:
+        genome_counts_dict = data_get_genome_counts(adaptor, release)
+        genome_counts = GenomeCountsResponse(**genome_counts_dict)
+        response_data = responses.JSONResponse(genome_counts.model_dump(), status_code=200)
+    except Exception as ex:
+        logging.exception("Error in get_genome_counts")
+        return response_error_handler({"status": 500})
+    return response_data
+
+
+# TODO FIX: create stats data in DB and use
+def data_get_genome_counts(db_conn: Any, release_label: str | None):
+
+    try:
+        # The logic calling the ORM and fetching data from the DB
+        # will go here. For now, we return dummy data.
+        dummy_data = {
+            "total": 4758,
+            "counts": [
+                {
+                    "label": "Animals",
+                    "count": 4127,
+                },
+                {
+                    "label": "Green Plants",
+                    "count": 475,
+                },
+                {
+                    "label": "Fungi",
+                    "count": 116,
+                },
+                {
+                    "label": "Bacteria",
+                    "count": 1,
+                },
+                {
+                    "label": "Others",
+                    "count": 39,
+                }
+            ]
+        }
+
+        return dummy_data
+
+    except Exception:
+        # Dummy error handling until ORM logic is implemented.
+        logger.exception(
+            "Unexpected error while fetching genomes in group "
+            "(release_label=%r)",release_label
+        )
+        return None
 
 
 # TODO FIX: create stats data in DB and use
@@ -2928,137 +3190,6 @@ def data_get_genome_counts(db_conn: Any, release_label: str | None):
 
 
 
-@router.get("/genome_counts", name="genome_counts")
-#@redis_cache(key_prefix="genome_counts", arg_keys=["release"])
-async def get_genome_counts(
-	adaptor: GenomeAdaptorDep,
-    release: str | None = Query(None, description="Optional release label to filter counts, e.g. '2025-02'")
-):
-    try:
-        genome_counts_dict = data_get_genome_counts(adaptor, release)
-        genome_counts = GenomeCountsResponse(**genome_counts_dict)
-        response_data = responses.JSONResponse(genome_counts.model_dump(), status_code=200)
-    except Exception as ex:
-        logging.exception("Error in get_genome_counts")
-        return response_error_handler({"status": 500})
-    return response_data
-
-
-
-
-app = FastAPI()
-app.include_router(router)
-
-
-client = TestClient(app)
-
-
-def test_explain_genome():
-    response = client.get("/genome/a7335667-93e7-11ec-a39d-005056b38ce3/explain")
-    assert response.status_code == 200
-    assert response.json() == {
-        "genome_id":"a7335667-93e7-11ec-a39d-005056b38ce3",
-        "genome_tag":None,
-        "common_name":"Human",
-        "scientific_name":"Homo sapiens",
-        "species_taxonomy_id":"9606",
-        "type":None,
-        "is_reference":True,
-        "assembly":{
-            "accession_id":"GCA_000001405.29",
-            "name":"GRCh38.p14"
-        },
-        "release":{
-            "name":"2025-02",
-            "type":"integrated"
-        },
-        "latest_genome":{
-            "genome_id":"be73075e-0633-471d-b7c8-4f8ca7752a04",
-            "genome_tag":None,
-            "common_name":"Human",
-            "scientific_name":"Homo sapiens",
-            "species_taxonomy_id":"9606",
-            "type":None,
-            "is_reference":True,
-            "assembly":{
-                "accession_id":"GCA_000001405.29",
-                "name":"GRCh38.p14",
-                "url":"https://identifiers.org/insdc.gca/GCA_000001405.29"
-            },
-            "release":{
-                "name":"2026-01-26",
-                "type":"partial",
-                "is_current":True
-            }
-        }
-    }
-
-
-
-def test_get_genomes_in_group():
-    response = client.get("/genome_groups/grch38-group/genomes")
-    assert response.status_code == 200
-    assert response.json() == (
-        {
-            "genomes":
-            [
-                {"genome_id":"a7335667-93e7-11ec-a39d-005056b38ce3",
-                 "genome_tag":"grch38",
-                 "common_name":"Human",
-                 "scientific_name":"Homo sapiens",
-                 "species_taxonomy_id":"9606",
-                 "type":None,
-                 "is_reference":True,
-                 "assembly":{
-                     "accession_id":"GCA_000001405.29",
-                     "name":"GRCh38.p14",
-                     "url":"https://identifiers.org/insdc.gca/GCA_000001405.29"
-                 },
-                 "release":{
-                     "name":"2025-02",
-                     "type":"integrated",
-                     "is_current":True
-                 }
-                }
-            ]
-        }
-    )
-
-def test_get_genome_groups():
-    response = client.get("/genome_groups?group_type=structural_variant")
-    assert response.status_code == 200
-    assert response.json() == (
-        {
-            "genome_groups":
-            [
-                {
-                    "id":"grch38-group",
-                    "type":"structural_variant",
-                    "name":None,
-                    "reference_genome":{
-                        "genome_id":"a7335667-93e7-11ec-a39d-005056b38ce3",
-                        "genome_tag":"grch38",
-                        "common_name":"Human",
-                        "scientific_name":"Homo sapiens",
-                        "species_taxonomy_id":"9606",
-                        "type":None,
-                        "is_reference":True,
-                        "assembly":{
-                            "accession_id":"GCA_000001405.29",
-                            "name":"GRCh38.p14",
-                            "url":"https://identifiers.org/insdc.gca/GCA_000001405.29"
-                        },
-                        "release":{
-                            "name":"2025-02",
-                            "type":"integrated",
-                            "is_current":True
-                        }
-                    }
-                }
-            ]
-        }
-    )
-
 def test_get_genome_counts():
     response = client.get("/genome_counts")
     assert response.status_code == 200
@@ -3090,4 +3221,13 @@ def test_get_genome_counts():
             ]
         }
     )
+
+
+
+
+app = FastAPI()
+app.include_router(router)
+
+
+client = TestClient(app)
 
