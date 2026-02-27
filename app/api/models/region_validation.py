@@ -108,7 +108,6 @@ class RegionValidation(BaseModel):
         if self.name:
             try:
                 genome_region = self.get_region(self.genome_uuid, self.name, db_conn)
-                logger.error(f"DBG: {genome_region}")
                 if genome_region is None:
                     self._is_valid[0] = False
                     self._region_name_error = "Could not find region {} for {}".format(
