@@ -380,7 +380,7 @@ class ExampleObjectList(BaseModel):
         attributes_info = values.get("attributesInfo") or {}
         genome_uuid = values.get("genomeUuid")
         extracted_example_objects = cls.extract_example_objects(
-            genome_uuid ,attributes_info
+            genome_uuid, attributes_info
         )
         values["example_objects"] = extracted_example_objects
         return values
