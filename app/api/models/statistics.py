@@ -406,18 +406,18 @@ class ExampleObjectList(BaseModel):
             # This is temporary until we have this data in the metadata DB
             # T2T
             if genome_uuid == "4c07817b-c7c5-463f-8624-982286bc4355":
-                example_sv_alignment_location = ExampleObject(
-                    type="structural_variants_alignment_location",
+                example_alignment_location = ExampleObject(
+                    type="alignment_location",
                     id="11:48674445-49222385"
                 )
-                extracted_example_objects.append(example_sv_alignment_location)
+                extracted_example_objects.append(example_alignment_location)
             # GRCh38
             elif genome_uuid == "a7335667-93e7-11ec-a39d-005056b38ce3":
-                example_sv_alignment_location = ExampleObject(
-                    type="structural_variants_alignment_location",
+                example_alignment_location = ExampleObject(
+                    type="alignment_location",
                     id="11:49321844-49869784"
                 )
-                extracted_example_objects.append(example_sv_alignment_location)
+                extracted_example_objects.append(example_alignment_location)
 
         except Exception as ex:
             logging.error(ex)
