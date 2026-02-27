@@ -110,11 +110,9 @@ async def example_objects(request: Request, genome_id: str):
     try:
         attributes_info = MessageToDict(grpc_client.get_attributes_info(genome_id))
         if attributes_info:
-            example_objects = ExampleObjectList(
-                example_objects=attributes_info["attributesInfo"]
-            )
+            genome_attributes_info = ExampleObjectList(**attributes_info)
             response_data = responses.JSONResponse(
-                example_objects.model_dump()["example_objects"]
+                genome_attributes_info.model_dump()["example_objects"]
             )
         else:
             return response_error_handler({
