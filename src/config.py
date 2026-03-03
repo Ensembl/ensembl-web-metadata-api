@@ -22,12 +22,15 @@ from loguru import logger
 from starlette.config import Config
 from starlette.datastructures import CommaSeparatedStrings
 
-from .logging import InterceptHandler
+from logconfig import InterceptHandler
 
 VERSION = "0.0.0"
 API_PREFIX = "/api"
 
 config = Config(".env")
+
+DB_URL: str = config("DB_URL", default="duckdb:///./duck_meta.db")
+
 DEBUG: bool = config("DEBUG", cast=bool, default=False)
 PROJECT_NAME: str = config("PROJECT_NAME", default="Ensembl Web Metadata API")
 ALLOWED_HOSTS: list[str] = config(

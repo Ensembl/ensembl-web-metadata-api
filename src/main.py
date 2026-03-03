@@ -23,8 +23,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from api.resources.redis import close_redis_pool
 from api.resources.routes import router
-from core.config import API_PREFIX, ALLOWED_HOSTS, VERSION, PROJECT_NAME, DEBUG
-
+from config import API_PREFIX, ALLOWED_HOSTS, DB_URL, VERSION, PROJECT_NAME, DEBUG
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

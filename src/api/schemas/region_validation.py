@@ -15,7 +15,7 @@ import logging
 from pydantic import BaseModel, model_serializer, Field, root_validator
 from typing import Any, Optional
 
-from core.logging import InterceptHandler
+from logging import InterceptHandler
 
 from ensembl.production.metadata.api.adaptors import GenomeAdaptor
 
