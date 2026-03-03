@@ -74,7 +74,7 @@ class BaseGenomeDetails(BaseModel):
     genome_id: str = Field(alias="genomeUuid")
     genome_tag: Optional[str] = Field(
         alias=AliasChoices(
-            AliasPath("assembly", "urlName"), AliasPath("assembly", "tolId")
+            "urlName", AliasPath("organism", "tolId")
         ),
         default=None,
     )
