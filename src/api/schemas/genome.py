@@ -11,8 +11,8 @@ from pydantic import (
 )
 from pydantic.functional_validators import model_validator
 
-from logging import InterceptHandler
-from config import ASSEMBLY_URLS
+from api.logconfig import InterceptHandler
+from api.config import ASSEMBLY_URLS
 
 logging.getLogger().handlers = [InterceptHandler()]
 

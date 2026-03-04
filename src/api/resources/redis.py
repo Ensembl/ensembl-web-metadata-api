@@ -25,7 +25,7 @@ from typing import Callable, Awaitable, Any, Optional
 
 from redis.asyncio import ConnectionPool
 
-from config import REDIS_HOST, REDIS_PORT, ENABLE_REDIS_CACHE, REDIS_MAX_CONNECTION
+from api.config import REDIS_HOST, REDIS_PORT, ENABLE_REDIS_CACHE, REDIS_MAX_CONNECTION
 
 logger = logging.getLogger("redis_cache")
 logger.setLevel(logging.INFO)

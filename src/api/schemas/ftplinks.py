@@ -14,7 +14,7 @@
 
 from pydantic import BaseModel, Field, HttpUrl, field_serializer
 from typing import Literal
-from config import FTP_BASE_URL
+from api.config import FTP_BASE_URL
 
 
 class FTPLink(BaseModel):

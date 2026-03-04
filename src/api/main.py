@@ -23,7 +23,8 @@ from starlette.middleware.cors import CORSMiddleware
 
 from api.resources.redis import close_redis_pool
 from api.resources.routes import router
-from config import API_PREFIX, ALLOWED_HOSTS, DB_URL, VERSION, PROJECT_NAME, DEBUG
+from api.config import API_PREFIX, ALLOWED_HOSTS, VERSION, PROJECT_NAME, DEBUG
+from api.dependencies import Dependencies
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -35,12 +36,16 @@ async def lifespan(app: FastAPI):
     """
     logger = logging.getLogger("uvicorn.worker")
     logger.info(f"Worker process started (PID: {os.getpid()})")
+#    app.state.deps = Dependencies()
+    logger.info(f"Mooh: {Dependencies.get_genome_adaptor()}")
+    logger.info(f"Mooh: {Dependencies.get_genome_adaptor()}")
+    logger.info(f"Mooh: {Dependencies.get_genome_adaptor()}")
     yield
     await close_redis_pool()
 
 
 def get_application() -> FastAPI:
-    application = FastAPI(title=PROJECT_NAME, debug=DEBUG, version=VERSION)
+    application = FastAPI(title=PROJECT_NAME, debug=DEBUG, version=VERSION, lifespan=lifespan)
 
     application.add_middleware(
         CORSMiddleware,

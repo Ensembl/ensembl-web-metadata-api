@@ -22,7 +22,7 @@ from loguru import logger
 from starlette.config import Config
 from starlette.datastructures import CommaSeparatedStrings
 
-from logconfig import InterceptHandler
+from api.logconfig import InterceptHandler
 
 VERSION = "0.0.0"
 API_PREFIX = "/api"

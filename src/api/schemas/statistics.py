@@ -8,7 +8,7 @@ from pydantic import (
     root_validator,
     AliasChoices,
 )
-from logging import InterceptHandler
+from api.logconfig import InterceptHandler
 
 logging.getLogger().handlers = [InterceptHandler()]
 

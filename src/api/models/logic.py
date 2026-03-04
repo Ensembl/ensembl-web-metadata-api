@@ -33,6 +33,9 @@ from typing import Annotated, Any
 
 from ensembl.production.metadata.api.models import Genome
 
+from ensembl.production.metadata.api.adaptors import GenomeAdaptor, ReleaseAdaptor
+from ensembl.production.metadata.api.adaptors.vep import VepAdaptor
+
 
 # logging.getLogger().handlers = [InterceptHandler()]
 
