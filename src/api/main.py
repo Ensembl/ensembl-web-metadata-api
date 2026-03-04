@@ -14,6 +14,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 import logging
 import os
 from contextlib import asynccontextmanager
@@ -26,6 +27,7 @@ from api.resources.routes import router
 from api.config import API_PREFIX, ALLOWED_HOSTS, VERSION, PROJECT_NAME, DEBUG
 from api.dependencies import Dependencies
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
@@ -36,16 +38,14 @@ async def lifespan(app: FastAPI):
     """
     logger = logging.getLogger("uvicorn.worker")
     logger.info(f"Worker process started (PID: {os.getpid()})")
-#    app.state.deps = Dependencies()
-    logger.info(f"Mooh: {Dependencies.get_genome_adaptor()}")
-    logger.info(f"Mooh: {Dependencies.get_genome_adaptor()}")
-    logger.info(f"Mooh: {Dependencies.get_genome_adaptor()}")
     yield
     await close_redis_pool()
 
 
 def get_application() -> FastAPI:
-    application = FastAPI(title=PROJECT_NAME, debug=DEBUG, version=VERSION, lifespan=lifespan)
+    application = FastAPI(
+        title=PROJECT_NAME, debug=DEBUG, version=VERSION, lifespan=lifespan
+    )
 
     application.add_middleware(
         CORSMiddleware,

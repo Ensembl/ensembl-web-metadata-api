@@ -34,7 +34,7 @@ logger.setLevel(logging.INFO)
 redis_pool = ConnectionPool.from_url(
     f"redis://{REDIS_HOST}:{REDIS_PORT}",
     max_connections=int(REDIS_MAX_CONNECTION),
-    decode_responses=True
+    decode_responses=True,
 )
 
 redis_client = redis.Redis(connection_pool=redis_pool)
@@ -58,6 +58,7 @@ def redis_cache(key_prefix: str, arg_keys: Optional[list[str]] = None, ttl: int 
         async def example_objects(request: Request, genome_id: str):
             ...
     """
+
     def decorator(func: Callable[..., Awaitable[Any]]):
         @wraps(func)
         async def wrapper(*args, **kwargs):
@@ -103,6 +104,7 @@ def redis_cache(key_prefix: str, arg_keys: Optional[list[str]] = None, ttl: int 
                 return await func(*args, **kwargs)
 
         return wrapper
+
     return decorator
 
 

@@ -15,29 +15,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-# import enum
 import itertools
 import logging
 
-# from core.logging import InterceptHandler
-import os
-
-# import pytest
-# import sqlalchemy
-# import time
-import timeit
 import uuid
 from datetime import datetime
 
-from typing import Annotated, Any
+from typing import Any
 
 from ensembl.production.metadata.api.models import Genome
 
 from ensembl.production.metadata.api.adaptors import GenomeAdaptor, ReleaseAdaptor
 from ensembl.production.metadata.api.adaptors.vep import VepAdaptor
 
-
-# logging.getLogger().handlers = [InterceptHandler()]
 
 def get_top_level_statistics_by_uuid(db_conn, genome_uuid):
     if not genome_uuid:
@@ -70,7 +60,6 @@ def get_top_level_statistics_by_uuid(db_conn, genome_uuid):
 
     logging.debug("No top level stats found.")
     return None
-
 
 
 def get_top_level_regions(adaptor: GenomeAdaptor, genome_uuid: str):
@@ -126,8 +115,6 @@ def create_assembly_region(data=None):
     return assembly_region
 
 
-
-
 def get_organisms_group_count(db_conn, release_label):
     count_result = db_conn.fetch_organisms_group_counts(release_label=release_label)
     response_data = create_organisms_group_count(count_result, release_label)
@@ -151,10 +138,6 @@ def create_organisms_group_count(data, release_label):
         organisms_list.append(created_organism_group)
 
     return {"organisms_group_count": organisms_list, "release_label": release_label}
-
-
-
-
 
 
 def get_attributes_by_genome_uuid(db_conn, genome_uuid, release_version):
@@ -231,8 +214,6 @@ def create_attributes_info(data=None):
         "assembly_provider_url": required_attributes["assembly.provider_url"],
         "variation_sample_variant": required_attributes["variation.sample_variant"],
     }
-
-
 
 
 def get_genome_by_uuid(db_conn, genome_uuid, release_version):
@@ -402,8 +383,6 @@ def create_release(data=None):
     return release
 
 
-
-
 def get_ftp_links(db_conn, genome_uuid, dataset_type, release_version):
     # Request is sending an empty string '' instead of None when
     # an input parameter is not supplied by the user
@@ -458,8 +437,6 @@ def create_paths(data=None):
         ftp_links_list.append(created_ftp_link)
 
     return {"links": ftp_links_list}
-
-
 
 
 def get_brief_genome_details_by_uuid(db_conn, genome_uuid_or_tag, release_version):
@@ -572,8 +549,6 @@ def create_brief_genome_details(data=None, latest_genome=None):
     return brief_genome_details
 
 
-
-
 def genome_assembly_sequence_region(db_conn, genome_uuid, sequence_region_name):
     if not genome_uuid or not sequence_region_name:
         logging.warning("Missing or Empty Genome UUID or Sequence region name field.")
@@ -611,8 +586,6 @@ def create_genome_assembly_sequence_region(data=None):
     }
 
     return genome_assembly_sequence_region
-
-
 
 
 def get_dataset_attributes(
@@ -780,8 +753,6 @@ def create_attribute_value(data=None, attribute_names=None, latest_only=False):
     return {"attributes": attributes_list, "release_version": data[0].release.version}
 
 
-
-
 def get_genomes_by_specific_keyword_iterator(
     db_conn,
     tolid,
@@ -882,8 +853,6 @@ def get_genomes_by_specific_keyword_iterator(
     return None
 
 
-
-
 def get_vep_paths_by_uuid(db_conn: VepAdaptor, genome_uuid: str):
     if not genome_uuid:
         logging.warning("Missing or Empty Genome UUID field.")
@@ -897,8 +866,6 @@ def get_vep_paths_by_uuid(db_conn: VepAdaptor, genome_uuid: str):
         logging.error(error)
 
     return None
-
-
 
 
 def release_iterator(db_conn: ReleaseAdaptor, site_name, release_label, current_only):
@@ -916,8 +883,6 @@ def release_iterator(db_conn: ReleaseAdaptor, site_name, release_label, current_
             f"Processing release: {result.EnsemblRelease.version if hasattr(result, 'EnsemblRelease') else None}"
         )
         yield create_release(result)
-
-
 
 
 def get_genome_groups_by_reference(
@@ -1058,8 +1023,6 @@ def get_genome_groups_by_reference(
         )
         # Return an empty message to avoid propagating the error to callers.
         return None
-
-
 
 
 # Dummy methods as found in upstream. Need to be properly connected to DB
@@ -1462,8 +1425,6 @@ def data_get_genomes_in_group(
         return None
 
 
-
-
 # TODO FIX: create stats data in DB and use
 def data_get_genome_counts(db_conn: Any, release_label: str | None):
 
@@ -1505,5 +1466,3 @@ def data_get_genome_counts(db_conn: Any, release_label: str | None):
             release_label,
         )
         return None
-
-

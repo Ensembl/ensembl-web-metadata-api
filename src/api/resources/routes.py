@@ -14,6 +14,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 # import enum
 import itertools
 import logging
@@ -55,7 +56,8 @@ from api.schemas.vep import VepFilePaths
 
 from api.resources.redis import redis_cache
 from api.dependencies import Dependencies
-#get_genome_adaptor, get_vep_adaptor, get_release_adaptor
+
+# get_genome_adaptor, get_vep_adaptor, get_release_adaptor
 
 from ensembl.production.metadata.api.adaptors import GenomeAdaptor, ReleaseAdaptor
 from ensembl.production.metadata.api.adaptors.vep import VepAdaptor
@@ -69,7 +71,7 @@ from fastapi import APIRouter
 
 router = APIRouter(tags=["metadata"], prefix="/metadata")
 
-logger = logging.getLogger("routes")
+logger = logger.getLogger("routes")
 logger.handlers = [InterceptHandler()]
 logger.info("Starting up")
 
@@ -117,10 +119,10 @@ async def get_metadata_statistics(
     try:
         top_level_stats = get_top_level_statistics_by_uuid(adaptor, genome_uuid)
         genome_stats = GenomeStatistics(_raw_data=top_level_stats)
-        logging.debug(genome_stats.model_dump())
+        logger.debug(genome_stats.model_dump())
         return responses.JSONResponse({"genome_stats": genome_stats.model_dump()})
     except Exception as e:
-        logging.error(e)
+        logger.error(e)
         return response_error_handler({"status": 500})
 
 
@@ -141,20 +143,23 @@ async def get_genome_karyotype(
             karyotype_response.model_dump()["top_level_regions"]
         )
     except Exception as e:
-        logging.error(e)
+        logger.error(e)
         return response_error_handler({"status": 500})
 
 
 @router.get("/popular_species", name="popular_species")
 @redis_cache(key_prefix="popular_species")  # TTL defaults is 5 minutes
 async def get_popular_species(adaptor: GenomeAdaptorDep, request: Request):
-    logging.warn("xip")
-    popular_species_dict = get_organisms_group_count(adaptor, None)
-    popular_species = popular_species_dict["organisms_group_count"]
-    popular_species_response = PopularSpeciesGroup(
-        _base_url=request.headers["host"], popular_species=popular_species
-    )
-    return responses.JSONResponse(popular_species_response.model_dump())
+    try:
+        popular_species_dict = get_organisms_group_count(adaptor, None)
+        popular_species = popular_species_dict["organisms_group_count"]
+        popular_species_response = PopularSpeciesGroup(
+            _base_url=request.headers["host"], popular_species=popular_species
+        )
+        return responses.JSONResponse(popular_species_response.model_dump())
+    except Exception as e:
+        logging.error(e)
+        return response_error_handler({"status": 500})
 
 
 @router.get("/validate_location", name="validate_location")
@@ -166,7 +171,7 @@ def validate_region(
         rgv.validate_region(adaptor)
         return responses.JSONResponse(rgv.model_dump())
     except Exception as e:
-        logging.error(e)
+        logger.error(e)
         return response_error_handler({"status": 500})
 
 
@@ -190,7 +195,7 @@ async def example_objects(adaptor: GenomeAdaptorDep, request: Request, genome_id
                 }
             )
     except Exception as ex:
-        logging.error(ex)
+        logger.error(ex)
         return response_error_handler({"status": 500})
     return response_data
 
@@ -217,7 +222,7 @@ async def get_genome_details(
                 {"status": 404, "details": f"Could not find details for {genome_uuid}"}
             )
     except Exception as ex:
-        logging.error(ex)
+        logger.error(ex)
         return response_error_handler({"status": 500})
     return response_data
 
@@ -242,7 +247,7 @@ async def get_genome_ftplinks(
         ftplinks = FTPLinks(**ftplinks_no_regulation)
         return responses.JSONResponse(ftplinks.model_dump().get("links", []))
     except Exception as ex:
-        logging.error(ex)
+        logger.error(ex)
         return response_error_handler({"status": 500})
 
 
@@ -277,7 +282,7 @@ async def explain_genome(
                 {"status": 404, "details": f"Could not explain {genome_id_or_slug}"}
             )
     except Exception as ex:
-        logging.error(ex)
+        logger.error(ex)
         return response_error_handler({"status": 500})
     return response_data
 
@@ -297,7 +302,7 @@ async def get_region_checksum(
         if error_type.index("missing") == 0:
             return response_error_handler({"status": 404})
     except Exception as ex:
-        logging.error(ex)
+        logger.error(ex)
         return response_error_handler({"status": 500})
 
 
@@ -329,7 +334,7 @@ async def get_genome_dataset_attributes(
         return response_data
 
     except Exception as ex:
-        logging.error(ex)
+        logger.error(ex)
         return response_error_handler({"status": 500})
 
 
@@ -361,11 +366,11 @@ async def get_genome_by_keyword(
         if latest_genome_by_keyword_object.genome_uuid:
             return responses.JSONResponse(latest_genome_by_keyword_object.model_dump())
         else:
-            logging.error(f"Assembly accession id {assembly_accession_id} not found")
+            logger.error(f"Assembly accession id {assembly_accession_id} not found")
             return response_error_handler({"status": 404})
 
     except Exception as ex:
-        logging.error(ex)
+        logger.error(ex)
         return response_error_handler({"status": 500})
 
 
@@ -387,7 +392,7 @@ async def get_vep_file_paths(
         return responses.JSONResponse(vep_file_paths_object.dict(), status_code=200)
 
     except Exception as ex:
-        logging.error(ex)
+        logger.error(ex)
         return response_error_handler({"status": 500})
 
 
@@ -430,7 +435,7 @@ async def get_releases(
                 {"status": 404, "details": "No releases found matching criteria"}
             )
     except Exception as e:
-        logging.error(e)
+        logger.error(e)
         error_response = {"message": f"An error occurred: {str(e)}"}
         response_data = responses.JSONResponse(error_response, status_code=500)
 
@@ -450,7 +455,7 @@ async def get_genome_groups(
         genome_groups_dict = get_genome_groups_by_reference(
             adaptor, group_type, release
         )
-        logging.debug(f"genome_groups_dict: {genome_groups_dict}")
+        logger.debug(f"genome_groups_dict: {genome_groups_dict}")
         if len(genome_groups_dict.get("genome_groups", [])) == 0:
             return response_error_handler(
                 {"status": 404, "details": "No genome groups found matching criteria"}
@@ -460,7 +465,7 @@ async def get_genome_groups(
         response_dict = genome_groups.model_dump()
         return responses.JSONResponse(response_dict, status_code=200)
     except Exception as ex:
-        logging.exception("Error in get_genome_groups")
+        logger.exception("Error in get_genome_groups")
         return response_error_handler({"status": 500})
 
 
@@ -475,7 +480,7 @@ async def get_genomes_in_group(
 ):
     try:
         genomes_in_group_dict = data_get_genomes_in_group(adaptor, group_id, release)
-        logging.debug(f"genomes_in_group_dict: {genomes_in_group_dict}")
+        logger.debug(f"genomes_in_group_dict: {genomes_in_group_dict}")
         if len(genomes_in_group_dict.get("genomes", [])) == 0:
             return response_error_handler(
                 {"status": 404, "details": "No genomes found in specified group"}
@@ -485,7 +490,7 @@ async def get_genomes_in_group(
         response_dict = genomes_in_group.model_dump()
         return responses.JSONResponse(response_dict, status_code=200)
     except Exception as ex:
-        logging.exception("Error in get_genomes_in_group")
+        logger.exception("Error in get_genomes_in_group")
         return response_error_handler({"status": 500})
 
 
@@ -504,6 +509,6 @@ async def get_genome_counts(
             genome_counts.model_dump(), status_code=200
         )
     except Exception as ex:
-        logging.exception("Error in get_genome_counts")
+        logger.exception("Error in get_genome_counts")
         return response_error_handler({"status": 500})
     return response_data

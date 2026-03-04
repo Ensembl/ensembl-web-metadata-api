@@ -1,4 +1,3 @@
-import logging
 from typing import Optional
 
 from pydantic import (
@@ -11,10 +10,7 @@ from pydantic import (
 )
 from pydantic.functional_validators import model_validator
 
-from api.logconfig import InterceptHandler
 from api.config import ASSEMBLY_URLS
-
-logging.getLogger().handlers = [InterceptHandler()]
 
 
 class Type(BaseModel):
@@ -128,7 +124,10 @@ class BriefGenomeDetails(BaseGenomeDetails):
     As mentioned in this PR: https://github.com/Ensembl/ensembl-web-metadata-api/pull/60
     We're planning to extend the BriefGenomeDetails class later
     """
-    latest_genome: Optional[BaseGenomeDetails] = Field(alias="latest_genome", default=None)
+
+    latest_genome: Optional[BaseGenomeDetails] = Field(
+        alias="latest_genome", default=None
+    )
 
 
 class GenomeDetails(BaseGenomeDetails):
@@ -146,12 +145,13 @@ class GenomeDetails(BaseGenomeDetails):
         # TODO: remove genebuildVersion after the metadata DB is updated
         alias=AliasChoices(
             AliasPath("attributes_info", "genebuild_provider_version"),
-            AliasPath("attributes_info", "genebuild_version")
+            AliasPath("attributes_info", "genebuild_version"),
         ),
-        default=None
+        default=None,
     )
     annotation_date: str = Field(
-        alias=AliasPath("attributes_info", "genebuild_last_geneset_update"), default=None
+        alias=AliasPath("attributes_info", "genebuild_last_geneset_update"),
+        default=None,
     )
     number_of_genomes_in_group: int = Field(alias="related_assemblies_count", default=1)
 
@@ -172,7 +172,9 @@ class GenomeDetails(BaseGenomeDetails):
                 "name": data.get("attributes_info", {}).get(
                     "genebuild_provider_name", None
                 ),
-                "url": data.get("attributes_info", {}).get("genebuild_provider_url", ""),
+                "url": data.get("attributes_info", {}).get(
+                    "genebuild_provider_url", ""
+                ),
             }
 
         super().__init__(**data)
@@ -190,10 +192,14 @@ class DatasetAttributes(BaseModel):
     attributes: list[DatasetAttribute]
     release_version: float = Field(alias="release_version")
 
+
 class GenomeByKeyword(BaseModel):
     genome_uuid: str = Field(alias="genome_uuid", default="")
-    release_version: float = Field(alias=AliasPath("release", "release_version"), default=0)
+    release_version: float = Field(
+        alias=AliasPath("release", "release_version"), default=0
+    )
     genome_tag: str = Field(alias=AliasPath("genome", "url_name"), default="")
+
 
 class GenomeGroup(BaseModel):
     id: str = Field(alias="group_id")
@@ -201,8 +207,10 @@ class GenomeGroup(BaseModel):
     name: str | None = Field(alias="group_name", default=None)
     reference_genome: BaseGenomeDetails = Field(alias="reference_genome")
 
+
 class GenomeGroupsResponse(BaseModel):
     genome_groups: list[GenomeGroup] = Field(alias="genome_groups")
+
 
 class GenomesInGroupResponse(BaseModel):
     genomes: list[BaseGenomeDetails] = Field(alias="genomes")

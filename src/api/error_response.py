@@ -34,40 +34,31 @@ def http_unknown_error(result):
 
 
 def http_400_bad_request(details: str = "Bad Request"):
-    response_msg = json.dumps({
-        "status_code": HTTP_400_BAD_REQUEST,
-        "details": details
-    })
+    response_msg = json.dumps({"status_code": HTTP_400_BAD_REQUEST, "details": details})
     return PlainTextResponse(response_msg, status_code=HTTP_400_BAD_REQUEST)
 
 
 def http_404_not_found(details: str = "Not Found"):
-    response_msg = json.dumps({
-        "status_code": HTTP_404_NOT_FOUND,
-        "details": details
-    })
+    response_msg = json.dumps({"status_code": HTTP_404_NOT_FOUND, "details": details})
     return PlainTextResponse(response_msg, status_code=HTTP_404_NOT_FOUND)
 
 
 def http_406_not_acceptable(details: str = "Not Acceptable"):
-    response_msg = json.dumps({
-        "status_code": HTTP_406_NOT_ACCEPTABLE,
-        "details": details
-    })
+    response_msg = json.dumps(
+        {"status_code": HTTP_406_NOT_ACCEPTABLE, "details": details}
+    )
     return PlainTextResponse(response_msg, status_code=HTTP_406_NOT_ACCEPTABLE)
 
 
 def http_501_not_implemented(details: str = "Not Implemented"):
-    response_msg = json.dumps({
-        "status_code": HTTP_501_NOT_IMPLEMENTED,
-        "details": details
-    })
+    response_msg = json.dumps(
+        {"status_code": HTTP_501_NOT_IMPLEMENTED, "details": details}
+    )
     return PlainTextResponse(response_msg, status_code=HTTP_501_NOT_IMPLEMENTED)
 
 
 def http_500_internal_server_error(details: str = "Internal Server Error"):
-    response_msg = json.dumps({
-        "status_code": HTTP_500_INTERNAL_SERVER_ERROR,
-        "details": details
-    })
+    response_msg = json.dumps(
+        {"status_code": HTTP_500_INTERNAL_SERVER_ERROR, "details": details}
+    )
     return PlainTextResponse(response_msg, status_code=HTTP_500_INTERNAL_SERVER_ERROR)
