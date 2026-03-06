@@ -61,7 +61,6 @@ class DBConnection:
     """
 
     def __init__(self, url: StrURL, reflect: bool = True, **kwargs: Any) -> None:
-        logging.warn("DBCon: init")
         self._engine = create_engine(url, future=True, **kwargs)
         self._metadata: MetaData | None = None
         if reflect:

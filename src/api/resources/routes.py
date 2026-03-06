@@ -71,7 +71,7 @@ from fastapi import APIRouter
 
 router = APIRouter(tags=["metadata"], prefix="/metadata")
 
-logger = logger.getLogger("routes")
+logger = logging.getLogger("routes")
 logger.handlers = [InterceptHandler()]
 logger.info("Starting up")
 
@@ -329,7 +329,7 @@ async def get_genome_dataset_attributes(
             )
         dataset_attributes_object = DatasetAttributes(**dataset_attributes)
         response_data = responses.JSONResponse(
-            dataset_attributes_object.dict(), status_code=200
+            dataset_attributes_object.model_dump(), status_code=200
         )
         return response_data
 
@@ -389,7 +389,7 @@ async def get_vep_file_paths(
             )
 
         vep_file_paths_object = VepFilePaths(**vep_file_paths)
-        return responses.JSONResponse(vep_file_paths_object.dict(), status_code=200)
+        return responses.JSONResponse(vep_file_paths_object.model_dump(), status_code=200)
 
     except Exception as ex:
         logger.error(ex)

@@ -13,26 +13,22 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 #
-from loguru import logger
-
 import unittest
 from fastapi.testclient import TestClient
 
-from main import app
+from api.main import app
+
+import api.config as config
+
+client = TestClient(app)
 
 
 class APIMetadataTestCase(unittest.TestCase):
-    client = TestClient(app)
 
     def setUp(self):
         self.api_prefix = "api"
         self.metadata_url = "api/metadata/"
-        self.statistics_url = self.metadata_url + "statistics"
-
-    def test_statistics_api_success_200(self):
-        get_response = client.get(self.statistics_url)
-        assert get_response.status_code == 200
-        assert type(get_response.json()) == dict
+        self.statistics_url = self.metadata_url + "genome_counts"
 
     def test_404_error_in_none_relative_requests(self):
         response = client.get("api/")
@@ -56,44 +52,214 @@ class APIMetadataTestCase(unittest.TestCase):
         put_response = client.put(self.statistics_url)
         assert put_response.status_code == 405
 
-    def test_get_genome_counts():
-        response = client.get("/genome_counts")
-        assert response.status_code == 200
-        assert response.json() == (
-            {
-                "total": 4758,
-                "counts": [
-                    {"label": "Animals", "count": 4127},
-                    {"label": "Green Plants", "count": 475},
-                    {"label": "Fungi", "count": 116},
-                    {"label": "Bacteria", "count": 1},
-                    {"label": "Others", "count": 39},
-                ],
-            }
-        )
 
-        # TODO: the response data is wrong here
-        response = client.get("/genome_counts?release=2023-10-18")
-        assert response.status_code == 200
-        assert response.json() == (
-            {
-                "total": 4758,
-                "counts": [
-                    {"label": "Animals", "count": 4127},
-                    {"label": "Green Plants", "count": 475},
-                    {"label": "Fungi", "count": 116},
-                    {"label": "Bacteria", "count": 1},
-                    {"label": "Others", "count": 39},
-                ],
-            }
-        )
+def test_get_genome_counts():
+    response = client.get("/api/metadata/genome_counts")
+    assert response.status_code == 200
+    assert response.json() == (
+        {
+            "total": 4758,
+            "counts": [
+                {"label": "Animals", "count": 4127},
+                {"label": "Green Plants", "count": 475},
+                {"label": "Fungi", "count": 116},
+                {"label": "Bacteria", "count": 1},
+                {"label": "Others", "count": 39},
+            ],
+        }
+    )
 
-    def test_get_genomes_in_group():
-        response = client.get("/genome_groups/grch38-group/genomes")
-        assert response.status_code == 200
-        assert response.json() == {
-            "genomes": [
-                {
+    # TODO: the response data is wrong here
+    response = client.get("/api/metadata/genome_counts?release=2023-10-18")
+    assert response.status_code == 200
+    assert response.json() == (
+        {
+            "total": 4758,
+            "counts": [
+                {"label": "Animals", "count": 4127},
+                {"label": "Green Plants", "count": 475},
+                {"label": "Fungi", "count": 116},
+                {"label": "Bacteria", "count": 1},
+                {"label": "Others", "count": 39},
+            ],
+        }
+    )
+
+
+def test_get_genomes_in_group():
+    response = client.get("/api/metadata/genome_groups/grch38-group/genomes")
+    assert response.status_code == 200
+    assert response.json() == {
+        "genomes": [
+            {
+                "genome_id": "a7335667-93e7-11ec-a39d-005056b38ce3",
+                "genome_tag": "grch38",
+                "common_name": "Human",
+                "scientific_name": "Homo sapiens",
+                "species_taxonomy_id": "9606",
+                "type": None,
+                "is_reference": True,
+                "assembly": {
+                    "accession_id": "GCA_000001405.29",
+                    "name": "GRCh38.p14",
+                    "url": "https://identifiers.org/insdc.gca/GCA_000001405.29",
+                },
+                "release": {
+                    "name": "2025-02",
+                    "type": "integrated",
+                    "is_current": True,
+                },
+            },
+            {
+                "genome_id": "4c07817b-c7c5-463f-8624-982286bc4355",
+                "genome_tag": "t2t-chm13",
+                "common_name": "Human",
+                "scientific_name": "Homo sapiens",
+                "species_taxonomy_id": "9606",
+                "type": None,
+                "is_reference": False,
+                "assembly": {
+                    "accession_id": "GCA_009914755.4",
+                    "name": "T2T-CHM13v2.0",
+                    "url": "https://identifiers.org/insdc.gca/GCA_009914755.4",
+                },
+                "release": {
+                    "name": "2025-02",
+                    "type": "integrated",
+                    "is_current": True,
+                },
+            },
+            {
+                "genome_id": "9d3b2ead-a987-4f08-8d18-10a1eb1e0fb0",
+                "genome_tag": None,
+                "common_name": "Human",
+                "scientific_name": "Homo sapiens",
+                "species_taxonomy_id": "9606",
+                "type": {"kind": "population", "value": "Yoruban in Nigeria"},
+                "is_reference": False,
+                "assembly": {
+                    "accession_id": "GCA_018503275.2",
+                    "name": "NA19240_mat_hprc_f2",
+                    "url": "https://identifiers.org/insdc.gca/GCA_018503275.2",
+                },
+                "release": {
+                    "name": "2025-10-21",
+                    "type": "partial",
+                    "is_current": False,
+                },
+            },
+            {
+                "genome_id": "27be510b-c431-434c-a6f5-158d8c138507",
+                "genome_tag": None,
+                "common_name": "Human",
+                "scientific_name": "Homo sapiens",
+                "species_taxonomy_id": "9606",
+                "type": {
+                    "kind": "population",
+                    "value": "Puerto Rican in Puerto Rico",
+                },
+                "is_reference": False,
+                "assembly": {
+                    "accession_id": "GCA_018506975.2",
+                    "name": "HG00733_mat_hprc_f2",
+                    "url": "https://identifiers.org/insdc.gca/GCA_018506975.2",
+                },
+                "release": {
+                    "name": "2025-10-21",
+                    "type": "partial",
+                    "is_current": False,
+                },
+            },
+            {
+                "genome_id": "7e09bad9-aa22-46e4-ab8f-1b2a64202967",
+                "genome_tag": None,
+                "common_name": "Human",
+                "scientific_name": "Homo sapiens",
+                "species_taxonomy_id": "9606",
+                "type": None,
+                "is_reference": False,
+                "assembly": {
+                    "accession_id": "GCA_042077495.1",
+                    "name": "NA19036_hap1_hprc_f2",
+                    "url": "https://identifiers.org/insdc.gca/GCA_042077495.1",
+                },
+                "release": {
+                    "name": "2025-05-28",
+                    "type": "partial",
+                    "is_current": False,
+                },
+            },
+            {
+                "genome_id": "30094672-c48c-425a-84e0-4049073a68d3",
+                "genome_tag": None,
+                "common_name": "Human",
+                "scientific_name": "Homo sapiens",
+                "species_taxonomy_id": "9606",
+                "type": {"kind": "population", "value": "Colombian in Medellin"},
+                "is_reference": False,
+                "assembly": {
+                    "accession_id": "GCA_018469665.2",
+                    "name": "HG01123_mat_hprc_f2",
+                    "url": "https://identifiers.org/insdc.gca/GCA_018469665.2",
+                },
+                "release": {
+                    "name": "2025-10-21",
+                    "type": "partial",
+                    "is_current": False,
+                },
+            },
+            {
+                "genome_id": "82b440be-8f7d-47fe-a363-a40cea709ea2",
+                "genome_tag": None,
+                "common_name": "Human",
+                "scientific_name": "Homo sapiens",
+                "species_taxonomy_id": "9606",
+                "type": {"kind": "population", "value": "Han Chinese South"},
+                "is_reference": False,
+                "assembly": {
+                    "accession_id": "GCA_018472595.2",
+                    "name": "HG00438_pat_hprc_f2",
+                    "url": "https://identifiers.org/insdc.gca/GCA_018472595.2",
+                },
+                "release": {
+                    "name": "2025-10-21",
+                    "type": "partial",
+                    "is_current": False,
+                },
+            },
+            {
+                "genome_id": "ddfadcb5-3b4a-48ca-9dcd-e75884445bd1",
+                "genome_tag": None,
+                "common_name": "Human",
+                "scientific_name": "Homo sapiens",
+                "species_taxonomy_id": "9606",
+                "type": {"kind": "population", "value": "Peruvian in Lima"},
+                "is_reference": False,
+                "assembly": {
+                    "accession_id": "GCA_018472695.2",
+                    "name": "HG01928_mat_hprc_f2",
+                    "url": "https://identifiers.org/insdc.gca/GCA_018472695.2",
+                },
+                "release": {
+                    "name": "2025-10-21",
+                    "type": "partial",
+                    "is_current": False,
+                },
+            },
+        ]
+    }
+
+
+def test_get_genome_groups():
+    response = client.get("/api/metadata/genome_groups?group_type=structural_variant")
+    assert response.status_code == 200
+    assert response.json() == {
+        "genome_groups": [
+            {
+                "id": "grch38-group",
+                "type": "structural_variant",
+                "name": None,
+                "reference_genome": {
                     "genome_id": "a7335667-93e7-11ec-a39d-005056b38ce3",
                     "genome_tag": "grch38",
                     "common_name": "Human",
@@ -112,7 +278,12 @@ class APIMetadataTestCase(unittest.TestCase):
                         "is_current": True,
                     },
                 },
-                {
+            },
+            {
+                "id": "t2t-group",
+                "type": "structural_variant",
+                "name": None,
+                "reference_genome": {
                     "genome_id": "4c07817b-c7c5-463f-8624-982286bc4355",
                     "genome_tag": "t2t-chm13",
                     "common_name": "Human",
@@ -131,219 +302,50 @@ class APIMetadataTestCase(unittest.TestCase):
                         "is_current": True,
                     },
                 },
-                {
-                    "genome_id": "9d3b2ead-a987-4f08-8d18-10a1eb1e0fb0",
-                    "genome_tag": None,
-                    "common_name": "Human",
-                    "scientific_name": "Homo sapiens",
-                    "species_taxonomy_id": "9606",
-                    "type": {"kind": "population", "value": "Yoruban in Nigeria"},
-                    "is_reference": False,
-                    "assembly": {
-                        "accession_id": "GCA_018503275.2",
-                        "name": "NA19240_mat_hprc_f2",
-                        "url": "https://identifiers.org/insdc.gca/GCA_018503275.2",
-                    },
-                    "release": {
-                        "name": "2025-10-21",
-                        "type": "partial",
-                        "is_current": False,
-                    },
-                },
-                {
-                    "genome_id": "27be510b-c431-434c-a6f5-158d8c138507",
-                    "genome_tag": None,
-                    "common_name": "Human",
-                    "scientific_name": "Homo sapiens",
-                    "species_taxonomy_id": "9606",
-                    "type": {
-                        "kind": "population",
-                        "value": "Puerto Rican in Puerto Rico",
-                    },
-                    "is_reference": False,
-                    "assembly": {
-                        "accession_id": "GCA_018506975.2",
-                        "name": "HG00733_mat_hprc_f2",
-                        "url": "https://identifiers.org/insdc.gca/GCA_018506975.2",
-                    },
-                    "release": {
-                        "name": "2025-10-21",
-                        "type": "partial",
-                        "is_current": False,
-                    },
-                },
-                {
-                    "genome_id": "7e09bad9-aa22-46e4-ab8f-1b2a64202967",
-                    "genome_tag": None,
-                    "common_name": "Human",
-                    "scientific_name": "Homo sapiens",
-                    "species_taxonomy_id": "9606",
-                    "type": None,
-                    "is_reference": False,
-                    "assembly": {
-                        "accession_id": "GCA_042077495.1",
-                        "name": "NA19036_hap1_hprc_f2",
-                        "url": "https://identifiers.org/insdc.gca/GCA_042077495.1",
-                    },
-                    "release": {
-                        "name": "2025-05-28",
-                        "type": "partial",
-                        "is_current": False,
-                    },
-                },
-                {
-                    "genome_id": "30094672-c48c-425a-84e0-4049073a68d3",
-                    "genome_tag": None,
-                    "common_name": "Human",
-                    "scientific_name": "Homo sapiens",
-                    "species_taxonomy_id": "9606",
-                    "type": {"kind": "population", "value": "Colombian in Medellin"},
-                    "is_reference": False,
-                    "assembly": {
-                        "accession_id": "GCA_018469665.2",
-                        "name": "HG01123_mat_hprc_f2",
-                        "url": "https://identifiers.org/insdc.gca/GCA_018469665.2",
-                    },
-                    "release": {
-                        "name": "2025-10-21",
-                        "type": "partial",
-                        "is_current": False,
-                    },
-                },
-                {
-                    "genome_id": "82b440be-8f7d-47fe-a363-a40cea709ea2",
-                    "genome_tag": None,
-                    "common_name": "Human",
-                    "scientific_name": "Homo sapiens",
-                    "species_taxonomy_id": "9606",
-                    "type": {"kind": "population", "value": "Han Chinese South"},
-                    "is_reference": False,
-                    "assembly": {
-                        "accession_id": "GCA_018472595.2",
-                        "name": "HG00438_pat_hprc_f2",
-                        "url": "https://identifiers.org/insdc.gca/GCA_018472595.2",
-                    },
-                    "release": {
-                        "name": "2025-10-21",
-                        "type": "partial",
-                        "is_current": False,
-                    },
-                },
-                {
-                    "genome_id": "ddfadcb5-3b4a-48ca-9dcd-e75884445bd1",
-                    "genome_tag": None,
-                    "common_name": "Human",
-                    "scientific_name": "Homo sapiens",
-                    "species_taxonomy_id": "9606",
-                    "type": {"kind": "population", "value": "Peruvian in Lima"},
-                    "is_reference": False,
-                    "assembly": {
-                        "accession_id": "GCA_018472695.2",
-                        "name": "HG01928_mat_hprc_f2",
-                        "url": "https://identifiers.org/insdc.gca/GCA_018472695.2",
-                    },
-                    "release": {
-                        "name": "2025-10-21",
-                        "type": "partial",
-                        "is_current": False,
-                    },
-                },
-            ]
-        }
-
-    def test_get_genome_groups():
-        response = client.get("/genome_groups?group_type=structural_variant")
-        assert response.status_code == 200
-        assert response.json() == {
-            "genome_groups": [
-                {
-                    "id": "grch38-group",
-                    "type": "structural_variant",
-                    "name": None,
-                    "reference_genome": {
-                        "genome_id": "a7335667-93e7-11ec-a39d-005056b38ce3",
-                        "genome_tag": "grch38",
-                        "common_name": "Human",
-                        "scientific_name": "Homo sapiens",
-                        "species_taxonomy_id": "9606",
-                        "type": None,
-                        "is_reference": True,
-                        "assembly": {
-                            "accession_id": "GCA_000001405.29",
-                            "name": "GRCh38.p14",
-                            "url": "https://identifiers.org/insdc.gca/GCA_000001405.29",
-                        },
-                        "release": {
-                            "name": "2025-02",
-                            "type": "integrated",
-                            "is_current": True,
-                        },
-                    },
-                },
-                {
-                    "id": "t2t-group",
-                    "type": "structural_variant",
-                    "name": None,
-                    "reference_genome": {
-                        "genome_id": "4c07817b-c7c5-463f-8624-982286bc4355",
-                        "genome_tag": "t2t-chm13",
-                        "common_name": "Human",
-                        "scientific_name": "Homo sapiens",
-                        "species_taxonomy_id": "9606",
-                        "type": None,
-                        "is_reference": False,
-                        "assembly": {
-                            "accession_id": "GCA_009914755.4",
-                            "name": "T2T-CHM13v2.0",
-                            "url": "https://identifiers.org/insdc.gca/GCA_009914755.4",
-                        },
-                        "release": {
-                            "name": "2025-02",
-                            "type": "integrated",
-                            "is_current": True,
-                        },
-                    },
-                },
-            ]
-        }
-
-    def test_get_releases(benchmark):
-
-        response = client.get("/releases?release_name=2023-10-18")
-        assert response.status_code == 200
-        assert response.json() == [
-            {"name": "2023-10-18", "type": "partial", "is_current": False}
+            },
         ]
+    }
 
-        response = client.get("/releases?current_only=true")
-        assert response.status_code == 200
-        assert response.json() == [
-            {"name": "2025-02", "type": "integrated", "is_current": True},
-            {"name": "2026-01-26", "type": "partial", "is_current": True},
-        ]
 
-        response = client.get("/releases?release_name=100000")
-        assert response.status_code == 404
+def test_get_releases(benchmark):
 
-        response = client.get(
-            "/releases?release_name=2023-10-18&release_name=2024-09-18"
-        )
-        assert response.status_code == 200
-        assert response.json() == [
-            {"name": "2023-10-18", "type": "partial", "is_current": False},
-            {"name": "2024-09-18", "type": "partial", "is_current": False},
-        ]
+    response = client.get("/api/metadata/releases?release_name=2023-10-18")
+    assert response.status_code == 200
+    assert response.json() == [
+        {"name": "2023-10-18", "type": "partial", "is_current": False}
+    ]
 
-        response = client.get("/releases")
-        assert response.status_code == 200
-        assert len(response.json()) == 20
+    response = client.get("/api/metadata/releases?current_only=true")
+    assert response.status_code == 200
+    assert response.json() == [
+        {"name": "2025-02", "type": "integrated", "is_current": True},
+        {"name": "2026-01-26", "type": "partial", "is_current": True},
+    ]
 
-        runnable = lambda: client.get("/releases")
-        benchmark(runnable)
+    response = client.get("/api/metadata/releases?release_name=100000")
+    assert response.status_code == 404
+
+    response = client.get(
+        "/api/metadata/releases?release_name=2023-10-18&release_name=2024-09-18"
+    )
+    assert response.status_code == 200
+    assert response.json() == [
+        {"name": "2023-10-18", "type": "partial", "is_current": False},
+        {"name": "2024-09-18", "type": "partial", "is_current": False},
+    ]
+
+    response = client.get("/api/metadata/releases")
+    assert response.status_code == 200
+    assert len(response.json()) == 20
+
+    runnable = lambda: client.get("/api/metadata/releases")
+    benchmark(runnable)
 
 
 def test_get_vep_file_paths():
-    response = client.get("/genome/2b5fb047-5992-4dfb-b2fa-1fb4e18d1abb/vep/file_paths")
+    response = client.get(
+        "/api/metadata/genome/2b5fb047-5992-4dfb-b2fa-1fb4e18d1abb/vep/file_paths"
+    )
     assert response.status_code == 200
     assert response.json() == {
         "faa_location": "Homo_sapiens/GCA_000001405.29/vep/genome/softmasked.fa.bgz",
@@ -352,7 +354,9 @@ def test_get_vep_file_paths():
 
 
 def test_get_genome_by_keyword():
-    response = client.get("/genomeid?assembly_accession_id=GCA_000001405.29")
+    response = client.get(
+        "/api/metadata/genomeid?assembly_accession_id=GCA_000001405.29"
+    )
     assert response.status_code == 200
     assert response.json() == {
         "genome_uuid": "be73075e-0633-471d-b7c8-4f8ca7752a04",
@@ -363,7 +367,7 @@ def test_get_genome_by_keyword():
 
 def test_get_genome_dataset_attributes():
     response = client.get(
-        "/genome/a7335667-93e7-11ec-a39d-005056b38ce3/dataset/genebuild/attributes"
+        "/api/metadata/genome/a7335667-93e7-11ec-a39d-005056b38ce3/dataset/genebuild/attributes"
     )
     assert response.status_code == 200
     assert response.json() == {
@@ -885,13 +889,17 @@ def test_get_genome_dataset_attributes():
 
 
 def test_get_region_checksum():
-    response = client.get("/genome/a7335667-93e7-11ec-a39d-005056b38ce3/checksum/1")
+    response = client.get(
+        "/api/metadata/genome/a7335667-93e7-11ec-a39d-005056b38ce3/checksum/1"
+    )
     assert response.status_code == 200
     assert response.content.decode("utf-8") == "2648ae1bacce4ec4b6cf337dcae37816"
 
 
 def test_explain_genome():
-    response = client.get("/genome/a7335667-93e7-11ec-a39d-005056b38ce3/explain")
+    response = client.get(
+        "/api/metadata/genome/a7335667-93e7-11ec-a39d-005056b38ce3/explain"
+    )
     assert response.status_code == 200
     assert response.json() == {
         "genome_id": "a7335667-93e7-11ec-a39d-005056b38ce3",
@@ -922,7 +930,9 @@ def test_explain_genome():
 
 
 def test_get_genome_ftplinks():
-    response = client.get("/genome/a7335667-93e7-11ec-a39d-005056b38ce3/ftplinks")
+    response = client.get(
+        "/api/metadata/genome/a7335667-93e7-11ec-a39d-005056b38ce3/ftplinks"
+    )
     assert response.status_code == 200
     assert response.json() == [
         {
@@ -945,7 +955,9 @@ def test_get_genome_ftplinks():
 
 
 def test_get_genome_details():
-    response = client.get("/genome/a7335667-93e7-11ec-a39d-005056b38ce3/details")
+    response = client.get(
+        "/api/metadata/genome/a7335667-93e7-11ec-a39d-005056b38ce3/details"
+    )
     assert response.status_code == 200
     assert response.json() == {
         "genome_id": "a7335667-93e7-11ec-a39d-005056b38ce3",
@@ -978,7 +990,7 @@ def test_get_genome_details():
 
 def test_example_objects():
     response = client.get(
-        "/genome/a7335667-93e7-11ec-a39d-005056b38ce3/example_objects"
+        "/api/metadata/genome/a7335667-93e7-11ec-a39d-005056b38ce3/example_objects"
     )
     assert response.status_code == 200
     assert response.json() == [
@@ -990,7 +1002,7 @@ def test_example_objects():
 
 def test_validate_region():
     response = client.get(
-        "/validate_location?genome_id=a7335667-93e7-11ec-a39d-005056b38ce3&location=8:26291508-26372680"
+        "/api/metadata/validate_location?genome_id=a7335667-93e7-11ec-a39d-005056b38ce3&location=8:26291508-26372680"
     )
     assert response.status_code == 200
     assert response.json() == {
@@ -1017,7 +1029,7 @@ def test_validate_region():
 
 
 def test_get_popular_species():
-    response = client.get("/popular_species")
+    response = client.get("/api/metadata/popular_species")
     assert response.status_code == 200
     assert response.json() == {
         "popular_species": [
@@ -1278,7 +1290,9 @@ def test_get_popular_species():
 
 
 def test_get_genome_karyotype():
-    response = client.get("/genome/a7335667-93e7-11ec-a39d-005056b38ce3/karyotype")
+    response = client.get(
+        "/api/metadata/genome/a7335667-93e7-11ec-a39d-005056b38ce3/karyotype"
+    )
     assert response.status_code == 200
     assert response.json() == [
         {"name": "1", "type": "chromosome", "length": 248956422, "is_circular": False},
@@ -1310,7 +1324,9 @@ def test_get_genome_karyotype():
 
 
 def test_get_metadata_statistics():
-    response = client.get("/genome/a7335667-93e7-11ec-a39d-005056b38ce3/stats")
+    response = client.get(
+        "/api/metadata/genome/a7335667-93e7-11ec-a39d-005056b38ce3/stats"
+    )
     assert response.status_code == 200
     assert response.json() == {
         "genome_stats": {

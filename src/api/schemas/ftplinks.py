@@ -12,7 +12,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from pydantic import BaseModel, Field, HttpUrl, field_serializer
+from pydantic import BaseModel, Field, field_serializer
 from typing import Literal
 from api.config import FTP_BASE_URL
 
@@ -22,7 +22,7 @@ class FTPLink(BaseModel):
     url: str = Field(..., validation_alias="path")
 
     @field_serializer("url")
-    def url_serializer(self, path: str) -> HttpUrl:
+    def url_serializer(self, path: str) -> str:
         return f"{FTP_BASE_URL}{path}"
 
 
