@@ -4,5 +4,11 @@ metadata:
   name: metadata-api-configmap
 data:
   DEBUG: "False"
-  GRPC_HOST: ensembl-metadata-service
-  GRPC_PORT: "50051"
+  DB_URL: "duckdb:///./duck_meta.db"
+  ENABLE_REDIS_CACHE: "False"
+  REDIS_HOST: "redis"
+  REDIS_PORT: "6379"
+  IDENTIFIERS_ORG_BASE_URL: https://identifiers.org/
+  REDIS_EXPIRY_SECONDS: '6600'
+  REDIS_MAX_CONNECTION: '20'
+  WORKERS: '10'

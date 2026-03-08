@@ -6,11 +6,11 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: metadata-api-server
+      ensembl.web.api.name: metadata-api-server
   template:
     metadata:
       labels:
-        app: metadata-api-server
+        ensembl.web.api.name: metadata-api-server
     spec:
       imagePullSecrets:
         - name: ensemblweb-pull-secret 
@@ -20,14 +20,23 @@ spec:
           ports:
             - containerPort: 8014
           imagePullPolicy: Always
+          env:
+            - name: PYTHONPATH
+              value: /app/src
           envFrom:
             - configMapRef:
                 name: metadata-api-configmap
           command: ["uvicorn"]
-          args: [
-            "--host",
-            "0.0.0.0",
-            "--port",
-            "8014",
-            "main:app"
-          ]
+          args: ["api.main:app", "--host", "0.0.0.0", "--port", "8014"]
+          readinessProbe:
+            httpGet:
+              path: /health/live
+              port: 8014
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health/duckdb
+              port: 8014
+            initialDelaySeconds: 15
+            periodSeconds: 20

@@ -14,25 +14,20 @@
 #    limitations under the License.
 #
 
-# Base image
 FROM python:3.11
 
-# Maintainer
 LABEL org.opencontainers.image.authors="ensembl-webteam@ebi.ac.uk"
 
-# Set Work Directory
 WORKDIR /app
 
-# Copy source code
-COPY ./app /app/
 COPY requirements.txt requirements.txt
-# Install dependencies
-RUN pip install  -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose Ports
-ENV PORT 8014
+COPY src /app/src
+COPY duck_meta.db /app/duck_meta.db
+
+ENV PORT=8014
+ENV PYTHONPATH=/app/src
 EXPOSE 8014
 
-# Run uvicorn server
-# CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8014", "--reload"]
-
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8014"]
