@@ -4,7 +4,7 @@ metadata:
   name: metadata-api-configmap
 data:
   DEBUG: "False"
-  DB_URL: "duckdb:///./duck_meta.db"
+  DB_URL: "duckdb:////data/duck_meta.db"
   ENABLE_REDIS_CACHE: "False"
   REDIS_HOST: "redis"
   REDIS_PORT: "6379"

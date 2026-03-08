@@ -24,7 +24,7 @@ COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY src /app/src
-COPY duck_meta.db /app/duck_meta.db
+COPY scripts /app/scripts
 
 ENV PORT=8014
 ENV PYTHONPATH=/app/src

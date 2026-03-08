@@ -14,6 +14,26 @@ spec:
     spec:
       imagePullSecrets:
         - name: ensemblweb-pull-secret 
+      initContainers:
+        - name: generate-duckdb
+          image: DOCKER_IMAGE
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: metadata-api-configmap
+            - secretRef:
+                name: metadata-api-secret
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              if [ -s /data/duck_meta.db ]; then
+                echo "DuckDB file already exists at /data/duck_meta.db, skipping generation."
+              else
+                python /app/scripts/generate_duckdb.py --outfile /data/duck_meta.db
+              fi
+          volumeMounts:
+            - name: duckdb-storage
+              mountPath: /data
       containers:
         - name: metadata-api
           image: DOCKER_IMAGE
@@ -26,6 +46,9 @@ spec:
           envFrom:
             - configMapRef:
                 name: metadata-api-configmap
+          volumeMounts:
+            - name: duckdb-storage
+              mountPath: /data
           command: ["uvicorn"]
           args: ["api.main:app", "--host", "0.0.0.0", "--port", "8014"]
           readinessProbe:
@@ -40,3 +63,7 @@ spec:
               port: 8014
             initialDelaySeconds: 15
             periodSeconds: 20
+      volumes:
+        - name: duckdb-storage
+          persistentVolumeClaim:
+            claimName: metadata-duckdb-pvc
