@@ -49,6 +49,14 @@ def main():
     print(f"Starting metadata import into DuckDB file: {outfile}")
 
     con = duckdb.connect()
+    # The mysql extension is baked into the image at build time, but each DuckDB
+    # connection still needs to load it before ATTACH ... (TYPE mysql) can work.
+    try:
+        con.execute("LOAD mysql")
+    except Exception as exc:
+        raise RuntimeError(
+            "DuckDB mysql extension is not available in this image"
+        ) from exc
 
     # This operation may need much more memory than the configured limit.
     con.execute("SET memory_limit = '8GB'")

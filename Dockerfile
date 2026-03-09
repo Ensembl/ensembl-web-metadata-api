@@ -27,6 +27,21 @@ COPY requirements.txt requirements.txt
 # Install dependencies
 RUN pip install  -r requirements.txt
 
+ENV DUCKDB_EXTENSION_DIRECTORY=/opt/duckdb/extensions
+RUN mkdir -p "${DUCKDB_EXTENSION_DIRECTORY}"
+# Pre-install the mysql extension so the init container does not have to
+# download it from inside the cluster at runtime.
+RUN python - <<'EOF'
+import duckdb
+
+con = duckdb.connect()
+con.execute("INSTALL mysql")
+# LOAD validates that the baked-in extension can be opened successfully
+# during image build; the script still needs LOAD mysql per connection.
+con.execute("LOAD mysql")
+print("mysql extension installed")
+EOF
+
 # Expose Ports
 ENV PORT 8014
 EXPOSE 8014
