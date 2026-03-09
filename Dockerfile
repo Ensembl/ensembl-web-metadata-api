@@ -20,14 +20,24 @@ LABEL org.opencontainers.image.authors="ensembl-webteam@ebi.ac.uk"
 
 WORKDIR /app
 
+# Copy source code
+COPY ./src /app/
 COPY requirements.txt requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+# Install dependencies
+RUN pip install  -r requirements.txt
 
-COPY src /app/src
-COPY scripts /app/scripts
-
-ENV PORT=8014
-ENV PYTHONPATH=/app/src
+# Expose Ports
+ENV PORT 8014
 EXPOSE 8014
 
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8014"]
+RUN mkdir /data
+
+# Run uvicorn server
+ENV PYTHONPATH=/app/
+ENV DB_URL=duckdb:////data/duck_meta.db
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8014", "--reload"]
+
+# Run the container like this:
+# sudo podman run --mount type=bind,src=data,dst=/data/ -p 8014:8014 container_id
+# Expects the DB in ./data/duck_meta.db, will be mounted to /data/duck_meta.db
+# in the container
