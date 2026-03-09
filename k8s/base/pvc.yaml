@@ -3,6 +3,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: metadata-duckdb-pvc
 spec:
+  storageClassName: standard-nfs-production
   accessModes:
   - ReadWriteOnce
   resources:
