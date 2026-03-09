@@ -22,7 +22,7 @@ WORKDIR /app
 
 # Copy source code
 COPY ./src /app/
-COPY ./scripts /app/
+COPY ./scripts /app/scripts/
 COPY requirements.txt requirements.txt
 # Install dependencies
 RUN pip install  -r requirements.txt
