@@ -29,6 +29,7 @@ spec:
               if [ -s /data/duck_meta.db ]; then
                 echo "DuckDB file already exists at /data/duck_meta.db, skipping generation."
               else
+                METADATA_DB="mysql://${DB_USER}:${DB_PASS}@${DB_HOST}:${DB_PORT}/${METADATA_DB_NAME}" \
                 python /app/scripts/generate_duckdb.py --outfile /data/duck_meta.db
               fi
           volumeMounts:

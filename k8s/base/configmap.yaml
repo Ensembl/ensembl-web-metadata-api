@@ -5,6 +5,7 @@ metadata:
 data:
   DEBUG: "False"
   DB_URL: "duckdb:////data/duck_meta.db"
+  METADATA_DB_NAME: "ensembl_genome_metadata_1"
   ENABLE_REDIS_CACHE: "False"
   REDIS_HOST: "redis"
   REDIS_PORT: "6379"
