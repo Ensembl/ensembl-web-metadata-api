@@ -61,10 +61,12 @@ from api.dependencies import Dependencies
 
 from ensembl.production.metadata.api.adaptors import GenomeAdaptor, ReleaseAdaptor
 from ensembl.production.metadata.api.adaptors.vep import VepAdaptor
+from api.models.meta_adaptor import MetaAdaptor
 
 GenomeAdaptorDep = Annotated[GenomeAdaptor, Depends(Dependencies.get_genome_adaptor)]
 VepAdaptorDep = Annotated[VepAdaptor, Depends(Dependencies.get_vep_adaptor)]
 ReleaseAdaptorDep = Annotated[ReleaseAdaptor, Depends(Dependencies.get_release_adaptor)]
+MetaAdaptorDep = Annotated[MetaAdaptor, Depends(Dependencies.get_meta_adaptor)]
 
 
 from fastapi import APIRouter
@@ -495,18 +497,14 @@ async def get_genomes_in_group(
 @router.get("/genome_counts", name="genome_counts")
 @redis_cache(key_prefix="genome_counts", arg_keys=["release"])
 async def get_genome_counts(
-    adaptor: GenomeAdaptorDep,
+    adaptor: MetaAdaptorDep,
     release: str | None = Query(
         None, description="Optional release label to filter counts, e.g. '2025-02'"
     ),
 ):
-    try:
-        genome_counts_dict = data_get_genome_counts(adaptor, release)
-        genome_counts = GenomeCountsResponse(**genome_counts_dict)
-        response_data = responses.JSONResponse(
-            genome_counts.model_dump(), status_code=200
-        )
-    except Exception as ex:
-        logger.exception("Error in get_genome_counts")
-        return response_error_handler({"status": 500})
+    genome_counts_dict = data_get_genome_counts(adaptor, release)
+    genome_counts = GenomeCountsResponse(**genome_counts_dict)
+    response_data = responses.JSONResponse(
+        genome_counts.model_dump(), status_code=200
+    )
     return response_data

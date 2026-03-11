@@ -58,29 +58,29 @@ def test_get_genome_counts():
     assert response.status_code == 200
     assert response.json() == (
         {
-            "total": 4758,
+            "total": 4852,
             "counts": [
-                {"label": "Animals", "count": 4127},
-                {"label": "Green Plants", "count": 475},
-                {"label": "Fungi", "count": 116},
+                {"label": "Animals", "count": 4195},
                 {"label": "Bacteria", "count": 1},
-                {"label": "Others", "count": 39},
+                {"label": "Fungi", "count": 151},
+                {"label": "Green Plants", "count": 465},
+                {"label": "Others", "count": 40},
             ],
         }
     )
 
-    # TODO: the response data is wrong here
+    # TODO: implement per-release
     response = client.get("/api/metadata/genome_counts?release=2023-10-18")
     assert response.status_code == 200
     assert response.json() == (
         {
-            "total": 4758,
+            "total": 200,
             "counts": [
-                {"label": "Animals", "count": 4127},
-                {"label": "Green Plants", "count": 475},
-                {"label": "Fungi", "count": 116},
+                {"label": "Animals", "count": 100},
                 {"label": "Bacteria", "count": 1},
-                {"label": "Others", "count": 39},
+                {"label": "Fungi", "count": 10},
+                {"label": "Green Plants", "count": 10},
+                {"label": "Others", "count": 10},
             ],
         }
     )

@@ -217,8 +217,8 @@ class GenomesInGroupResponse(BaseModel):
 
 
 class GenomeCountItem(BaseModel):
-    label: str
-    count: int
+    label: str = Field(alias="ensembl_taxon_name")
+    count: int = Field(alias="count")
 
 
 class GenomeCountsResponse(BaseModel):

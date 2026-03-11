@@ -16,7 +16,7 @@ limitations under the License.
 """
 
 import itertools
-import logging
+from loguru import logger
 
 import uuid
 from datetime import datetime
@@ -27,11 +27,12 @@ from ensembl.production.metadata.api.models import Genome
 
 from ensembl.production.metadata.api.adaptors import GenomeAdaptor, ReleaseAdaptor
 from ensembl.production.metadata.api.adaptors.vep import VepAdaptor
+from api.models.meta_adaptor import MetaAdaptor
 
 
 def get_top_level_statistics_by_uuid(db_conn, genome_uuid):
     if not genome_uuid:
-        logging.warning("Missing or Empty Genome UUID field.")
+        logger.warning("Missing or Empty Genome UUID field.")
         return None
 
     stats_results = db_conn.fetch_genome_datasets(
@@ -55,10 +56,10 @@ def get_top_level_statistics_by_uuid(db_conn, genome_uuid):
 
         statistics.sort(key=lambda x: x["name"])
 
-        # logging.debug(f"Response data: \n{statistics}")
+        # logger.debug(f"Response data: \n{statistics}")
         return statistics
 
-    logging.debug("No top level stats found.")
+    logger.debug("No top level stats found.")
     return None
 
 
@@ -87,7 +88,7 @@ def get_top_level_regions(adaptor: GenomeAdaptor, genome_uuid: str):
 
 def assembly_region_iterator(db_conn, genome_uuid, chromosomal_only):
     if not genome_uuid:
-        logging.warning("Missing or Empty Genome UUID field.")
+        logger.warning("Missing or Empty Genome UUID field.")
         return
 
     assembly_sequence_results = db_conn.fetch_sequences(
@@ -95,7 +96,7 @@ def assembly_region_iterator(db_conn, genome_uuid, chromosomal_only):
         chromosomal_only=chromosomal_only,
     )
     for result in assembly_sequence_results:
-        logging.debug(f"Processing assembly: {result.AssemblySequence.name}")
+        logger.debug(f"Processing assembly: {result.AssemblySequence.name}")
         yield create_assembly_region(result)
 
 
@@ -118,7 +119,7 @@ def create_assembly_region(data=None):
 def get_organisms_group_count(db_conn, release_label):
     count_result = db_conn.fetch_organisms_group_counts(release_label=release_label)
     response_data = create_organisms_group_count(count_result, release_label)
-    # logging.debug(f"Response data: \n{response_data}")
+    # logger.debug(f"Response data: \n{response_data}")
     return response_data
 
 
@@ -142,7 +143,7 @@ def create_organisms_group_count(data, release_label):
 
 def get_attributes_by_genome_uuid(db_conn, genome_uuid, release_version):
     if not genome_uuid:
-        logging.warning("Missing or Empty Genome UUID field.")
+        logger.warning("Missing or Empty Genome UUID field.")
         return None
 
     attrib_data_results = db_conn.fetch_genome_datasets(
@@ -151,10 +152,10 @@ def get_attributes_by_genome_uuid(db_conn, genome_uuid, release_version):
         release_version=release_version,
     )
 
-    logging.debug(f"Genome Datasets Retrieved: {attrib_data_results}")
+    logger.debug(f"Genome Datasets Retrieved: {attrib_data_results}")
 
     if len(attrib_data_results) == 0:
-        logging.error(f"No Attributes were found: {genome_uuid}/{release_version}")
+        logger.error(f"No Attributes were found: {genome_uuid}/{release_version}")
     else:
         if len(attrib_data_results) > 0:
             attribs = []
@@ -218,16 +219,16 @@ def create_attributes_info(data=None):
 
 def get_genome_by_uuid(db_conn, genome_uuid, release_version):
     if not genome_uuid:
-        logging.warning("Missing or Empty Genome UUID field.")
+        logger.warning("Missing or Empty Genome UUID field.")
         return None
     genome_results = db_conn.fetch_genomes(
         genome_uuid=genome_uuid, release_version=release_version
     )
     if len(genome_results) == 0:
-        logging.error(f"No Genome/Release found: {genome_uuid}/{release_version}")
+        logger.error(f"No Genome/Release found: {genome_uuid}/{release_version}")
     else:
         if len(genome_results) > 1:
-            logging.warning(f"Multiple results returned. {genome_results}")
+            logger.warning(f"Multiple results returned. {genome_results}")
 
         one_genome = genome_results[0]
 
@@ -245,7 +246,7 @@ def create_genome_with_attributes_and_count(db_conn, genome, release_version):
         release_version=release_version,
     )
 
-    logging.debug(f"Genome Datasets Retrieved: {attrib_data_results}")
+    logger.debug(f"Genome Datasets Retrieved: {attrib_data_results}")
     attribs = []
     if len(attrib_data_results) > 0:
         for dataset in attrib_data_results[0].datasets:
@@ -387,7 +388,7 @@ def get_ftp_links(db_conn, genome_uuid, dataset_type, release_version):
     # Request is sending an empty string '' instead of None when
     # an input parameter is not supplied by the user
     if not genome_uuid:
-        logging.warning("Missing or Empty Genome UUID field.")
+        logger.warning("Missing or Empty Genome UUID field.")
         return None
     if not dataset_type:
         dataset_type = "all"
@@ -400,7 +401,7 @@ def get_ftp_links(db_conn, genome_uuid, dataset_type, release_version):
 
         # Return empty links if Genome is not found
         if genome is None:
-            logging.debug("No Genome found.")
+            logger.debug("No Genome found.")
             return None
 
         # Find the links for the given dataset.
@@ -412,15 +413,15 @@ def get_ftp_links(db_conn, genome_uuid, dataset_type, release_version):
             )
         except (ValueError, RuntimeError) as error:
             # log the errors to error log and return empty list of links
-            logging.error(f"Error fetching links: {error}")
+            logger.error(f"Error fetching links: {error}")
             return None
 
     if len(links) > 0:
         response_data = create_paths(data=links)
-        # logging.debug(f"Response data: \n{response_data}")
+        # logger.debug(f"Response data: \n{response_data}")
         return response_data
 
-    logging.debug("No Genome found.")
+    logger.debug("No Genome found.")
     return None
 
 
@@ -452,12 +453,12 @@ def get_brief_genome_details_by_uuid(db_conn, genome_uuid_or_tag, release_versio
         A dictionary containing brief genome details.
     """
     if not genome_uuid_or_tag:
-        logging.warning("Missing or Empty Genome UUID field.")
+        logger.warning("Missing or Empty Genome UUID field.")
         return None
 
     # If genome_uuid_or_tag is not a valid UUID, assume it's a tag and fetch genome_uuid
     if not is_valid_uuid(genome_uuid_or_tag):
-        logging.debug(
+        logger.debug(
             f"Invalid genome_uuid {genome_uuid_or_tag}, assuming it's a tag and using it to fetch genome_uuid"
         )
         # For tag (URL name), we only care about the latest integrated release.
@@ -475,13 +476,13 @@ def get_brief_genome_details_by_uuid(db_conn, genome_uuid_or_tag, release_versio
         )
 
     if not genome_results:
-        logging.error(
+        logger.error(
             f"No Genome/Release found: {genome_uuid_or_tag}/{release_version}"
         )
         return None
 
     if len(genome_results) > 1:
-        logging.warning(
+        logger.warning(
             f"Multiple results found for Genome UUID/Release version: {genome_uuid_or_tag}/{release_version}"
         )
         # means that this genome is released in both a partial and integrated release
@@ -507,7 +508,7 @@ def get_brief_genome_details_by_uuid(db_conn, genome_uuid_or_tag, release_versio
             != current_genome.Genome.genome_uuid
         ):
             latest_genome = all_genomes_with_same_assembly[0]
-            logging.debug(f"Found newer genome: {latest_genome.Genome.genome_uuid}")
+            logger.debug(f"Found newer genome: {latest_genome.Genome.genome_uuid}")
 
     # Return the requested genome together with the latest genome details (or None if current is latest)
     return create_brief_genome_details(current_genome, latest_genome)
@@ -551,19 +552,19 @@ def create_brief_genome_details(data=None, latest_genome=None):
 
 def genome_assembly_sequence_region(db_conn, genome_uuid, sequence_region_name):
     if not genome_uuid or not sequence_region_name:
-        logging.warning("Missing or Empty Genome UUID or Sequence region name field.")
+        logger.warning("Missing or Empty Genome UUID or Sequence region name field.")
         return None
 
     assembly_sequence_results = db_conn.fetch_sequences(
         genome_uuid=genome_uuid, assembly_sequence_name=sequence_region_name
     )
     if len(assembly_sequence_results) == 0:
-        logging.error(
+        logger.error(
             f"Assembly sequence not found for {genome_uuid}/{sequence_region_name}"
         )
     else:
         if len(assembly_sequence_results) > 1:
-            logging.warning(
+            logger.warning(
                 f"Multiple results returned for {genome_uuid}/{sequence_region_name}"
             )
         response_data = create_genome_assembly_sequence_region(
@@ -626,7 +627,7 @@ def get_attributes_values_by_uuid(
                 an empty attribute value object is returned.
     """
     if not genome_uuid:
-        logging.warning("Missing or Empty Genome UUID field.")
+        logger.warning("Missing or Empty Genome UUID field.")
         return None
 
     genome_datasets_results = db_conn.fetch_genome_datasets(
@@ -636,7 +637,7 @@ def get_attributes_values_by_uuid(
     )
 
     if len(genome_datasets_results) > 1:
-        logging.debug("Multiple results returned.")
+        logger.debug("Multiple results returned.")
         # if we get more than one genome, it means it's attached to both partial and integrated releases
         # we pick the integrated genome because it's the one taking precedence
         genome_datasets_results = [
@@ -653,12 +654,12 @@ def get_attributes_values_by_uuid(
             attribute_names=attribute_names,
             latest_only=latest_only,
         )
-        logging.debug(f"Response data: \n{response_data}")
+        logger.debug(f"Response data: \n{response_data}")
         return response_data
     else:
-        logging.debug("Genome not found.")
+        logger.debug("Genome not found.")
 
-    logging.debug("No attribute values were found.")
+    logger.debug("No attribute values were found.")
     return None
 
 
@@ -775,7 +776,7 @@ def get_genomes_by_specific_keyword_iterator(
         or scientific_parlance_name
         or species_taxonomy_id
     ):
-        logging.warning("Missing required field")
+        logger.warning("Missing required field")
         return None
 
     try:
@@ -846,16 +847,16 @@ def get_genomes_by_specific_keyword_iterator(
                 yield create_genome(data=genome_row)
 
     except Exception as e:
-        logging.error(f"Error fetching genomes: {e}")
+        logger.error(f"Error fetching genomes: {e}")
         return None
 
-    logging.debug("No genomes were found.")
+    logger.debug("No genomes were found.")
     return None
 
 
 def get_vep_paths_by_uuid(db_conn: VepAdaptor, genome_uuid: str):
     if not genome_uuid:
-        logging.warning("Missing or Empty Genome UUID field.")
+        logger.warning("Missing or Empty Genome UUID field.")
         return None
 
     try:
@@ -863,7 +864,7 @@ def get_vep_paths_by_uuid(db_conn: VepAdaptor, genome_uuid: str):
         if vep_paths:
             return vep_paths
     except (ValueError, RuntimeError) as error:
-        logging.error(error)
+        logger.error(error)
 
     return None
 
@@ -879,7 +880,7 @@ def release_iterator(db_conn: ReleaseAdaptor, site_name, release_label, current_
     )
 
     for result in release_results:
-        logging.debug(
+        logger.debug(
             f"Processing release: {result.EnsemblRelease.version if hasattr(result, 'EnsemblRelease') else None}"
         )
         yield create_release(result)
@@ -893,7 +894,7 @@ def get_genome_groups_by_reference(
     if (
         not group_type or group_type != "structural_variant"
     ):  # accepting only structural_variant for now
-        logging.warning("Missing or Wrong Group type field.")
+        logger.warning("Missing or Wrong Group type field.")
         return None
 
     # The logic calling the ORM and fetching data from the DB
@@ -1015,7 +1016,7 @@ def get_genome_groups_by_reference(
 
     except Exception:
         # Dummy error handling until the real ORM logic is in place
-        logging.exception(
+        logger.exception(
             "Unexpected error while fetching genome groups "
             "(group_type=%r, release_label=%r)",
             group_type,
@@ -1032,7 +1033,7 @@ def data_get_genomes_in_group(
     release_label: str | None,
 ):
     if not group_id:
-        logging.warning("Missing or Empty Group type field.")
+        logger.warning("Missing or Empty Group type field.")
         return None
 
     try:
@@ -1416,7 +1417,7 @@ def data_get_genomes_in_group(
 
     except Exception:
         # Dummy error handling until ORM logic is implemented.
-        logging.exception(
+        logger.exception(
             "Unexpected error while fetching genomes in group "
             "(group_id=%r, release_label=%r)",
             group_id,
@@ -1425,44 +1426,21 @@ def data_get_genomes_in_group(
         return None
 
 
-# TODO FIX: create stats data in DB and use
-def data_get_genome_counts(db_conn: Any, release_label: str | None):
+# OK
+def data_get_genome_counts(adaptor: MetaAdaptor, release_label: str | None):
 
     try:
-        # The logic calling the ORM and fetching data from the DB
-        # will go here. For now, we return dummy data.
-        dummy_data = {
-            "total": 4758,
-            "counts": [
-                {
-                    "label": "Animals",
-                    "count": 4127,
-                },
-                {
-                    "label": "Green Plants",
-                    "count": 475,
-                },
-                {
-                    "label": "Fungi",
-                    "count": 116,
-                },
-                {
-                    "label": "Bacteria",
-                    "count": 1,
-                },
-                {
-                    "label": "Others",
-                    "count": 39,
-                },
-            ],
+        data = adaptor.fetch_genome_taxonomy_counts()
+        total_row = data.pop(0)
+
+        return {
+            "total": total_row["count"],
+            "counts": data
         }
 
-        return dummy_data
-
     except Exception:
-        # Dummy error handling until ORM logic is implemented.
-        logging.exception(
-            "Unexpected error while fetching genomes in group " "(release_label=%r)",
+        logger.exception(
+            "Unexpected error while fetching genome counts " "(release_label=%r)",
             release_label,
         )
         return None
