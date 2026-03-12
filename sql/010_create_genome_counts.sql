@@ -12,6 +12,14 @@ create table taxonomy_counts as from (
   gr.is_current = true group by all
 );
 alter table taxonomy_counts add column domain_tax_id int;
+alter table taxonomy_counts add column release_id int;
+update taxonomy_counts set release_id = 0;
+
+insert into taxonomy_counts (release_id, genome_id, organism_id, production_name, taxonomy_id) select er.release_id, g.genome_id, g.organism_id, g.production_name,
+    o.taxonomy_id from genome g inner join genome_release gr on gr.genome_id =
+    g.genome_id inner join ensembl_release er on er.release_id = gr.release_id inner
+    join organism o on o.organism_id = g.organism_id where g.suppressed = false and
+    gr.is_current = true and er.status = 'Released';
 
 # If there is newer data from NCBI, update our taxonomy_ids
 update taxonomy_counts set taxonomy_id = new_tax_id from (select ntn.taxon_id as new_tax_id, genome_id from taxonomy_counts tc
@@ -54,19 +62,24 @@ update taxonomy_counts set domain_tax_id = uptax(taxonomy_id);
 
 
 drop table if exists genome_taxonomy_counts;
-create table genome_taxonomy_counts as select tsl.taxon_id, ensembl_taxon_name, count(ifnull(domain_tax_id, 0)) as 'count', ord from taxonomy_counts
-  inner join tax_stop_levels tsl on taxonomy_counts.domain_tax_id = tsl.taxon_id
-  group by ord, ensembl_taxon_name, tsl.taxon_id
-  order by ord asc;
+create table genome_taxonomy_counts as select tc.release_id, label, tsl.taxon_id, ensembl_taxon_name, count(ifnull(domain_tax_id, 0)) as 'count', ord from taxonomy_counts tc
+    inner join tax_stop_levels tsl on tc.domain_tax_id = tsl.taxon_id left join ensembl_release er on er.release_id = tc.release_id
+    group by tc.release_id, label, ord, ensembl_taxon_name, tsl.taxon_id
+    order by tc.release_id, ord asc;
+update genome_taxonomy_counts set label = '' where label is null;
 
-insert into genome_taxonomy_counts values (0, 'Genomes now available', (select sum(count) from genome_taxonomy_counts), 0);
 
 # View result
 .print ''
-.print 'Created table genome_taxonomy_counts:'
+select sum(count) as Total from genome_taxonomy_counts where release_id = 0;
+.print 'Created table genome_taxonomy_counts. Across all releases:'
 .print ''
-from genome_taxonomy_counts order by ord;
+from genome_taxonomy_counts where release_id = 0 order by ord;
+.print ''
+.print 'Per release:'
+.print ''
+from genome_taxonomy_counts where release_id > 0 order by release_id,ord;
 
-drop table taxonomy_counts;
+#drop table taxonomy_counts;
 drop table tax_stop_levels;
 drop macro uptax;

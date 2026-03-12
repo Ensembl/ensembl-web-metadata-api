@@ -1426,15 +1426,16 @@ def data_get_genomes_in_group(
         return None
 
 
-# OK
 def data_get_genome_counts(adaptor: MetaAdaptor, release_label: str | None):
 
     try:
-        data = adaptor.fetch_genome_taxonomy_counts()
-        total_row = data.pop(0)
+        data = adaptor.fetch_genome_taxonomy_counts(release_label)
+        total = 0
+        for i in data:
+            total += i["count"]
 
         return {
-            "total": total_row["count"],
+            "total": total,
             "counts": data
         }
 

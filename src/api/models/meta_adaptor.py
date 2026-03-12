@@ -11,11 +11,8 @@
 #   limitations under the License.
 from __future__ import annotations
 
-import enum
 import logging
-import re
-from operator import and_
-from typing import List, Tuple, NamedTuple
+from typing import List
 
 import sqlalchemy as db
 from ensembl.utils.database import DBConnection
@@ -44,7 +41,7 @@ class MetaAdaptor():
         self.db_conn = db_conn
         DeferredReflection.prepare(db_conn._engine)
 
-    def fetch_genome_taxonomy_counts(self):
+    def fetch_genome_taxonomy_counts(self, release_label: str | None = None):
         """
         Fetches genome taxonomy counts.
 
@@ -61,11 +58,13 @@ class MetaAdaptor():
         Example usage:
             genome_taxonomy_counts = fetch_genome_taxonomy_counts()
         """
+        if release_label == None:
+            release_label = ''
         with self.db_conn.session_scope() as session:
             sql = db.select(
                 GenomeTaxonomyCounts.ensembl_taxon_name,
                 GenomeTaxonomyCounts.count,
-            ).order_by(GenomeTaxonomyCounts.ord)
+            ).where(GenomeTaxonomyCounts.label == release_label).order_by(GenomeTaxonomyCounts.ord)
             logger.debug(sql)
             genome_taxonomy_counts = session.execute(sql).mappings().all()
         return genome_taxonomy_counts

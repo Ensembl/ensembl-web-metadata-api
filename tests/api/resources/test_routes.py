@@ -74,13 +74,13 @@ def test_get_genome_counts():
     assert response.status_code == 200
     assert response.json() == (
         {
-            "total": 200,
+            "total": 225,
             "counts": [
-                {"label": "Animals", "count": 100},
+                {"label": "Animals", "count": 185},
                 {"label": "Bacteria", "count": 1},
-                {"label": "Fungi", "count": 10},
-                {"label": "Green Plants", "count": 10},
-                {"label": "Others", "count": 10},
+                {"label": "Fungi", "count": 1},
+                {"label": "Green Plants", "count": 37},
+                {"label": "Others", "count": 1},
             ],
         }
     )

@@ -28,10 +28,17 @@ def test_get_genome_counts():
 
     data = adaptor.fetch_genome_taxonomy_counts()
     assert data == [
-        (0, "Genomes now available", 4852, 0),
-        (33208, "Animals", 4195, 1),
-        (2, "Bacteria", 1, 3),
-        (4751, "Fungi", 151, 4),
-        (33090, "Green Plants", 465, 5),
-        (1, "Others", 40, 6),
+        {"ensembl_taxon_name": "Animals", "count": 4195},
+        {"ensembl_taxon_name": "Bacteria", "count": 1},
+        {"ensembl_taxon_name": "Fungi", "count": 151},
+        {"ensembl_taxon_name": "Green Plants", "count": 465},
+        {"ensembl_taxon_name": "Others", "count": 40},
+    ]
+
+    data = adaptor.fetch_genome_taxonomy_counts("2026-01-26")
+    assert data == [
+        {"ensembl_taxon_name": "Animals", "count": 71},
+        {"ensembl_taxon_name": "Fungi", "count": 4},
+        {"ensembl_taxon_name": "Green Plants", "count": 1},
+        {"ensembl_taxon_name": "Others", "count": 2},
     ]
