@@ -1,19 +1,18 @@
 # Create a table with all species, copying out of genome / organism
 drop table if exists taxonomy_counts;
 create table taxonomy_counts as from (
-  with valid_releases as (select * from ensembl_release where ((release_type =
-        'integrated' and is_current = true) or (release_type = 'partial' and
-        status = 'Released' and release_date >= (select release_date from
-          ensembl_release where release_type = 'integrated' and is_current =
-          true)))) select g.genome_id, g.organism_id, g.production_name,
-  o.taxonomy_id from genome g inner join genome_release gr on gr.genome_id =
-  g.genome_id inner join valid_releases vr on vr.release_id = gr.release_id inner
-  join organism o on o.organism_id = g.organism_id where g.suppressed = false and
-  gr.is_current = true group by all
+  select g.genome_id, g.organism_id, g.production_name, o.taxonomy_id from genome g
+    join genome_release gr on g.genome_id = gr.genome_id
+    join ensembl_release er on er.release_id = gr.release_id
+    inner join organism o on o.organism_id = g.organism_id
+  where (g.suppressed = false or (release_type='integrated' and g.suppressed = true)) and (release_type='integrated' or gr.is_current=1)
+  group by all
 );
 alter table taxonomy_counts add column domain_tax_id int;
 alter table taxonomy_counts add column release_id int;
 update taxonomy_counts set release_id = 0;
+
+
 
 insert into taxonomy_counts (release_id, genome_id, organism_id, production_name, taxonomy_id) select er.release_id, g.genome_id, g.organism_id, g.production_name,
     o.taxonomy_id from genome g inner join genome_release gr on gr.genome_id =
