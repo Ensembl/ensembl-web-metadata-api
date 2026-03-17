@@ -23,9 +23,9 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
 from api.resources.redis import close_redis_pool
-# from api.resources.routes import router
+from api.resources.routes import router
 from api.config import API_PREFIX, ALLOWED_HOSTS, VERSION, PROJECT_NAME, DEBUG
-# from api.dependencies import Dependencies
+from api.dependencies import Dependencies
 
 from api.resources.health import router as health_router
 
@@ -56,8 +56,8 @@ def get_application() -> FastAPI:
         allow_headers=["*"],
     )
 
-    # application.include_router(router, prefix=API_PREFIX)
-    application.include_router(health_router)
+    application.include_router(router, prefix=API_PREFIX)
+    application.include_router(health_router, prefix=API_PREFIX) # will be removed later
 
     return application
 
