@@ -100,11 +100,11 @@ Setup:Review:
     NS: ${CI_COMMIT_REF_SLUG}
   script:
     - kubectl create configmap metadata-api-configmap --from-env-file=.env.sample --dry-run=client -o yaml | kubectl apply -f -
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "push" && 
+#  rules:
+#    - if: $CI_PIPELINE_SOURCE == "push" &&
 #          $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000" &&  # TODO: uncomment later
 #          $CI_COMMIT_REF_NAME !~  "/^nodeploy\/.*$/"
-      when: always
+#      when: always
 
 #Review:WP51:HL:
 Review:
