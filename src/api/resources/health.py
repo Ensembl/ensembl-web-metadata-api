@@ -7,7 +7,7 @@ from starlette.responses import JSONResponse
 from api.config import DB_URL
 from ensembl.utils.database.dbconnection import DBConnection
 
-router = APIRouter(tags=["health"])
+router = APIRouter(tags=["health"], prefix="/metadata")
 
 
 @router.get("/health/live")
