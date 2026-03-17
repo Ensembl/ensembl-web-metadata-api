@@ -181,11 +181,9 @@ async def example_objects(adaptor: GenomeAdaptorDep, request: Request, genome_id
     try:
         attributes_info = get_attributes_by_genome_uuid(adaptor, genome_id, None)
         if attributes_info:
-            example_objects = ExampleObjectList(
-                example_objects=attributes_info["attributes_info"]
-            )
+            genome_attributes_info = ExampleObjectList(**attributes_info)
             response_data = responses.JSONResponse(
-                example_objects.model_dump()["example_objects"]
+                genome_attributes_info.model_dump()["example_objects"]
             )
         else:
             return response_error_handler(

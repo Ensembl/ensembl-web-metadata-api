@@ -6,27 +6,21 @@ from pydantic import (
     validator,
     field_serializer,
     root_validator,
+    model_validator,
     AliasChoices,
 )
 from api.logconfig import InterceptHandler
 
 logging.getLogger().handlers = [InterceptHandler()]
 
-
 class Homology(BaseModel):
     coverage: float | None = Field(
-        alias=AliasChoices(
-            "compara.stats.homology_coverage",
-            "compara.homology_coverage",
-            "compara.homology_coverage ",
-        ),
+        alias=AliasChoices("compara.stats.homology_coverage", "compara.homology_coverage", "compara.homology_coverage "),
         default=None,
     )
     reference_species_name: str | None = Field(
         alias=AliasChoices(
-            "compara.stats.homology_reference_species",
-            "compara.homology_reference_species",
-            "compara.homology_reference_species ",
+            "compara.stats.homology_reference_species", "compara.homology_reference_species", "compara.homology_reference_species "
         ),
         default=None,
     )
@@ -47,323 +41,213 @@ class Homology(BaseModel):
 
 class Regulation(BaseModel):
     enhancers: int | None = Field(
-        alias=AliasChoices(
-            "regulation.stats.enhancer_count", "regulation.enhancer_count"
-        ),
-        default=None,
+        alias=AliasChoices("regulation.stats.enhancer_count", "regulation.enhancer_count"),
+        default=None
     )
     promoters: int | None = Field(
-        alias=AliasChoices(
-            "regulation.stats.promoter_count", "regulation.promoter_count"
-        ),
-        default=None,
+        alias=AliasChoices("regulation.stats.promoter_count", "regulation.promoter_count"),
+        default=None
     )
     ctcf_count: int | None = Field(
         alias=AliasChoices("regulation.stats.ctcf_count", "regulation.ctcf_count"),
-        default=None,
+        default=None
     )
     tfbs_count: int | None = Field(
         alias=AliasChoices("regulation.stats.tfbs_count", "regulation.tfbs_count"),
-        default=None,
+        default=None
     )
     open_chromatin_count: int | None = Field(
-        alias=AliasChoices(
-            "regulation.stats.open_chromatin_count", "regulation.open_chromatin_count"
-        ),
-        default=None,
+        alias=AliasChoices("regulation.stats.open_chromatin_count", "regulation.open_chromatin_count"),
+        default=None
     )
 
 
 class Pseudogene(BaseModel):
     pseudogenes: int | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.ps_pseudogenes", "genebuild.ps_pseudogenes"
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.ps_pseudogenes", "genebuild.ps_pseudogenes"),
+        default=None
     )
     average_genomic_span: float | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.ps_average_genomic_span",
-            "genebuild.ps_average_genomic_span",
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.ps_average_genomic_span", "genebuild.ps_average_genomic_span"),
+        default=None
     )
     average_sequence_length: float | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.ps_average_sequence_length",
-            "genebuild.ps_average_sequence_length",
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.ps_average_sequence_length", "genebuild.ps_average_sequence_length"),
+        default=None
     )
     shortest_gene_length: int | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.ps_shortest_gene_length",
-            "genebuild.ps_shortest_gene_length",
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.ps_shortest_gene_length", "genebuild.ps_shortest_gene_length"),
+        default=None
     )
     longest_gene_length: int | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.ps_longest_gene_length", "genebuild.ps_longest_gene_length"
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.ps_longest_gene_length", "genebuild.ps_longest_gene_length"),
+        default=None
     )
     total_transcripts: int | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.ps_total_transcripts", "genebuild.ps_total_transcripts"
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.ps_total_transcripts", "genebuild.ps_total_transcripts"),
+        default=None
     )
     transcripts_per_gene: float | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.ps_transcripts_per_gene",
-            "genebuild.ps_transcripts_per_gene",
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.ps_transcripts_per_gene", "genebuild.ps_transcripts_per_gene"),
+        default=None
     )
     total_exons: int | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.ps_total_exons", "genebuild.ps_total_exons"
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.ps_total_exons", "genebuild.ps_total_exons"),
+        default=None
     )
     average_exon_length: float | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.ps_average_exon_length", "genebuild.ps_average_exon_length"
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.ps_average_exon_length", "genebuild.ps_average_exon_length"),
+        default=None
     )
     average_exons_per_transcript: float | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.ps_average_exons_per_transcript",
-            "genebuild.ps_average_exons_per_transcript",
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.ps_average_exons_per_transcript", "genebuild.ps_average_exons_per_transcript"),
+        default=None
     )
     total_introns: int | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.ps_total_introns", "genebuild.ps_total_introns"
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.ps_total_introns", "genebuild.ps_total_introns"),
+        default=None
     )
     average_intron_length: float | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.ps_average_intron_length",
-            "genebuild.ps_average_intron_length",
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.ps_average_intron_length", "genebuild.ps_average_intron_length"),
+        default=None
     )
 
 
 class NonCoding(BaseModel):
     non_coding_genes: int | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.nc_non_coding_genes", "genebuild.nc_non_coding_genes"
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.nc_non_coding_genes", "genebuild.nc_non_coding_genes"),
+        default=None
     )
     small_non_coding_genes: int | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.nc_small_non_coding_genes",
-            "genebuild.nc_small_non_coding_genes",
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.nc_small_non_coding_genes", "genebuild.nc_small_non_coding_genes"),
+        default=None
     )
     long_non_coding_genes: int | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.nc_long_non_coding_genes",
-            "genebuild.nc_long_non_coding_genes",
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.nc_long_non_coding_genes", "genebuild.nc_long_non_coding_genes"),
+        default=None
     )
     misc_non_coding_genes: int | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.nc_misc_non_coding_genes",
-            "genebuild.nc_misc_non_coding_genes",
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.nc_misc_non_coding_genes", "genebuild.nc_misc_non_coding_genes"),
+        default=None
     )
     average_genomic_span: float | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.nc_average_genomic_span",
-            "genebuild.nc_average_genomic_span",
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.nc_average_genomic_span", "genebuild.nc_average_genomic_span"),
+        default=None
     )
     average_sequence_length: float | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.nc_average_sequence_length",
-            "genebuild.nc_average_sequence_length",
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.nc_average_sequence_length", "genebuild.nc_average_sequence_length"),
+        default=None
     )
     shortest_gene_length: int | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.nc_shortest_gene_length",
-            "genebuild.nc_shortest_gene_length",
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.nc_shortest_gene_length", "genebuild.nc_shortest_gene_length"),
+        default=None
     )
     longest_gene_length: int | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.nc_longest_gene_length", "genebuild.nc_longest_gene_length"
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.nc_longest_gene_length", "genebuild.nc_longest_gene_length"),
+        default=None
     )
     total_transcripts: int | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.nc_total_transcripts", "genebuild.nc_total_transcripts"
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.nc_total_transcripts", "genebuild.nc_total_transcripts"),
+        default=None
     )
     transcripts_per_gene: float | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.nc_transcripts_per_gene",
-            "genebuild.nc_transcripts_per_gene",
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.nc_transcripts_per_gene", "genebuild.nc_transcripts_per_gene"),
+        default=None
     )
     total_exons: int | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.nc_total_exons", "genebuild.nc_total_exons"
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.nc_total_exons", "genebuild.nc_total_exons"),
+        default=None
     )
     average_exon_length: float | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.nc_average_exon_length", "genebuild.nc_average_exon_length"
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.nc_average_exon_length", "genebuild.nc_average_exon_length"),
+        default=None
     )
     average_exons_per_transcript: float | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.nc_average_exons_per_transcript",
-            "genebuild.nc_average_exons_per_transcript",
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.nc_average_exons_per_transcript", "genebuild.nc_average_exons_per_transcript"),
+        default=None
     )
     total_introns: int | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.nc_total_introns", "genebuild.nc_total_introns"
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.nc_total_introns", "genebuild.nc_total_introns"),
+        default=None
     )
     average_intron_length: float | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.nc_average_intron_length",
-            "genebuild.nc_average_intron_length",
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.nc_average_intron_length", "genebuild.nc_average_intron_length"),
+        default=None
     )
 
 
 class Coding(BaseModel):
     coding_genes: int | None = Field(
         alias=AliasChoices("genebuild.stats.coding_genes", "genebuild.coding_genes"),
-        default=None,
+        default=None
     )
     average_genomic_span: float | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.average_genomic_span", "genebuild.average_genomic_span"
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.average_genomic_span", "genebuild.average_genomic_span"),
+        default=None
     )
     average_sequence_length: float | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.average_sequence_length",
-            "genebuild.average_sequence_length",
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.average_sequence_length", "genebuild.average_sequence_length"),
+        default=None
     )
     average_cds_length: float | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.average_cds_length", "genebuild.average_cds_length"
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.average_cds_length", "genebuild.average_cds_length"),
+        default=None
     )
     shortest_gene_length: int | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.shortest_gene_length", "genebuild.shortest_gene_length"
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.shortest_gene_length", "genebuild.shortest_gene_length"),
+        default=None
     )
     longest_gene_length: int | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.longest_gene_length", "genebuild.longest_gene_length"
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.longest_gene_length", "genebuild.longest_gene_length"),
+        default=None
     )
     total_transcripts: int | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.total_transcripts", "genebuild.total_transcripts"
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.total_transcripts", "genebuild.total_transcripts"),
+        default=None
     )
     coding_transcripts: int | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.coding_transcripts", "genebuild.coding_transcripts"
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.coding_transcripts", "genebuild.coding_transcripts"),
+        default=None
     )
     transcripts_per_gene: float | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.transcripts_per_gene", "genebuild.transcripts_per_gene"
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.transcripts_per_gene", "genebuild.transcripts_per_gene"),
+        default=None
     )
     coding_transcripts_per_gene: float | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.coding_transcripts_per_gene",
-            "genebuild.coding_transcripts_per_gene",
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.coding_transcripts_per_gene", "genebuild.coding_transcripts_per_gene"),
+        default=None
     )
     total_exons: int | None = Field(
         alias=AliasChoices("genebuild.stats.total_exons", "genebuild.total_exons"),
-        default=None,
+        default=None
     )
     total_coding_exons: int | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.total_coding_exons", "genebuild.total_coding_exons"
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.total_coding_exons", "genebuild.total_coding_exons"),
+        default=None
     )
     average_exon_length: float | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.average_exon_length", "genebuild.average_exon_length"
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.average_exon_length", "genebuild.average_exon_length"),
+        default=None
     )
     average_coding_exon_length: float | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.average_coding_exon_length",
-            "genebuild.average_coding_exon_length",
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.average_coding_exon_length", "genebuild.average_coding_exon_length"),
+        default=None
     )
     average_exons_per_transcript: float | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.average_coding_exons_per_trans",
-            "genebuild.average_coding_exons_per_trans",
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.average_coding_exons_per_trans", "genebuild.average_coding_exons_per_trans"),
+        default=None
     )
     average_coding_exons_per_coding_transcript: float | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.average_coding_exons_per_trans",
-            "genebuild.average_coding_exons_per_trans",
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.average_coding_exons_per_trans", "genebuild.average_coding_exons_per_trans"),
+        default=None
     )
     total_introns: int | None = Field(
         alias=AliasChoices("genebuild.stats.total_introns", "genebuild.total_introns"),
-        default=None,
+        default=None
     )
     average_intron_length: float | None = Field(
-        alias=AliasChoices(
-            "genebuild.stats.average_intron_length", "genebuild.average_intron_length"
-        ),
-        default=None,
+        alias=AliasChoices("genebuild.stats.average_intron_length", "genebuild.average_intron_length"),
+        default=None
     )
 
 
@@ -371,53 +255,41 @@ class Assembly(BaseModel):
     """
     I added AliasChoices temporarily for a smooth transition with breaking the API
     """
-
     contig_n50: int | None = Field(
         alias=AliasChoices("assembly.stats.contig_n50", "assembly.contig_n50"),
-        default=None,
+        default=None
     )
     total_genome_length: int | None = Field(
-        alias=AliasChoices(
-            "assembly.stats.total_genome_length", "assembly.total_genome_length"
-        ),
-        default=None,
+        alias=AliasChoices("assembly.stats.total_genome_length", "assembly.total_genome_length"),
+        default=None
     )
     total_coding_sequence_length: int | None = Field(
-        alias=AliasChoices(
-            "assembly.stats.total_coding_sequence_length",
-            "assembly.total_coding_sequence_length",
-        ),
-        default=None,
+        alias=AliasChoices("assembly.stats.total_coding_sequence_length", "assembly.total_coding_sequence_length"),
+        default=None
     )
     total_gap_length: int | None = Field(
-        alias=AliasChoices(
-            "assembly.stats.total_gap_length", "assembly.total_gap_length"
-        ),
-        default=None,
+        alias=AliasChoices("assembly.stats.total_gap_length", "assembly.total_gap_length"),
+        default=None
     )
     spanned_gaps: int | None = Field(
         alias=AliasChoices("assembly.stats.spanned_gaps", "assembly.spanned_gaps"),
-        default=None,
+        default=None
     )
     chromosomes: int | None = Field(
         alias=AliasChoices("assembly.stats.chromosomes", "assembly.chromosomes"),
-        default=None,
+        default=None
     )
     toplevel_sequences: int | None = Field(
-        alias=AliasChoices(
-            "assembly.stats.toplevel_sequences", "assembly.toplevel_sequences"
-        ),
-        default=None,
+        alias=AliasChoices("assembly.stats.toplevel_sequences", "assembly.toplevel_sequences"),
+        default=None
     )
     component_sequences: int | None = Field(
-        alias=AliasChoices(
-            "assembly.stats.component_sequences", "assembly.component_sequences"
-        ),
-        default=None,
+        alias=AliasChoices("assembly.stats.component_sequences", "assembly.component_sequences"),
+        default=None
     )
     gc_percentage: float | None = Field(
         alias=AliasChoices("assembly.stats.gc_percentage", "assembly.gc_percentage"),
-        default=None,
+        default=None
     )
 
     @validator("contig_n50", "component_sequences", pre=True)
@@ -435,44 +307,28 @@ class Assembly(BaseModel):
 
 class Variation(BaseModel):
     short_variants: int | None = Field(
-        alias=AliasChoices(
-            "variation.stats.short_variants", "variation.short_variants"
-        ),
-        default=None,
+        alias=AliasChoices("variation.stats.short_variants", "variation.short_variants"),
+        default=None
     )
     structural_variants: int | None = Field(
-        alias=AliasChoices(
-            "variation.stats.structural_variants", "variation.structural_variants"
-        ),
-        default=None,
+        alias=AliasChoices("variation.stats.structural_variants", "variation.structural_variants"),
+        default=None
     )
     short_variants_with_phenotype_assertions: int | None = Field(
-        alias=AliasChoices(
-            "variation.stats.short_variants_with_phenotype_assertions",
-            "variation.short_variants_with_phenotype_assertions",
-        ),
-        default=None,
+        alias=AliasChoices("variation.stats.short_variants_with_phenotype_assertions", "variation.short_variants_with_phenotype_assertions"),
+        default=None
     )
     short_variants_with_publications: int | None = Field(
-        alias=AliasChoices(
-            "variation.stats.short_variants_with_publications",
-            "variation.short_variants_with_publications",
-        ),
-        default=None,
+        alias=AliasChoices("variation.stats.short_variants_with_publications", "variation.short_variants_with_publications"),
+        default=None
     )
     short_variants_frequency_studies: int | None = Field(
-        alias=AliasChoices(
-            "variation.stats.short_variants_frequency_studies",
-            "variation.short_variants_frequency_studies",
-        ),
-        default=None,
+        alias=AliasChoices("variation.stats.short_variants_frequency_studies", "variation.short_variants_frequency_studies"),
+        default=None
     )
     structural_variants_with_phenotype_assertions: int | None = Field(
-        alias=AliasChoices(
-            "variation.stats.structural_variants_with_phenotype_assertions",
-            "variation.structural_variants_with_phenotype_assertions",
-        ),
-        default=None,
+        alias=AliasChoices("variation.stats.structural_variants_with_phenotype_assertions", "variation.structural_variants_with_phenotype_assertions"),
+        default=None
     )
 
 
@@ -520,30 +376,51 @@ class ExampleObject(BaseModel):
 class ExampleObjectList(BaseModel):
     example_objects: list[ExampleObject] = []
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def set_region_parameters(cls, values):
+        attributes_info = values.get("attributes_info") or {}
+        genome_uuid = values.get("genome_uuid")
         extracted_example_objects = cls.extract_example_objects(
-            values.get("example_objects")
+            genome_uuid, attributes_info
         )
         values["example_objects"] = extracted_example_objects
         return values
 
     @staticmethod
-    def extract_example_objects(genome_attributes):
+    def extract_example_objects(genome_uuid ,attributes_info):
         extracted_example_objects = []
         try:
             example_gene = ExampleObject(
-                type="gene", id=genome_attributes["genebuild_sample_gene"]
+                type="gene", id=attributes_info["genebuild_sample_gene"]
             )
             extracted_example_objects.append(example_gene)
             example_location = ExampleObject(
-                type="location", id=genome_attributes["genebuild_sample_location"]
+                type="location", id=attributes_info["genebuild_sample_location"]
             )
             extracted_example_objects.append(example_location)
             example_variant = ExampleObject(
-                type="variant", id=genome_attributes["variation_sample_variant"]
+                type="variant", id=attributes_info["variation_sample_variant"]
             )
             extracted_example_objects.append(example_variant)
+
+            # We are hardcoding SV alignment locations for T2T and GrCh38
+            # This is temporary until we have this data in the metadata DB
+            # T2T
+            if genome_uuid == "4c07817b-c7c5-463f-8624-982286bc4355":
+                example_alignment_location = ExampleObject(
+                    type="alignment_location",
+                    id="11:48674445-49222385"
+                )
+                extracted_example_objects.append(example_alignment_location)
+            # GRCh38
+            elif genome_uuid == "a7335667-93e7-11ec-a39d-005056b38ce3":
+                example_alignment_location = ExampleObject(
+                    type="alignment_location",
+                    id="11:49321844-49869784"
+                )
+                extracted_example_objects.append(example_alignment_location)
+
         except Exception as ex:
             logging.error(ex)
         return extracted_example_objects

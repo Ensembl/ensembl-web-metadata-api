@@ -997,6 +997,7 @@ def test_example_objects():
         {"type": "gene", "id": "ENSG00000221914"},
         {"type": "location", "id": "8:26291508-26372680"},
         {"type": "variant", "id": "1:230710048:rs699"},
+        { 'id': '11:49321844-49869784', 'type': 'alignment_location', },
     ]
 
 
