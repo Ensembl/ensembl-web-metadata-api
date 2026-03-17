@@ -6,4 +6,4 @@ resources:
 #- configmap.yaml
 #- secret.yaml
 #- ingress.yaml
-- pvc.yaml
+#- pvc.yaml
