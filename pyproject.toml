@@ -1,5 +1,5 @@
 [project]
-name = "Ensembl_web_metadata_API"
+name = "ensembl_web_metadata_api"
 description = "REST API for web metadata"
 version = "0.1.0"
 readme = "README.md"
@@ -50,13 +50,13 @@ dev = [
   "black",
 ]
 
-[project.scripts]
-ensembl-web-metadata-api = "ensembl_web_metadata_api:main"
-
 [build-system]
 requires = ["uv_build>=0.10.11,<0.11.0"]
 build-backend = "uv_build"
-module-name = ["api", "ensembl"]
+
+[tool.uv.build-backend]
+module-root = "src"
+module-name = ["api"]
 
 [tool.pytest]
 minversion = "9.0"
