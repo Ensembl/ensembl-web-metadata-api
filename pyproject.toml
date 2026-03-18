@@ -8,6 +8,7 @@ authors = [
     { name = "Ensembl platform team", email = "ensembl-platform@ebi.ac.uk" }
 ]
 license = "Apache-2.0"
+# redis>=7.3.0 needs Python >= 3.10
 requires-python = ">=3.10"
 dependencies = [
     "annotated-types>=0.7.0",
@@ -39,15 +40,6 @@ dependencies = [
 ]
 packages = [
     { include = "src" },
-]
-
-[project.optional-dependencies]
-test = [
-  "pytest",
-  "pytest-benchmark",
-]
-dev = [
-  "black",
 ]
 
 [build-system]

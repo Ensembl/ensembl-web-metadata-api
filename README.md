@@ -35,3 +35,21 @@ uv run pytest
 ```bash
 uv run black src/api
 ```
+
+### Dependency management
+```bash
+# Add/remove project dependency
+uv add httpx
+uv remove httpx
+# Dev dependency
+uv add --dev httpx
+# Alternative
+uv add httpx --group dev
+uv remove --dev httpx
+# List dependencies
+uv tree
+
+# A venv is managed by uv. You don't need an extra one. You don't have to
+# activate it. pyproject.toml is updated for you. A uv.lock file is written and
+# kept up to date. Changes to uv.lock should be committed to git.
+```
