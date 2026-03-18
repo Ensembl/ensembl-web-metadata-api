@@ -1,25 +1,72 @@
-[tool.poetry]
+[project]
 name = "Ensembl_web_metadata_API"
-version = "0.0.0"
-description = "FastAPI application ."
-authors = ["Web team <ensembl-webteam@ebi.ac.uk>"]
+description = "REST API for web metadata"
+version = "0.1.0"
+readme = "README.md"
+authors = [
+    { name = "Ensembl web team", email = "ensembl-webteam@ebi.ac.uk" },
+    { name = "Ensembl platform team", email = "ensembl-platform@ebi.ac.uk" }
+]
 license = "Apache-2.0"
+requires-python = ">=3.10"
+dependencies = [
+    "annotated-types>=0.7.0",
+    "anyio>=4.12.1",
+    "click>=8.3.1",
+    "duckdb>=1.5.0",
+    "duckdb-engine>=0.17.0",
+    "exceptiongroup>=1.3.1",
+    "fastapi>=0.135.1",
+    "grpcio>=1.78.0",
+    "grpcio-tools>=1.78.0",
+    "h11>=0.16.0",
+    "idna>=3.11",
+    "loguru>=0.7.3",
+    "protobuf>=6.33.5",
+    "pydantic>=2.12.5",
+    "pydantic-core>=2.41.5",
+    "redis>=7.3.0",
+    "requests>=2.32.5",
+    "six>=1.17.0",
+    "sniffio>=1.3.1",
+    "sqlalchemy==2.0.43",
+    "sqlalchemy-utils>=0.42.1",
+    "starlette>=0.52.1",
+    "typing-extensions>=4.15.0",
+    "ujson>=5.12.0",
+    "uvicorn>=0.42.0",
+    "yagrc>=1.1.2",
+]
+packages = [
+    { include = "src" },
+]
 
-[tool.poetry.dependencies]
-python = "^3.8"
-fastapi = "^0.57.0"
-pydantic = "^1.5.1"
-starlette = "^0.13.4"
-loguru = "^0.5.1"
-aiohttp = "^3.8.4"
-uvicorn = "^0.22.0"
-black = "^23.3.0"
+[project.optional-dependencies]
+test = [
+  "pytest",
+  "pytest-benchmark",
+]
+dev = [
+  "black",
+]
+
+[project.scripts]
+ensembl-web-metadata-api = "ensembl_web_metadata_api:main"
 
 [build-system]
-requires = ["poetry>=1.0"]
-build-backend = "poetry.masonry.api"
+requires = ["uv_build>=0.10.11,<0.11.0"]
+build-backend = "uv_build"
+module-name = ["api", "ensembl"]
 
 [tool.pytest]
 minversion = "9.0"
 pythonpath = ["src"]
 testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "black>=26.3.1",
+    "httpx>=0.28.1",
+    "pytest>=9.0.2",
+    "pytest-benchmark>=5.2.3",
+]

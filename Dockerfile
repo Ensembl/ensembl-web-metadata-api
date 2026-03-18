@@ -14,8 +14,8 @@
 #    limitations under the License.
 #
 
-# Base image
-FROM python:3.11
+FROM python:3.12-slim-trixie
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 # Maintainer
 LABEL org.opencontainers.image.authors="ensembl-webteam@ebi.ac.uk"
@@ -24,10 +24,13 @@ LABEL org.opencontainers.image.authors="ensembl-webteam@ebi.ac.uk"
 WORKDIR /app
 
 # Copy source code
-COPY ./src /app/
-COPY requirements.txt requirements.txt
-# Install dependencies
-RUN pip install  -r requirements.txt
+COPY --exclude=data/ --exclude=venv/ --exclude=.venv/ . /app/
+
+# Disable development dependencies
+ENV UV_NO_DEV=1
+
+# Sync the project into a new environment, asserting the lockfile is up to date
+RUN uv sync --locked
 
 # Expose Ports
 ENV PORT 8014
@@ -36,9 +39,9 @@ EXPOSE 8014
 RUN mkdir /data
 
 # Run uvicorn server
-ENV PYTHONPATH=/app/
+ENV PYTHONPATH=/app/src
 ENV DB_URL=duckdb:////data/duck_meta.db
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8014", "--reload"]
+CMD ["uv", "run", "uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8014", "--reload"]
 
 # Run the container like this:
 # sudo podman run --mount type=bind,src=data,dst=/data/ -p 8014:8014 container_id
