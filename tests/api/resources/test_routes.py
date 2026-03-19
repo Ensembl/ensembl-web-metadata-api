@@ -1018,6 +1018,7 @@ def test_get_genome_details():
 
 
 def test_example_objects(benchmark):
+    # Human
     response = client.get(
         "/api/metadata/genome/a7335667-93e7-11ec-a39d-005056b38ce3/example_objects"
     )
@@ -1030,6 +1031,16 @@ def test_example_objects(benchmark):
             "id": "11:49321844-49869784",
             "type": "alignment_location",
         },
+    ]
+
+    # E coli has no variant example
+    response = client.get(
+        "/api/metadata/genome/a73351f7-93e7-11ec-a39d-005056b38ce3/example_objects"
+    )
+    assert response.status_code == 200
+    assert response.json() == [
+        {"type": "gene", "id": "b2992"},
+        {"type": "location", "id": "Chromosome:3140311-3140799"},
     ]
 
     runnable = lambda: client.get("/api/metadata/genome/a7335667-93e7-11ec-a39d-005056b38ce3/example_objects")
