@@ -179,16 +179,12 @@ class DBConnection:
         """
         # Create a dedicated engine for this session
         engine = self._engine
-        if self.dialect == "sqlite":
-            self._enable_sqlite_savepoints(engine)
         Session = sessionmaker(future=True)
         session = Session(bind=engine, autoflush=False)
         try:
             yield session
-            session.commit()
         except:
             # Rollback to ensure no changes are made to the database
-            session.rollback()
             raise
         finally:
             # Whatever happens, make sure the session is closed
