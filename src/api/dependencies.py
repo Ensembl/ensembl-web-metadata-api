@@ -15,7 +15,7 @@ class Dependencies:
         DB_URL, connect_args={"read_only": True, "config": {"memory_limit": "1GB"}}
     )
 
-    genome_adaptor = GenomeAdaptor(meta_conn)
+    genome_adaptor = GenomeAdaptor(meta_conn, meta_conn)
     vep_adaptor = VepAdaptor(meta_conn)
     release_adaptor = ReleaseAdaptor(meta_conn)
     meta_adaptor = MetaAdaptor(meta_conn)

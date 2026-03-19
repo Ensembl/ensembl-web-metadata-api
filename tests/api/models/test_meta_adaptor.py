@@ -20,12 +20,13 @@ from ensembl.utils.database import DBConnection
 import logging
 
 
-def test_get_genome_counts():
-    meta_conn = DBConnection(
-        DB_URL, connect_args={"read_only": True, "config": {"memory_limit": "1GB"}}
-    )
-    adaptor = MetaAdaptor(meta_conn)
+meta_conn = DBConnection(
+    DB_URL, connect_args={"read_only": True, "config": {"memory_limit": "1GB"}}
+)
+adaptor = MetaAdaptor(meta_conn)
 
+
+def test_get_genome_counts():
     data = adaptor.fetch_genome_taxonomy_counts()
     assert data == [
        {'ensembl_taxon_name': 'Animals', 'count': 4207},
@@ -43,3 +44,7 @@ def test_get_genome_counts():
         {"ensembl_taxon_name": "Green Plants", "count": 1},
         {"ensembl_taxon_name": "Others", "count": 2},
     ]
+
+def test_get_genome_groups():
+    data = adaptor.fetch_genome_groups()
+    assert data == []
