@@ -5,3 +5,4 @@ venv*
 *DS_Store*
 .env
 duck_meta.db
+duck_meta.db.wal

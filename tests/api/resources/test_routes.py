@@ -58,18 +58,37 @@ def test_get_genome_counts():
     assert response.status_code == 200
     assert response.json() == (
         {
-            "total": 4852,
-            "counts": [
-                {"label": "Animals", "count": 4195},
-                {"label": "Bacteria", "count": 1},
-                {"label": "Fungi", "count": 151},
-                {"label": "Green Plants", "count": 465},
-                {"label": "Others", "count": 40},
+            'counts': [
+                {
+                    'count': 4207,
+                    'label': 'Animals',
+                },
+                {
+                    'count': 24,
+                    'label': 'Archaea',
+                },
+                {
+                    'count': 85,
+                    'label': 'Bacteria',
+                },
+                {
+                    'count': 153,
+                    'label': 'Fungi',
+                },
+                {
+                    'count': 465,
+                    'label': 'Green Plants',
+                },
+                {
+                    'count': 43,
+                    'label': 'Others',
+                },
             ],
+            'total': 4977,
         }
     )
 
-    # TODO: implement per-release
+
     response = client.get("/api/metadata/genome_counts?release=2023-10-18")
     assert response.status_code == 200
     assert response.json() == (
@@ -319,7 +338,7 @@ def test_get_releases(benchmark):
     assert response.status_code == 200
     assert response.json() == [
         {"name": "2025-02", "type": "integrated", "is_current": True},
-        {"name": "2026-01-26", "type": "partial", "is_current": True},
+        {"name": "2026-02-20", "type": "partial", "is_current": True},
     ]
 
     response = client.get("/api/metadata/releases?release_name=100000")
@@ -336,7 +355,7 @@ def test_get_releases(benchmark):
 
     response = client.get("/api/metadata/releases")
     assert response.status_code == 200
-    assert len(response.json()) == 20
+    assert len(response.json()) == 21
 
     runnable = lambda: client.get("/api/metadata/releases")
     benchmark(runnable)
@@ -909,8 +928,14 @@ def test_explain_genome():
         "species_taxonomy_id": "9606",
         "type": None,
         "is_reference": True,
-        "assembly": {"accession_id": "GCA_000001405.29", "name": "GRCh38.p14"},
-        "release": {"name": "2025-02", "type": "integrated"},
+        "assembly": {
+            "accession_id": "GCA_000001405.29",
+            "name": "GRCh38.p14"
+        },
+        "release": {
+            "name": "2025-02",
+            "type": "integrated"
+        },
         "latest_genome": {
             "genome_id": "be73075e-0633-471d-b7c8-4f8ca7752a04",
             "genome_tag": None,
@@ -924,7 +949,11 @@ def test_explain_genome():
                 "name": "GRCh38.p14",
                 "url": "https://identifiers.org/insdc.gca/GCA_000001405.29",
             },
-            "release": {"name": "2026-01-26", "type": "partial", "is_current": True},
+            "release": {
+                "name": "2026-01-26",
+                "type": "partial",
+                "is_current": False
+            },
         },
     }
 
@@ -988,7 +1017,7 @@ def test_get_genome_details():
     }
 
 
-def test_example_objects():
+def test_example_objects(benchmark):
     response = client.get(
         "/api/metadata/genome/a7335667-93e7-11ec-a39d-005056b38ce3/example_objects"
     )
@@ -997,8 +1026,14 @@ def test_example_objects():
         {"type": "gene", "id": "ENSG00000221914"},
         {"type": "location", "id": "8:26291508-26372680"},
         {"type": "variant", "id": "1:230710048:rs699"},
-        { 'id': '11:49321844-49869784', 'type': 'alignment_location', },
+        {
+            "id": "11:49321844-49869784",
+            "type": "alignment_location",
+        },
     ]
+
+    runnable = lambda: client.get("/api/metadata/genome/a7335667-93e7-11ec-a39d-005056b38ce3/example_objects")
+    benchmark(runnable)
 
 
 def test_validate_region():
@@ -1050,7 +1085,7 @@ def test_get_popular_species():
                 "species_taxonomy_id": "7955",
                 "name": "Zebrafish",
                 "image": "//testserver/static/genome_images/7955.svg",
-                "genomes_count": 1,
+                "genomes_count": 4,
             },
             {
                 "species_taxonomy_id": "4565",
@@ -1066,7 +1101,7 @@ def test_get_popular_species():
             },
             {
                 "species_taxonomy_id": "3702",
-                "name": "Thale-cress",
+                "name": "Thale cress",
                 "image": "//testserver/static/genome_images/3702.svg",
                 "genomes_count": 1,
             },
@@ -1234,7 +1269,7 @@ def test_get_popular_species():
             },
             {
                 "species_taxonomy_id": "3847",
-                "name": "Soybeans",
+                "name": "Soybean",
                 "image": "//testserver/static/genome_images/3847.svg",
                 "genomes_count": 1,
             },
@@ -1278,7 +1313,7 @@ def test_get_popular_species():
                 "species_taxonomy_id": "562",
                 "name": "Escherichia coli K-12",
                 "image": "//testserver/static/genome_images/562.svg",
-                "genomes_count": 1,
+                "genomes_count": 2,
             },
             {
                 "species_taxonomy_id": "5833",
@@ -1324,7 +1359,7 @@ def test_get_genome_karyotype():
     ]
 
 
-def test_get_metadata_statistics():
+def test_get_metadata_statistics(benchmark):
     response = client.get(
         "/api/metadata/genome/a7335667-93e7-11ec-a39d-005056b38ce3/stats"
     )
@@ -1413,6 +1448,56 @@ def test_get_metadata_statistics():
                 "open_chromatin_count": 7541,
             },
         }
+    }
+
+    runnable = lambda: client.get("/api/metadata/genome/a7335667-93e7-11ec-a39d-005056b38ce3/stats")
+    benchmark(runnable)
+
+
+def test_get_genome_group_categories():
+    response = client.get("/api/metadata/get_genome_group_categories")
+    assert response.status_code == 200
+    assert response.json() == {
+        "group_categories": [
+            {
+                "display_name": "External projects",
+                "type": "external_projects",
+                "groups": [
+                    {
+                        "group_id": 1,
+                        "title": "AQUA-FAANG",
+                        "description": "Short project description",
+                        "rank": 1,
+                        "genomes_count": 15,
+                    },
+                    {
+                        "group_id": 2,
+                        "title": "Aquatic Symbiosis Genomics Project",
+                        "description": "Short project description",
+                        "rank": 2,
+                        "genomes_count": 11,
+                    },
+                ],
+            },
+            {
+                "display_name": "Ensembl genome collections",
+                "type": "genome_collections",
+                "groups": [
+                    {
+                        "group_id": 3,
+                        "title": "Animal pathogens",
+                        "rank": 1,
+                        "genomes_count": 20,
+                    },
+                    {
+                        "group_id": 4,
+                        "title": "Apes",
+                        "rank": 2,
+                        "genomes_count": 412,
+                    },
+                ],
+            },
+        ]
     }
 
 
