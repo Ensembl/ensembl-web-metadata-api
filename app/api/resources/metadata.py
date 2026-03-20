@@ -14,6 +14,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 import logging
 from typing import Annotated
 
@@ -25,8 +26,16 @@ from api.models.checksums import Checksum
 from api.models.statistics import GenomeStatistics, ExampleObjectList
 from api.models.popular_species import PopularSpeciesGroup
 from api.models.karyotype import Karyotype
-from api.models.genome import BriefGenomeDetails, GenomeDetails, DatasetAttributes, GenomeByKeyword, Release, \
-    GenomeGroupsResponse, GenomesInGroupResponse, GenomeCountsResponse
+from api.models.genome import (
+    BriefGenomeDetails,
+    GenomeDetails,
+    DatasetAttributes,
+    GenomeByKeyword,
+    Release,
+    GenomeGroupsResponse,
+    GenomesInGroupResponse,
+    GenomeCountsResponse,
+)
 from api.models.ftplinks import FTPLinks
 from api.models.vep import VepFilePaths
 
@@ -115,10 +124,12 @@ async def example_objects(request: Request, genome_id: str):
                 genome_attributes_info.model_dump()["example_objects"]
             )
         else:
-            return response_error_handler({
-                "status": 404,
-                "details": f"Could not find example objects for {genome_id}"
-            })
+            return response_error_handler(
+                {
+                    "status": 404,
+                    "details": f"Could not find example objects for {genome_id}",
+                }
+            )
     except Exception as ex:
         logging.error(ex)
         return response_error_handler({"status": 500})
@@ -132,16 +143,17 @@ async def get_genome_details(request: Request, genome_uuid: str):
         genome_details_dict = MessageToDict(grpc_client.get_genome_details(genome_uuid))
         if genome_details_dict:
             genome_details = GenomeDetails(**genome_details_dict)
-            response_data = responses.JSONResponse(genome_details.model_dump(
-                exclude={
-                    "release": {"is_current"},
-                }
-            ))
+            response_data = responses.JSONResponse(
+                genome_details.model_dump(
+                    exclude={
+                        "release": {"is_current"},
+                    }
+                )
+            )
         else:
-            return response_error_handler({
-                "status": 404,
-                "details": f"Could not find details for {genome_uuid}"
-            })
+            return response_error_handler(
+                {"status": 404, "details": f"Could not find details for {genome_uuid}"}
+            )
     except Exception as ex:
         logging.error(ex)
         return response_error_handler({"status": 500})
@@ -171,10 +183,12 @@ async def get_genome_ftplinks(request: Request, genome_uuid: str):
 
 
 @router.get("/genome/{genome_id_or_slug}/explain", name="genome_explain")
-@redis_cache(key_prefix="explain", arg_keys=['genome_id_or_slug'])
+@redis_cache(key_prefix="explain", arg_keys=["genome_id_or_slug"])
 async def explain_genome(request: Request, genome_id_or_slug: str):
     try:
-        genome_details_dict = MessageToDict(grpc_client.get_brief_genome_details(genome_id_or_slug))
+        genome_details_dict = MessageToDict(
+            grpc_client.get_brief_genome_details(genome_id_or_slug)
+        )
         if genome_details_dict:
             genome_details = BriefGenomeDetails(**genome_details_dict)
             response_dict = genome_details.model_dump(
@@ -193,10 +207,9 @@ async def explain_genome(request: Request, genome_id_or_slug: str):
             )
             response_data = responses.JSONResponse(response_dict, status_code=200)
         else:
-            return response_error_handler({
-                "status": 404,
-                "details": f"Could not explain {genome_id_or_slug}"
-            })
+            return response_error_handler(
+                {"status": 404, "details": f"Could not explain {genome_id_or_slug}"}
+            )
     except Exception as ex:
         logging.error(ex)
         return response_error_handler({"status": 500})
@@ -204,7 +217,7 @@ async def explain_genome(request: Request, genome_id_or_slug: str):
 
 
 @router.get("/genome/{genome_uuid}/checksum/{region_name}", name="region_checksum")
-async def get_genome_ftplinks(request: Request, genome_uuid: str, region_name: str):
+async def get_region_checksum(request: Request, genome_uuid: str, region_name: str):
     try:
         region_checksum_dict = MessageToDict(
             grpc_client.get_region_checksum(
@@ -239,7 +252,7 @@ async def get_genome_dataset_attributes(
                 attribute_names=attribute_names,
             )
         )
-        if len(dataset_attributes.get("attributes",[])) == 0:
+        if len(dataset_attributes.get("attributes", [])) == 0:
             return responses.JSONResponse(
                 {
                     "message": f"Could not find details for genome {genome_uuid} and dataset {dataset_type}."
@@ -256,25 +269,32 @@ async def get_genome_dataset_attributes(
         logging.error(ex)
         return response_error_handler({"status": 500})
 
+
 @router.get("/genomeid")
 async def get_genome_by_keyword(request: Request, assembly_accession_id: str):
     try:
-        genome_response = grpc_client.get_genome_by_specific_keyword(assembly_accession_id=assembly_accession_id)
+        genome_response = grpc_client.get_genome_by_specific_keyword(
+            assembly_accession_id=assembly_accession_id
+        )
         latest_genome_by_keyword_object = GenomeByKeyword()
         for arr in genome_response:
             arr = MessageToDict(arr)
             genome_by_keyword_object = GenomeByKeyword(**arr)
-            if (genome_by_keyword_object.release_version > latest_genome_by_keyword_object.release_version):
+            if (
+                genome_by_keyword_object.release_version
+                > latest_genome_by_keyword_object.release_version
+            ):
                 latest_genome_by_keyword_object = genome_by_keyword_object
-        if (latest_genome_by_keyword_object.genome_uuid):
+        if latest_genome_by_keyword_object.genome_uuid:
             return responses.JSONResponse(latest_genome_by_keyword_object.model_dump())
-        else:            
+        else:
             logging.error(f"Assembly accession id {assembly_accession_id} not found")
             return response_error_handler({"status": 404})
 
     except Exception as ex:
         logging.error(ex)
         return response_error_handler({"status": 500})
+
 
 @router.get("/genome/{genome_uuid}/vep/file_paths")
 async def get_vep_file_paths(
@@ -287,16 +307,12 @@ async def get_vep_file_paths(
         )
         if len(vep_file_paths) == 0:
             return responses.JSONResponse(
-                {
-                    "message": f"Could not find VEP file paths for genome {genome_uuid}."
-                },
+                {"message": f"Could not find VEP file paths for genome {genome_uuid}."},
                 status_code=404,
             )
 
         vep_file_paths_object = VepFilePaths(**vep_file_paths)
-        return responses.JSONResponse(
-            vep_file_paths_object.dict(), status_code=200
-        )
+        return responses.JSONResponse(vep_file_paths_object.dict(), status_code=200)
 
     except Exception as ex:
         logging.error(ex)
@@ -308,12 +324,11 @@ async def get_vep_file_paths(
 async def get_releases(
     request: Request,
     release_name: list[str] = Query(None, description="Filter by release name(s)"),
-    current_only: bool = Query(False, description="Only current releases")
+    current_only: bool = Query(False, description="Only current releases"),
 ):
     try:
         releases_stream = grpc_client.get_release(
-            release_label=release_name,
-            current_only=current_only
+            release_label=release_name, current_only=current_only
         )
 
         releases_list = []
@@ -336,10 +351,9 @@ async def get_releases(
                 response_list.append(response_dict)
             response_data = responses.JSONResponse(response_list, status_code=200)
         else:
-            return response_error_handler({
-                "status": 404,
-                "details": "No releases found matching criteria"
-            })
+            return response_error_handler(
+                {"status": 404, "details": "No releases found matching criteria"}
+            )
     except Exception as e:
         logging.error(e)
         error_response = {"message": f"An error occurred: {str(e)}"}
@@ -347,25 +361,26 @@ async def get_releases(
 
     return response_data
 
+
 @router.get("/genome_groups", name="genome_groups")
 @redis_cache("genome_groups", arg_keys=["group_type", "release"])
 async def get_genome_groups(
-        group_type: str = Query(..., description="Group type, e.g. 'structural_variant'"),
-        release: str | None = Query(None, description="Optional release label, e.g. '2025-02'")
+    group_type: str = Query(..., description="Group type, e.g. 'structural_variant'"),
+    release: str | None = Query(
+        None, description="Optional release label, e.g. '2025-02'"
+    ),
 ):
     try:
         genome_groups_dict = MessageToDict(
             grpc_client.get_genome_groups_with_reference(
-                group_type=group_type,
-                release_label=release
+                group_type=group_type, release_label=release
             )
         )
         logging.debug(f"genome_groups_dict: {genome_groups_dict}")
         if len(genome_groups_dict.get("genomeGroups", [])) == 0:
-            return response_error_handler({
-                "status": 404,
-                "details": "No genome groups found matching criteria"
-            })
+            return response_error_handler(
+                {"status": 404, "details": "No genome groups found matching criteria"}
+            )
 
         genome_groups = GenomeGroupsResponse(**genome_groups_dict)
         response_dict = genome_groups.model_dump()
@@ -374,25 +389,24 @@ async def get_genome_groups(
         logging.exception("Error in get_genome_groups")
         return response_error_handler({"status": 500})
 
+
 @router.get("/genome_groups/{group_id}/genomes", name="genomes_in_group")
 @redis_cache("genomes_in_group", arg_keys=["group_id", "release"])
 async def get_genomes_in_group(
-        group_id: str = Path(..., description="Group ID, e.g. 'grch38-group'"),
-        release: str | None = Query(None, description="Optional release label, e.g. '2025-02'")
+    group_id: str = Path(..., description="Group ID, e.g. 'grch38-group'"),
+    release: str | None = Query(
+        None, description="Optional release label, e.g. '2025-02'"
+    ),
 ):
     try:
         genomes_in_group_dict = MessageToDict(
-            grpc_client.get_genomes_in_group(
-                group_id=group_id,
-                release_label=release
-            )
+            grpc_client.get_genomes_in_group(group_id=group_id, release_label=release)
         )
         logging.debug(f"genomes_in_group_dict: {genomes_in_group_dict}")
         if len(genomes_in_group_dict.get("genomes", [])) == 0:
-            return response_error_handler({
-                "status": 404,
-                "details": "No genomes found in specified group"
-            })
+            return response_error_handler(
+                {"status": 404, "details": "No genomes found in specified group"}
+            )
 
         genomes_in_group = GenomesInGroupResponse(**genomes_in_group_dict)
         response_dict = genomes_in_group.model_dump()
@@ -405,14 +419,18 @@ async def get_genomes_in_group(
 @router.get("/genome_counts", name="genome_counts")
 @redis_cache(key_prefix="genome_counts", arg_keys=["release"])
 async def get_genome_counts(
-    release: str | None = Query(None, description="Optional release label to filter counts, e.g. '2025-02'")
+    release: str | None = Query(
+        None, description="Optional release label to filter counts, e.g. '2025-02'"
+    )
 ):
     try:
         genome_counts_dict = MessageToDict(
             grpc_client.get_genome_counts(release_label=release)
         )
         genome_counts = GenomeCountsResponse(**genome_counts_dict)
-        response_data = responses.JSONResponse(genome_counts.model_dump(), status_code=200)
+        response_data = responses.JSONResponse(
+            genome_counts.model_dump(), status_code=200
+        )
     except Exception as ex:
         logging.exception("Error in get_genome_counts")
         return response_error_handler({"status": 500})
