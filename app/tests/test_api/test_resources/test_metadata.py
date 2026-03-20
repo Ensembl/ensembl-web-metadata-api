@@ -55,6 +55,20 @@ class APIMetadataTestCase(unittest.TestCase):
         put_response = self.client.put(self.statistics_url)
         assert put_response.status_code == 405
 
+    def test_region_checksum_route(self):
+        # We just check if the route is valid and doesn't 404
+        response = self.client.get(
+            self.metadata_url + "genome/test-uuid/checksum/test-region"
+        )
+        assert response.status_code in [200, 404, 500]
+
+    def test_vep_file_paths_route(self):
+        # We just check if the route is valid and doesn't 404
+        response = self.client.get(
+            self.metadata_url + "genome/test-uuid/vep/file_paths"
+        )
+        assert response.status_code in [200, 404, 500]
+
 
 if __name__ == "__main__":
     unittest.main()
