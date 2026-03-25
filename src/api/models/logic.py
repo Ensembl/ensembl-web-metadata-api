@@ -476,9 +476,7 @@ def get_brief_genome_details_by_uuid(db_conn, genome_uuid_or_tag, release_versio
         )
 
     if not genome_results:
-        logger.error(
-            f"No Genome/Release found: {genome_uuid_or_tag}/{release_version}"
-        )
+        logger.error(f"No Genome/Release found: {genome_uuid_or_tag}/{release_version}")
         return None
 
     if len(genome_results) > 1:
@@ -1434,14 +1432,43 @@ def data_get_genome_counts(adaptor: MetaAdaptor, release_label: str | None):
         for i in data:
             total += i["count"]
 
-        return {
-            "total": total,
-            "counts": data
-        }
+        return {"total": total, "counts": data}
 
     except Exception:
         logger.exception(
             "Unexpected error while fetching genome counts " "(release_label=%r)",
             release_label,
+        )
+        return None
+
+
+def data_genome_group_categories(adaptor: MetaAdaptor):
+    try:
+        data = adaptor.fetch_genome_groups()
+        genome_group_categories = {}
+        i = 0
+        for entry in data:
+            cat_type = entry["type"]
+            category_entry = genome_group_categories.get(cat_type)
+            if category_entry is None:
+                category_entry = {
+                    "display_name": entry["display_name"],
+                    "type": cat_type,
+                    "groups": [],
+                }
+                genome_group_categories[cat_type] = category_entry
+
+            new_entry["group_id"] = entry["genome_group_id"]
+            new_entry["title"] = entry["label"]
+            new_entry["description"] = entry["description"]
+            new_entry["rank"] = i
+            i += 1
+            new_entry["genomes_count"] = entry["genome_count"]
+            genome_group_categories[cat_type]["groups"].add(new_entry)
+
+        return {"group_categories": genome_group_categories}
+    except Exception:
+        logger.exception(
+            "Unexpected error while fetching genome group categories ",
         )
         return None

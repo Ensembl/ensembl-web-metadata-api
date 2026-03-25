@@ -58,36 +58,35 @@ def test_get_genome_counts():
     assert response.status_code == 200
     assert response.json() == (
         {
-            'counts': [
+            "counts": [
                 {
-                    'count': 4207,
-                    'label': 'Animals',
+                    "count": 4207,
+                    "label": "Animals",
                 },
                 {
-                    'count': 24,
-                    'label': 'Archaea',
+                    "count": 24,
+                    "label": "Archaea",
                 },
                 {
-                    'count': 85,
-                    'label': 'Bacteria',
+                    "count": 85,
+                    "label": "Bacteria",
                 },
                 {
-                    'count': 153,
-                    'label': 'Fungi',
+                    "count": 153,
+                    "label": "Fungi",
                 },
                 {
-                    'count': 465,
-                    'label': 'Green Plants',
+                    "count": 465,
+                    "label": "Green Plants",
                 },
                 {
-                    'count': 43,
-                    'label': 'Others',
+                    "count": 43,
+                    "label": "Others",
                 },
             ],
-            'total': 4977,
+            "total": 4977,
         }
     )
-
 
     response = client.get("/api/metadata/genome_counts?release=2023-10-18")
     assert response.status_code == 200
@@ -928,14 +927,8 @@ def test_explain_genome():
         "species_taxonomy_id": "9606",
         "type": None,
         "is_reference": True,
-        "assembly": {
-            "accession_id": "GCA_000001405.29",
-            "name": "GRCh38.p14"
-        },
-        "release": {
-            "name": "2025-02",
-            "type": "integrated"
-        },
+        "assembly": {"accession_id": "GCA_000001405.29", "name": "GRCh38.p14"},
+        "release": {"name": "2025-02", "type": "integrated"},
         "latest_genome": {
             "genome_id": "be73075e-0633-471d-b7c8-4f8ca7752a04",
             "genome_tag": None,
@@ -949,11 +942,7 @@ def test_explain_genome():
                 "name": "GRCh38.p14",
                 "url": "https://identifiers.org/insdc.gca/GCA_000001405.29",
             },
-            "release": {
-                "name": "2026-01-26",
-                "type": "partial",
-                "is_current": False
-            },
+            "release": {"name": "2026-01-26", "type": "partial", "is_current": False},
         },
     }
 
@@ -1043,7 +1032,9 @@ def test_example_objects(benchmark):
         {"type": "location", "id": "Chromosome:3140311-3140799"},
     ]
 
-    runnable = lambda: client.get("/api/metadata/genome/a7335667-93e7-11ec-a39d-005056b38ce3/example_objects")
+    runnable = lambda: client.get(
+        "/api/metadata/genome/a7335667-93e7-11ec-a39d-005056b38ce3/example_objects"
+    )
     benchmark(runnable)
 
 
@@ -1461,7 +1452,9 @@ def test_get_metadata_statistics(benchmark):
         }
     }
 
-    runnable = lambda: client.get("/api/metadata/genome/a7335667-93e7-11ec-a39d-005056b38ce3/stats")
+    runnable = lambda: client.get(
+        "/api/metadata/genome/a7335667-93e7-11ec-a39d-005056b38ce3/stats"
+    )
     benchmark(runnable)
 
 
