@@ -47,6 +47,11 @@ variables:
     - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "main"'
       when: on_success
 
+.deploy_manual_rules:
+  rules:
+    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "main"'
+      when: manual
+
 # Build docker image for all branches
 build:
   extends: .build
@@ -55,7 +60,7 @@ build:
 Prod:
   extends:
     - .deploy
-    - .deploy_rules
+    - .deploy_manual_rules
   environment:
     name: production
   variables:
@@ -67,7 +72,7 @@ Prod:
 Staging:
   extends: 
     - .deploy
-    - .deploy_rules
+    - .deploy_manual_rules
   environment:
     name: staging
   variables:
@@ -90,7 +95,7 @@ Internal:
 Dev:
   extends: 
     - .deploy
-    - .deploy_rules
+    - .deploy_manual_rules
   environment:
     name: development
   variables:
