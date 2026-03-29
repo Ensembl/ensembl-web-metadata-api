@@ -30,7 +30,8 @@ COPY . /app/
 ENV UV_NO_DEV=1
 
 # Sync the project into a new environment, asserting the lockfile is up to date
-RUN uv sync --locked
+RUN uv lock --check
+RUN uv sync --locked -v
 
 # Expose Ports
 ENV PORT 8014
