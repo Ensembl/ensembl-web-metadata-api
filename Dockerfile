@@ -24,7 +24,7 @@ LABEL org.opencontainers.image.authors="ensembl-webteam@ebi.ac.uk"
 WORKDIR /app
 
 # Copy source code
-COPY --exclude=data/ --exclude=venv/ --exclude=.venv/ . /app/
+COPY . /app/
 
 # Disable development dependencies
 ENV UV_NO_DEV=1
