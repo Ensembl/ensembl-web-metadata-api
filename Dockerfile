@@ -35,6 +35,7 @@ COPY . /app/
 ENV UV_NO_DEV=1
 
 # Sync the project into a new environment, asserting the lockfile is up to date
+RUN pwd && ls -la && ls -la /app
 RUN uv sync --locked
 
 # Expose Ports
