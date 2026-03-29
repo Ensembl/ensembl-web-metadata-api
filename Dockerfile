@@ -23,7 +23,7 @@ LABEL org.opencontainers.image.authors="ensembl-webteam@ebi.ac.uk"
 # we need git because we have dependencies ensembl-metadata-api and ensembl-py
 # fix: Git executable not found. Ensure that Git is installed and available.
 RUN apt-get update && apt-get install -y --no-install-recommends git \
-    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/lib/apt/lists/*
 
 # Set Work Directory
 WORKDIR /app
@@ -35,7 +35,6 @@ COPY . /app/
 ENV UV_NO_DEV=1
 
 # Sync the project into a new environment, asserting the lockfile is up to date
-RUN pwd && ls -la && ls -la /app
 RUN uv sync --locked
 
 # Expose Ports
