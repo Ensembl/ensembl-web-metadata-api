@@ -20,6 +20,11 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 # Maintainer
 LABEL org.opencontainers.image.authors="ensembl-webteam@ebi.ac.uk"
 
+# we need git because we have dependencies ensembl-metadata-api and ensembl-py
+# fix: Git executable not found. Ensure that Git is installed and available.
+RUN apt-get update && apt-get install -y --no-install-recommends git \
+    && rm -rf /var/lib/apt/lists/* \
+
 # Set Work Directory
 WORKDIR /app
 
@@ -30,8 +35,7 @@ COPY . /app/
 ENV UV_NO_DEV=1
 
 # Sync the project into a new environment, asserting the lockfile is up to date
-RUN uv lock --check
-RUN uv sync --locked -v
+RUN uv sync --locked
 
 # Expose Ports
 ENV PORT 8014
