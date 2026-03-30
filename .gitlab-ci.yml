@@ -79,16 +79,16 @@ Staging:
     AGENT: ${STAGING_AGENT}
     NS: ${STAGING_NS}
 
-#Internal:WP40:HL:
-Internal:
-  extends:
-    - .deploy
-    - .deploy_rules
-  environment:
-    name: internal
-  variables:
-    AGENT: ${INTERNAL_AGENT}
-    NS: ${INTERNAL_NS}
+##Internal:WP40:HL:
+#Internal:
+#  extends:
+#    - .deploy
+#    - .deploy_rules
+#  environment:
+#    name: internal
+#  variables:
+#    AGENT: ${INTERNAL_AGENT}
+#    NS: ${INTERNAL_NS}
 
 # Deployment for dev-2020.ensembl.org
 #Dev:WP51:HL:
@@ -138,7 +138,7 @@ Review:
 Fallback:
   extends: 
     - .deploy
-    - .deploy_rules
+    - .deploy_manual_rules
   environment:
     name: fallback
   variables:
