@@ -47,10 +47,11 @@ EXPOSE 8014
 
 RUN mkdir /data
 
-# Run uvicorn server
+# Run the application from the environment created at build time.
 ENV PYTHONPATH=/app/src
+ENV PATH="/app/.venv/bin:${PATH}"
 ENV DB_URL=duckdb:////data/duck_meta.db
-CMD ["uv", "run", "uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8014", "--reload"]
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8014"]
 
 # Run the container like this:
 # sudo podman run --mount type=bind,src=data,dst=/data/ -p 8014:8014 container_id
