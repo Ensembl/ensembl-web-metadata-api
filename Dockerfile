@@ -14,25 +14,45 @@
 #    limitations under the License.
 #
 
-# Base image
-FROM python:3.11
+FROM python:3.12-slim-trixie
+COPY --from=ghcr.io/astral-sh/uv:0.8.5 /uv /uvx /bin/
 
 # Maintainer
 LABEL org.opencontainers.image.authors="ensembl-webteam@ebi.ac.uk"
+
+# we need git because we have dependencies ensembl-metadata-api and ensembl-py
+# fix: Git executable not found. Ensure that Git is installed and available.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    build-essential \
+    pkg-config \
+    default-libmysqlclient-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # Set Work Directory
 WORKDIR /app
 
 # Copy source code
-COPY ./app /app/
-COPY requirements.txt requirements.txt
-# Install dependencies
-RUN pip install  -r requirements.txt
+COPY . /app/
+
+# Disable development dependencies
+ENV UV_NO_DEV=1
+
+# Sync the project into a new environment, asserting the lockfile is up to date
+RUN uv sync --locked
 
 # Expose Ports
 ENV PORT 8014
 EXPOSE 8014
 
-# Run uvicorn server
-# CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8014", "--reload"]
+RUN mkdir /data
 
+# Run uvicorn server
+ENV PYTHONPATH=/app/src
+ENV DB_URL=duckdb:////data/duck_meta.db
+CMD ["uv", "run", "uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8014", "--reload"]
+
+# Run the container like this:
+# sudo podman run --mount type=bind,src=data,dst=/data/ -p 8014:8014 container_id
+# Expects the DB in ./data/duck_meta.db, will be mounted to /data/duck_meta.db
+# in the container

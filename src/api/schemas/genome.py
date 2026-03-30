@@ -1,0 +1,226 @@
+from typing import Optional
+
+from pydantic import (
+    BaseModel,
+    Field,
+    validator,
+    AliasChoices,
+    AliasPath,
+    field_serializer,
+)
+from pydantic.functional_validators import model_validator
+
+from api.config import ASSEMBLY_URLS
+
+
+class Type(BaseModel):
+    kind: str
+    value: str
+
+    @field_serializer("value")
+    def serialize_url(self, value: str):
+        if value == "":
+            return None
+        return value
+
+
+class Release(BaseModel):
+    name: str = Field(alias="release_label")
+    type: str = Field(alias="release_type")
+    is_current: bool = Field(alias="is_current", default=False)
+
+
+class AssemblyInGenome(BaseModel):
+    accession_id: str = Field(alias="accession")
+    name: str = Field(alias="name")
+    # TODO FIX: accession alias is defined twice?
+    url: str = Field(alias="accession", default=None)
+
+    @validator("url", always=True)
+    def generate_url(cls, value):
+        if value.startswith("GCA"):
+            return ASSEMBLY_URLS["GCA"] + value
+        if value.startswith("GCF"):
+            return ASSEMBLY_URLS["GCF"] + value
+        return None
+
+
+class AssemblyProvider(BaseModel):
+    name: str
+    url: str = Field(alias="url", default="")
+
+    @field_serializer("url")
+    def serialize_url(self, url: str):
+        if url == "":
+            return None
+        return url
+
+
+class AnnotationProvider(BaseModel):
+    name: str
+    url: str = Field(alias="url", default="")
+
+    @field_serializer("url")
+    def serialize_url(self, url: str):
+        if url == "":
+            return None
+        return url
+
+
+class BaseGenomeDetails(BaseModel):
+    genome_id: str = Field(alias="genome_uuid")
+    genome_tag: Optional[str] = Field(
+        alias=AliasChoices(
+            AliasPath("genome", "url_name"), AliasPath("organism", "tol_id")
+        ),
+        default=None,
+    )
+    common_name: str = Field(alias=AliasPath("organism", "common_name"), default=None)
+    scientific_name: str = Field(alias=AliasPath("organism", "scientific_name"))
+    species_taxonomy_id: str = Field(alias=AliasPath("organism", "species_taxonomy_id"))
+    type: Optional[Type] = None
+    is_reference: bool = Field(
+        alias=AliasPath("assembly", "is_reference"), default=False
+    )
+    assembly: AssemblyInGenome = None
+    release: Release = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def inject_type_from_organism(cls, data):
+        """
+        Build a 'type' object from organism.strainType and organism.strain
+        before normal field parsing.
+        """
+        if not isinstance(data, dict):
+            return data
+
+        org = data.get("organism") or {}
+        strain_type = org.get("strain_type")
+        strain = org.get("strain")
+
+        # only inject if we actually have both strain_type and strain
+        if strain_type is not None and strain is not None and "type" not in data:
+            data = dict(data)  # shallow copy to avoid mutating original
+            data["type"] = {
+                "kind": strain_type,
+                "value": strain,
+            }
+
+        return data
+
+    @validator("species_taxonomy_id", pre=True)
+    def convert_int_to_str(cls, value):
+        return str(value)
+
+    def model_post_init(self, __context):
+        """Set genome_tag to None if the release type is 'partial'."""
+        if self.release and self.release.type == "partial":
+            self.genome_tag = None
+
+
+class BriefGenomeDetails(BaseGenomeDetails):
+    """
+    As mentioned in this PR: https://github.com/Ensembl/ensembl-web-metadata-api/pull/60
+    We're planning to extend the BriefGenomeDetails class later
+    """
+
+    latest_genome: Optional[BaseGenomeDetails] = Field(
+        alias="latest_genome", default=None
+    )
+
+
+class GenomeDetails(BaseGenomeDetails):
+    taxonomy_id: str = Field(alias=AliasPath("organism", "taxonomy_id"))
+    assembly_provider: AssemblyProvider = None
+    assembly_level: str = Field(alias=AliasPath("attributes_info", "assembly_level"))
+    assembly_date: str = Field(
+        alias=AliasPath("attributes_info", "assembly_date"), default=None
+    )
+    annotation_provider: AnnotationProvider = None
+    annotation_method: str = Field(
+        alias=AliasPath("attributes_info", "genebuild_method_display"), default=None
+    )
+    annotation_version: str = Field(
+        # TODO: remove genebuildVersion after the metadata DB is updated
+        alias=AliasChoices(
+            AliasPath("attributes_info", "genebuild_provider_version"),
+            AliasPath("attributes_info", "genebuild_version"),
+        ),
+        default=None,
+    )
+    annotation_date: str = Field(
+        alias=AliasPath("attributes_info", "genebuild_last_geneset_update"),
+        default=None,
+    )
+    number_of_genomes_in_group: int = Field(alias="related_assemblies_count", default=1)
+
+    @validator("taxonomy_id", "species_taxonomy_id", pre=True)
+    def convert_int_to_str(cls, value):
+        return str(value)
+
+    def __init__(self, **data):
+        if data.get("attributes_info", {}).get("assembly_provider_name", None):
+            data["assembly_provider"] = {
+                "name": data.get("attributes_info", {}).get(
+                    "assembly_provider_name", None
+                ),
+                "url": data.get("attributes_info", {}).get("assembly_provider_url", ""),
+            }
+        if data.get("attributes_info", {}).get("genebuild_provider_name", None):
+            data["annotation_provider"] = {
+                "name": data.get("attributes_info", {}).get(
+                    "genebuild_provider_name", None
+                ),
+                "url": data.get("attributes_info", {}).get(
+                    "genebuild_provider_url", ""
+                ),
+            }
+
+        super().__init__(**data)
+
+
+class DatasetAttribute(BaseModel):
+    name: str = Field(alias="attribute_name")
+    value: str = Field(alias="attribute_value", default=None)
+    version: str = Field(alias="dataset_version")
+    uuid: str = Field(alias="dataset_uuid")
+    type: str = Field(alias="dataset_type")
+
+
+class DatasetAttributes(BaseModel):
+    attributes: list[DatasetAttribute]
+    release_version: float = Field(alias="release_version")
+
+
+class GenomeByKeyword(BaseModel):
+    genome_uuid: str = Field(alias="genome_uuid", default="")
+    release_version: float = Field(
+        alias=AliasPath("release", "release_version"), default=0
+    )
+    genome_tag: str = Field(alias=AliasPath("genome", "url_name"), default="")
+
+
+class GenomeGroup(BaseModel):
+    id: str = Field(alias="group_id")
+    type: str = Field(alias="group_type")
+    name: str | None = Field(alias="group_name", default=None)
+    reference_genome: BaseGenomeDetails = Field(alias="reference_genome")
+
+
+class GenomeGroupsResponse(BaseModel):
+    genome_groups: list[GenomeGroup] = Field(alias="genome_groups")
+
+
+class GenomesInGroupResponse(BaseModel):
+    genomes: list[BaseGenomeDetails] = Field(alias="genomes")
+
+
+class GenomeCountItem(BaseModel):
+    label: str = Field(alias="ensembl_taxon_name")
+    count: int = Field(alias="count")
+
+
+class GenomeCountsResponse(BaseModel):
+    total: int = 0
+    counts: list[GenomeCountItem] = Field(default_factory=list)

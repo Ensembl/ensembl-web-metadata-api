@@ -47,6 +47,11 @@ variables:
     - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "main"'
       when: on_success
 
+.deploy_manual_rules:
+  rules:
+    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "main"'
+      when: manual
+
 # Build docker image for all branches
 build:
   extends: .build
@@ -55,7 +60,7 @@ build:
 Prod:
   extends:
     - .deploy
-    - .deploy_rules
+    - .deploy_manual_rules
   environment:
     name: production
   variables:
@@ -67,30 +72,30 @@ Prod:
 Staging:
   extends: 
     - .deploy
-    - .deploy_rules
+    - .deploy_manual_rules
   environment:
     name: staging
   variables:
     AGENT: ${STAGING_AGENT}
     NS: ${STAGING_NS}
 
-#Internal:WP40:HL:
-Internal:
-  extends:
-    - .deploy
-    - .deploy_rules
-  environment:
-    name: internal
-  variables:
-    AGENT: ${INTERNAL_AGENT}
-    NS: ${INTERNAL_NS}
+##Internal:WP40:HL:
+#Internal:
+#  extends:
+#    - .deploy
+#    - .deploy_rules
+#  environment:
+#    name: internal
+#  variables:
+#    AGENT: ${INTERNAL_AGENT}
+#    NS: ${INTERNAL_NS}
 
 # Deployment for dev-2020.ensembl.org
 #Dev:WP51:HL:
 Dev:
   extends: 
     - .deploy
-    - .deploy_rules
+    - .deploy_manual_rules
   environment:
     name: development
   variables:
@@ -133,7 +138,7 @@ Review:
 Fallback:
   extends: 
     - .deploy
-    - .deploy_rules
+    - .deploy_manual_rules
   environment:
     name: fallback
   variables:
