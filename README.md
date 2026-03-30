@@ -16,9 +16,15 @@ uv run uvicorn api.main:app --host 127.0.0.1 --port 8000 --reload
 ### Build and run with Docker/podman
 ```bash
 sudo podman build --tag=duck-meta .
-vi .env # add values for PORT / enable or disable redis
-sudo podman run -it --mount type=bind,src=./data,dst=/data -p 8000:8000 duck-meta:latest
+cp .env.sample .env
+vi .env # add values for redis or database settings as needed
+sudo podman run -it --env-file .env --mount type=bind,src=./data,dst=/data -p 8014:8014 duck-meta:latest
 ```
+
+The container image installs dependencies at build time and starts `uvicorn`
+directly from the built virtual environment. Do not change the container
+startup command to `uv run ...`, because that triggers dependency resolution at
+runtime.
 
 ### Run together with Redis
 ```bash
