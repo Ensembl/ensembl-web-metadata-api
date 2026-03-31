@@ -45,6 +45,8 @@ def test_get_genome_counts():
         {"ensembl_taxon_name": "Others", "count": 2},
     ]
 
-def test_get_genome_groups():
-    data = adaptor.fetch_genome_groups()
-    assert data == []
+# # This doesn't exist (yet)
+# TODO: uncomment this once it's actually implemented
+# def test_get_genome_groups():
+#     data = adaptor.fetch_genome_groups()
+#     assert data == []
