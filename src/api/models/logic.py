@@ -539,10 +539,13 @@ def create_brief_genome_details(data=None, latest_genome=None):
     brief_genome_details = {
         "genome_uuid": data.Genome.genome_uuid,
         "created": str(data.Genome.created),
+        "url_name": data.Genome.url_name,
         "assembly": assembly,
         "taxon": taxon,
         "organism": organism,
         "release": release,
+        "is_suppressed": data.Genome.suppressed,
+        "suppression_details": data.Genome.suppression_details,
         "latest_genome": latest_genome_data,
     }
     return brief_genome_details
@@ -909,9 +912,7 @@ def get_genome_groups_by_reference(
                 "group_name": None,
                 "reference_genome": {
                     "genome_uuid": "a7335667-93e7-11ec-a39d-005056b38ce3",
-                    "genome": {
-                        "url_name": "grch38",
-                    },
+                    "url_name": "grch38",
                     "assembly": {
                         "accession": "GCA_000001405.29",
                         "name": "GRCh38.p14",
@@ -957,9 +958,7 @@ def get_genome_groups_by_reference(
                 "group_name": None,
                 "reference_genome": {
                     "genome_uuid": "4c07817b-c7c5-463f-8624-982286bc4355",
-                    "genome": {
-                        "url_name": "t2t-chm13",
-                    },
+                    "url_name": "t2t-chm13",
                     "assembly": {
                         "accession": "GCA_009914755.4",
                         "name": "T2T-CHM13v2.0",
@@ -1043,9 +1042,7 @@ def data_get_genomes_in_group(
         dummy_data = [
             {
                 "genome_uuid": "a7335667-93e7-11ec-a39d-005056b38ce3",
-                "genome": {
-                    "url_name": "grch38",
-                },
+                "url_name": "grch38",
                 "assembly": {
                     "accession": "GCA_000001405.29",
                     "name": "GRCh38.p14",
@@ -1054,7 +1051,6 @@ def data_get_genomes_in_group(
                     "ensembl_name": "GRCh38.p14",
                     "assembly_uuid": "fd7fea38-981a-4d73-a879-6f9daef86f08",
                     "is_reference": True,
-                    "url_name": "grch38",
                     "tol_id": "",
                 },
                 "taxon": {
@@ -1088,9 +1084,7 @@ def data_get_genomes_in_group(
             },
             {
                 "genome_uuid": "4c07817b-c7c5-463f-8624-982286bc4355",
-                "genome": {
-                    "url_name": "t2t-chm13",
-                },
+                "url_name": "t2t-chm13",
                 "assembly": {
                     "accession": "GCA_009914755.4",
                     "name": "T2T-CHM13v2.0",
@@ -1099,7 +1093,6 @@ def data_get_genomes_in_group(
                     "ensembl_name": "T2T-CHM13v2.0",
                     "assembly_uuid": "fc20ebd6-f756-45da-b941-b3b17e11515f",
                     "is_reference": False,
-                    "url_name": "t2t-chm13",
                     "tol_id": "",
                 },
                 "taxon": {
@@ -1133,9 +1126,7 @@ def data_get_genomes_in_group(
             },
             {
                 "genome_uuid": "9d3b2ead-a987-4f08-8d18-10a1eb1e0fb0",
-                "genome": {
-                    "url_name": "t2t-chm13",
-                },
+                "url_name": "t2t-chm13",
                 "assembly": {
                     "accession": "GCA_018503275.2",
                     "name": "NA19240_mat_hprc_f2",
@@ -1144,7 +1135,6 @@ def data_get_genomes_in_group(
                     "ensembl_name": "",
                     "assembly_uuid": "561a1451-cfe4-451d-ad8f-00310645e1fd",
                     "is_reference": False,
-                    "url_name": "",
                     "tol_id": "",
                 },
                 "taxon": {
@@ -1178,9 +1168,7 @@ def data_get_genomes_in_group(
             },
             {
                 "genome_uuid": "27be510b-c431-434c-a6f5-158d8c138507",
-                "genome": {
-                    "url_name": "t2t-chm13",
-                },
+                "url_name": "t2t-chm13",
                 "assembly": {
                     "accession": "GCA_018506975.2",
                     "name": "HG00733_mat_hprc_f2",
@@ -1189,7 +1177,6 @@ def data_get_genomes_in_group(
                     "ensembl_name": "",
                     "assembly_uuid": "0fb76cdf-6c6b-4c20-beef-7f7d4151651b",
                     "is_reference": False,
-                    "url_name": "",
                     "tol_id": "",
                 },
                 "taxon": {
@@ -1223,9 +1210,7 @@ def data_get_genomes_in_group(
             },
             {
                 "genome_uuid": "7e09bad9-aa22-46e4-ab8f-1b2a64202967",
-                "genome": {
-                    "url_name": "t2t-chm13",
-                },
+                "url_name": "t2t-chm13",
                 "assembly": {
                     "accession": "GCA_042077495.1",
                     "name": "NA19036_hap1_hprc_f2",
@@ -1234,7 +1219,6 @@ def data_get_genomes_in_group(
                     "ensembl_name": "",
                     "assembly_uuid": "11ed863b-5b0a-45e6-b3e6-f0788be79706",
                     "is_reference": False,
-                    "url_name": "",
                     "tol_id": "",
                 },
                 "taxon": {
@@ -1268,9 +1252,7 @@ def data_get_genomes_in_group(
             },
             {
                 "genome_uuid": "30094672-c48c-425a-84e0-4049073a68d3",
-                "genome": {
-                    "url_name": "t2t-chm13",
-                },
+                "url_name": "t2t-chm13",
                 "assembly": {
                     "accession": "GCA_018469665.2",
                     "name": "HG01123_mat_hprc_f2",
@@ -1279,7 +1261,6 @@ def data_get_genomes_in_group(
                     "ensembl_name": "",
                     "assembly_uuid": "6ab0e3a4-4e11-443d-a18a-81ff1e68d42d",
                     "is_reference": False,
-                    "url_name": "",
                     "tol_id": "",
                 },
                 "taxon": {
@@ -1313,9 +1294,7 @@ def data_get_genomes_in_group(
             },
             {
                 "genome_uuid": "82b440be-8f7d-47fe-a363-a40cea709ea2",
-                "genome": {
-                    "url_name": "t2t-chm13",
-                },
+                "url_name": "t2t-chm13",
                 "assembly": {
                     "accession": "GCA_018472595.2",
                     "name": "HG00438_pat_hprc_f2",
@@ -1324,7 +1303,6 @@ def data_get_genomes_in_group(
                     "ensembl_name": "",
                     "assembly_uuid": "179f190d-17f9-4692-9353-374976c62e20",
                     "is_reference": False,
-                    "url_name": "",
                     "tol_id": "",
                 },
                 "taxon": {
@@ -1358,9 +1336,7 @@ def data_get_genomes_in_group(
             },
             {
                 "genome_uuid": "ddfadcb5-3b4a-48ca-9dcd-e75884445bd1",
-                "genome": {
-                    "url_name": "t2t-chm13",
-                },
+                "url_name": "t2t-chm13",
                 "assembly": {
                     "accession": "GCA_018472695.2",
                     "name": "HG01928_mat_hprc_f2",
@@ -1369,7 +1345,6 @@ def data_get_genomes_in_group(
                     "ensembl_name": "",
                     "assembly_uuid": "c4b526fd-4919-459f-b25e-9f1f658e0c53",
                     "is_reference": False,
-                    "url_name": "",
                     "tol_id": "",
                 },
                 "taxon": {
@@ -1402,6 +1377,16 @@ def data_get_genomes_in_group(
                 },
             },
         ]
+
+        # The condition here is ugly, but we have to live with it for now
+        # Slack discussion for more context:
+        # https://genomes-ebi.slack.com/archives/C08A88R7GJG/p1772190014781849?thread_ts=1772187925.600559&cid=C08A88R7GJG
+        if group_id == "t2t-group":
+            # remove grch38 from the list
+            dummy_data = [
+                genome for genome in dummy_data
+                if genome.get("genome_uuid") != "a7335667-93e7-11ec-a39d-005056b38ce3"
+            ]
 
         # Use release_label even in dummy mode: filter to matching releases.
         if release_label:

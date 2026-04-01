@@ -71,7 +71,7 @@ class BaseGenomeDetails(BaseModel):
     genome_id: str = Field(alias="genome_uuid")
     genome_tag: Optional[str] = Field(
         alias=AliasChoices(
-            AliasPath("genome", "url_name"), AliasPath("organism", "tol_id")
+            "url_name", AliasPath("organism", "tol_id")
         ),
         default=None,
     )
@@ -82,6 +82,8 @@ class BaseGenomeDetails(BaseModel):
     is_reference: bool = Field(
         alias=AliasPath("assembly", "is_reference"), default=False
     )
+    is_suppressed: bool = Field(alias=AliasPath( "is_suppressed"), default=False)
+    suppression_details: Optional[str] = Field(alias=AliasPath( "suppression_details"), default=None)
     assembly: AssemblyInGenome = None
     release: Release = None
 
