@@ -458,7 +458,7 @@ paths:
                   genomes:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Genome'
+                      $ref: '#/components/schemas/BriefGenomeDetails'
         "404": { description: Not Found }
 
 components:
@@ -518,6 +518,13 @@ components:
           nullable: true
         is_reference:
           type: boolean
+        is_suppressed:
+          type: boolean
+          example: false
+        suppression_details:
+          type: string
+          nullable: true
+          example: null
         latest_genome:
           $ref: '#/components/schemas/BriefGenomeDetails'
           nullable: true
@@ -526,10 +533,13 @@ components:
         - genome_tag
         - common_name
         - scientific_name
-        - assembly_accession
-        - assembly_name
+        - species_taxonomy_id
+        - assembly
+        - release
         - type
         - is_reference
+        - is_suppressed
+        - suppression_details
         - latest_genome
     GenomeCountItem:
       type: object
@@ -1204,7 +1214,7 @@ components:
         group_name:
           type: string
         reference_genome:
-          $ref: '#/components/schemas/Genome'
+          $ref: '#/components/schemas/BriefGenomeDetails'
   responses:
     404NotFound:
       description: The specified resource was not found

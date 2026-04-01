@@ -273,6 +273,8 @@ async def explain_genome(
                     "assembly": {"name", "accession_id"},
                     "release": {"name", "type"},
                     "type": True,
+                    "is_suppressed": True,
+                    "suppression_details": True,
                     "latest_genome": True,
                 }
             )

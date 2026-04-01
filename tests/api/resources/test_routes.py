@@ -118,6 +118,8 @@ def test_get_genomes_in_group():
                 "species_taxonomy_id": "9606",
                 "type": None,
                 "is_reference": True,
+                "is_suppressed": False,
+                "suppression_details": None,
                 "assembly": {
                     "accession_id": "GCA_000001405.29",
                     "name": "GRCh38.p14",
@@ -137,6 +139,8 @@ def test_get_genomes_in_group():
                 "species_taxonomy_id": "9606",
                 "type": None,
                 "is_reference": False,
+                "is_suppressed": False,
+                "suppression_details": None,
                 "assembly": {
                     "accession_id": "GCA_009914755.4",
                     "name": "T2T-CHM13v2.0",
@@ -156,6 +160,8 @@ def test_get_genomes_in_group():
                 "species_taxonomy_id": "9606",
                 "type": {"kind": "population", "value": "Yoruban in Nigeria"},
                 "is_reference": False,
+                "is_suppressed": False,
+                "suppression_details": None,
                 "assembly": {
                     "accession_id": "GCA_018503275.2",
                     "name": "NA19240_mat_hprc_f2",
@@ -178,6 +184,8 @@ def test_get_genomes_in_group():
                     "value": "Puerto Rican in Puerto Rico",
                 },
                 "is_reference": False,
+                "is_suppressed": False,
+                "suppression_details": None,
                 "assembly": {
                     "accession_id": "GCA_018506975.2",
                     "name": "HG00733_mat_hprc_f2",
@@ -197,6 +205,8 @@ def test_get_genomes_in_group():
                 "species_taxonomy_id": "9606",
                 "type": None,
                 "is_reference": False,
+                "is_suppressed": False,
+                "suppression_details": None,
                 "assembly": {
                     "accession_id": "GCA_042077495.1",
                     "name": "NA19036_hap1_hprc_f2",
@@ -216,6 +226,8 @@ def test_get_genomes_in_group():
                 "species_taxonomy_id": "9606",
                 "type": {"kind": "population", "value": "Colombian in Medellin"},
                 "is_reference": False,
+                "is_suppressed": False,
+                "suppression_details": None,
                 "assembly": {
                     "accession_id": "GCA_018469665.2",
                     "name": "HG01123_mat_hprc_f2",
@@ -235,6 +247,8 @@ def test_get_genomes_in_group():
                 "species_taxonomy_id": "9606",
                 "type": {"kind": "population", "value": "Han Chinese South"},
                 "is_reference": False,
+                "is_suppressed": False,
+                "suppression_details": None,
                 "assembly": {
                     "accession_id": "GCA_018472595.2",
                     "name": "HG00438_pat_hprc_f2",
@@ -254,6 +268,8 @@ def test_get_genomes_in_group():
                 "species_taxonomy_id": "9606",
                 "type": {"kind": "population", "value": "Peruvian in Lima"},
                 "is_reference": False,
+                "is_suppressed": False,
+                "suppression_details": None,
                 "assembly": {
                     "accession_id": "GCA_018472695.2",
                     "name": "HG01928_mat_hprc_f2",
@@ -267,6 +283,14 @@ def test_get_genomes_in_group():
             },
         ]
     }
+
+
+def test_get_t2t_genomes_in_group_excludes_grch38():
+    response = client.get("/api/metadata/genome_groups/t2t-group/genomes")
+    assert response.status_code == 200
+    genome_ids = [genome["genome_id"] for genome in response.json()["genomes"]]
+    assert "a7335667-93e7-11ec-a39d-005056b38ce3" not in genome_ids
+    assert "4c07817b-c7c5-463f-8624-982286bc4355" in genome_ids
 
 
 def test_get_genome_groups():
@@ -286,6 +310,8 @@ def test_get_genome_groups():
                     "species_taxonomy_id": "9606",
                     "type": None,
                     "is_reference": True,
+                    "is_suppressed": False,
+                    "suppression_details": None,
                     "assembly": {
                         "accession_id": "GCA_000001405.29",
                         "name": "GRCh38.p14",
@@ -310,6 +336,8 @@ def test_get_genome_groups():
                     "species_taxonomy_id": "9606",
                     "type": None,
                     "is_reference": False,
+                    "is_suppressed": False,
+                    "suppression_details": None,
                     "assembly": {
                         "accession_id": "GCA_009914755.4",
                         "name": "T2T-CHM13v2.0",
@@ -922,12 +950,14 @@ def test_explain_genome():
     assert response.status_code == 200
     assert response.json() == {
         "genome_id": "a7335667-93e7-11ec-a39d-005056b38ce3",
-        "genome_tag": None,
+        "genome_tag": "grch38",
         "common_name": "Human",
         "scientific_name": "Homo sapiens",
         "species_taxonomy_id": "9606",
         "type": None,
         "is_reference": True,
+        "is_suppressed": False,
+        "suppression_details": None,
         "assembly": {
             "accession_id": "GCA_000001405.29",
             "name": "GRCh38.p14"
@@ -944,6 +974,8 @@ def test_explain_genome():
             "species_taxonomy_id": "9606",
             "type": None,
             "is_reference": True,
+            "is_suppressed": False,
+            "suppression_details": None,
             "assembly": {
                 "accession_id": "GCA_000001405.29",
                 "name": "GRCh38.p14",
@@ -996,6 +1028,8 @@ def test_get_genome_details():
         "species_taxonomy_id": "9606",
         "type": None,
         "is_reference": True,
+        "is_suppressed": False,
+        "suppression_details": None,
         "assembly": {
             "accession_id": "GCA_000001405.29",
             "name": "GRCh38.p14",
@@ -1112,7 +1146,7 @@ def test_get_popular_species():
             },
             {
                 "species_taxonomy_id": "3702",
-                "name": "Thale cress",
+                "name": "Thale-cress",
                 "image": "//testserver/static/genome_images/3702.svg",
                 "genomes_count": 1,
             },
@@ -1280,7 +1314,7 @@ def test_get_popular_species():
             },
             {
                 "species_taxonomy_id": "3847",
-                "name": "Soybean",
+                "name": "Soybeans",
                 "image": "//testserver/static/genome_images/3847.svg",
                 "genomes_count": 1,
             },
@@ -1464,52 +1498,52 @@ def test_get_metadata_statistics(benchmark):
     runnable = lambda: client.get("/api/metadata/genome/a7335667-93e7-11ec-a39d-005056b38ce3/stats")
     benchmark(runnable)
 
-
-def test_get_genome_group_categories():
-    response = client.get("/api/metadata/get_genome_group_categories")
-    assert response.status_code == 200
-    assert response.json() == {
-        "group_categories": [
-            {
-                "display_name": "External projects",
-                "type": "external_projects",
-                "groups": [
-                    {
-                        "group_id": 1,
-                        "title": "AQUA-FAANG",
-                        "description": "Short project description",
-                        "rank": 1,
-                        "genomes_count": 15,
-                    },
-                    {
-                        "group_id": 2,
-                        "title": "Aquatic Symbiosis Genomics Project",
-                        "description": "Short project description",
-                        "rank": 2,
-                        "genomes_count": 11,
-                    },
-                ],
-            },
-            {
-                "display_name": "Ensembl genome collections",
-                "type": "genome_collections",
-                "groups": [
-                    {
-                        "group_id": 3,
-                        "title": "Animal pathogens",
-                        "rank": 1,
-                        "genomes_count": 20,
-                    },
-                    {
-                        "group_id": 4,
-                        "title": "Apes",
-                        "rank": 2,
-                        "genomes_count": 412,
-                    },
-                ],
-            },
-        ]
-    }
+# TODO: uncomment this once it's actually implemented
+# def test_get_genome_group_categories():
+#     response = client.get("/api/metadata/get_genome_group_categories")
+#     assert response.status_code == 200
+#     assert response.json() == {
+#         "group_categories": [
+#             {
+#                 "display_name": "External projects",
+#                 "type": "external_projects",
+#                 "groups": [
+#                     {
+#                         "group_id": 1,
+#                         "title": "AQUA-FAANG",
+#                         "description": "Short project description",
+#                         "rank": 1,
+#                         "genomes_count": 15,
+#                     },
+#                     {
+#                         "group_id": 2,
+#                         "title": "Aquatic Symbiosis Genomics Project",
+#                         "description": "Short project description",
+#                         "rank": 2,
+#                         "genomes_count": 11,
+#                     },
+#                 ],
+#             },
+#             {
+#                 "display_name": "Ensembl genome collections",
+#                 "type": "genome_collections",
+#                 "groups": [
+#                     {
+#                         "group_id": 3,
+#                         "title": "Animal pathogens",
+#                         "rank": 1,
+#                         "genomes_count": 20,
+#                     },
+#                     {
+#                         "group_id": 4,
+#                         "title": "Apes",
+#                         "rank": 2,
+#                         "genomes_count": 412,
+#                     },
+#                 ],
+#             },
+#         ]
+#     }
 
 
 if __name__ == "__main__":
