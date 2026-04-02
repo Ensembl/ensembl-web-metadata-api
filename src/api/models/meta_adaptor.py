@@ -49,18 +49,33 @@ class GenomeGroupMember(DeferredReflection, Base):
     genome_group_member_id = Column(Integer, primary_key=True)
 
 
-class GenomeGroupCategory(DeferredReflection, Base):
-    __tablename__ = "genome_group_category"
-    __table_args__ = {"extend_existing": True}
-    genome_group_category_id = Column(Integer, primary_key=True)
-
-
 class MetaAdaptor:
     db_conn: DBConnection = None
 
     def __init__(self, db_conn: DBConnection):
         self.db_conn = db_conn
         DeferredReflection.prepare(db_conn._engine)
+
+    @staticmethod
+    def _genome_group_category_mock():
+        # Temporary replacement until genome_group_category exists in metadata DB.
+        return (
+            db.select(
+                db.literal(1).label("genome_group_category_id"),
+                db.literal("collection").label("type"),
+                db.literal("Ensembl genome collections").label("display_name"),
+                db.literal(1).label("ggc_order"),
+            )
+            .union_all(
+                db.select(
+                    db.literal(2).label("genome_group_category_id"),
+                    db.literal("project").label("type"),
+                    db.literal("External projects").label("display_name"),
+                    db.literal(2).label("ggc_order"),
+                )
+            )
+            .subquery("genome_group_category")
+        )
 
     def fetch_genome_taxonomy_counts(self, release_label: str | None = None):
         """
@@ -114,6 +129,7 @@ class MetaAdaptor:
         # where gg.genome_group_id = 13 group by all;
 
         with self.db_conn.session_scope() as session:
+            genome_group_category = self._genome_group_category_mock()
             sql = (
                 db.select(
                     GenomeGroup.type,
@@ -121,23 +137,26 @@ class MetaAdaptor:
                     GenomeGroup.name,
                     GenomeGroup.label,
                     GenomeGroup.description,
-                    GenomeGroupCategory.display_name,
+                    genome_group_category.c.display_name,
                     func.count(GenomeGroupMember.genome_id).label("genome_count"),
                 )
                 .join(
                     GenomeGroupMember,
                     GenomeGroupMember.genome_group_id == GenomeGroup.genome_group_id,
                 )
-                .join(GenomeGroupCategory, GenomeGroupCategory.type == GenomeGroup.type)
+                .join(genome_group_category, genome_group_category.c.type == GenomeGroup.type)
                 .group_by(
                     GenomeGroup.type,
                     GenomeGroup.genome_group_id,
                     GenomeGroup.name,
                     GenomeGroup.label,
                     GenomeGroup.description,
-                    GenomeGroupCategory.display_name,
+                    genome_group_category.c.display_name,
+                    genome_group_category.c.ggc_order,
                 )
-                .order_by(GenomeGroup.genome_group_id)
+                .order_by(
+                    genome_group_category.c.ggc_order, GenomeGroup.genome_group_id
+                )
             )
             logger.debug(sql)
             genome_groups = session.execute(sql).mappings().all()

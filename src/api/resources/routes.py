@@ -47,6 +47,7 @@ from api.schemas.genome import (
     GenomeGroupsResponse,
     GenomesInGroupResponse,
     GenomeCountsResponse,
+    GenomeGroupCategoriesResponse,
 )
 from api.schemas.karyotype import Karyotype
 from api.schemas.popular_species import PopularSpeciesGroup
@@ -524,7 +525,7 @@ async def get_genome_group_categories(
 ):
     group_dict = data_genome_group_categories(adaptor)
     logger.debug(f"group_dict: {group_dict}")
-    genome_group_categories = GenomeGroupCategories(**group_dict)
+    genome_group_categories = GenomeGroupCategoriesResponse(**group_dict)
     response_data = responses.JSONResponse(
         genome_group_categories.model_dump(), status_code=200
     )

@@ -1431,7 +1431,6 @@ def data_genome_group_categories(adaptor: MetaAdaptor):
     try:
         data = adaptor.fetch_genome_groups()
         genome_group_categories = {}
-        i = 0
         for entry in data:
             cat_type = entry["type"]
             category_entry = genome_group_categories.get(cat_type)
@@ -1443,15 +1442,16 @@ def data_genome_group_categories(adaptor: MetaAdaptor):
                 }
                 genome_group_categories[cat_type] = category_entry
 
-            new_entry["group_id"] = entry["genome_group_id"]
-            new_entry["title"] = entry["label"]
-            new_entry["description"] = entry["description"]
-            new_entry["rank"] = i
-            i += 1
-            new_entry["genomes_count"] = entry["genome_count"]
-            genome_group_categories[cat_type]["groups"].add(new_entry)
+            new_entry = {
+                "group_id": entry["genome_group_id"],
+                "title": entry["label"],
+                "description": entry["description"],
+                "rank": len(category_entry["groups"]) + 1,
+                "genomes_count": entry["genome_count"],
+            }
+            category_entry["groups"].append(new_entry)
 
-        return {"group_categories": genome_group_categories}
+        return {"group_categories": list(genome_group_categories.values())}
     except Exception:
         logger.exception(
             "Unexpected error while fetching genome group categories ",
