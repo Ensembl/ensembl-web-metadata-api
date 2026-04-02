@@ -226,3 +226,21 @@ class GenomeCountItem(BaseModel):
 class GenomeCountsResponse(BaseModel):
     total: int = 0
     counts: list[GenomeCountItem] = Field(default_factory=list)
+
+
+class GenomeGroupCategoryGroup(BaseModel):
+    group_id: int
+    title: str
+    description: str | None = None
+    rank: int
+    genomes_count: int
+
+
+class GenomeGroupCategory(BaseModel):
+    display_name: str
+    type: str
+    groups: list[GenomeGroupCategoryGroup] = Field(default_factory=list)
+
+
+class GenomeGroupCategoriesResponse(BaseModel):
+    group_categories: list[GenomeGroupCategory] = Field(default_factory=list)

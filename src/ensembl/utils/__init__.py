@@ -23,5 +23,4 @@ __all__ = [
 import os
 from typing import TypeVar
 
-
 StrPath = TypeVar("StrPath", str, os.PathLike)

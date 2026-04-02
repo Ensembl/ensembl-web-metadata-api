@@ -47,7 +47,12 @@ from sqlalchemy.schema import MetaData, Table
 
 import logging
 
-Query = TypeVar("Query", str, sqlalchemy.sql.expression.ClauseElement, sqlalchemy.sql.expression.TextClause)
+Query = TypeVar(
+    "Query",
+    str,
+    sqlalchemy.sql.expression.ClauseElement,
+    sqlalchemy.sql.expression.TextClause,
+)
 StrURL = TypeVar("StrURL", str, sqlalchemy.engine.URL)
 
 

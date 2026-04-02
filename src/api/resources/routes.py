@@ -47,6 +47,7 @@ from api.schemas.genome import (
     GenomeGroupsResponse,
     GenomesInGroupResponse,
     GenomeCountsResponse,
+    GenomeGroupCategoriesResponse,
 )
 from api.schemas.karyotype import Karyotype
 from api.schemas.popular_species import PopularSpeciesGroup
@@ -110,6 +111,7 @@ from api.models.logic import (
     get_genome_groups_by_reference,
     data_get_genomes_in_group,
     data_get_genome_counts,
+    data_genome_group_categories,
 )
 
 
@@ -152,16 +154,20 @@ async def get_genome_karyotype(
 @router.get("/popular_species", name="popular_species")
 @redis_cache(key_prefix="popular_species")  # TTL defaults is 5 minutes
 async def get_popular_species(adaptor: GenomeAdaptorDep, request: Request):
-    try:
-        popular_species_dict = get_organisms_group_count(adaptor, None)
-        popular_species = popular_species_dict["organisms_group_count"]
-        popular_species_response = PopularSpeciesGroup(
-            _base_url=request.headers["host"], popular_species=popular_species
-        )
-        return responses.JSONResponse(popular_species_response.model_dump())
-    except Exception as e:
-        logging.error(e)
-        return response_error_handler({"status": 500})
+    #    try:
+    popular_species_dict = get_organisms_group_count(adaptor, None)
+    #        logger.error(popular_species_dict)
+    logger.error(popular_species_dict["organisms_group_count"][23])
+    popular_species = popular_species_dict["organisms_group_count"]
+    popular_species_response = PopularSpeciesGroup(
+        _base_url=request.headers["host"], popular_species=popular_species
+    )
+    return responses.JSONResponse(popular_species_response.model_dump())
+
+
+#    except Exception as e:
+#        logging.error(e)
+#        return response_error_handler({"status": 500})
 
 
 @router.get("/validate_location", name="validate_location")
@@ -391,7 +397,9 @@ async def get_vep_file_paths(
             )
 
         vep_file_paths_object = VepFilePaths(**vep_file_paths)
-        return responses.JSONResponse(vep_file_paths_object.model_dump(), status_code=200)
+        return responses.JSONResponse(
+            vep_file_paths_object.model_dump(), status_code=200
+        )
 
     except Exception as ex:
         logger.error(ex)
@@ -506,7 +514,19 @@ async def get_genome_counts(
 ):
     genome_counts_dict = data_get_genome_counts(adaptor, release)
     genome_counts = GenomeCountsResponse(**genome_counts_dict)
+    response_data = responses.JSONResponse(genome_counts.model_dump(), status_code=200)
+    return response_data
+
+
+@router.get("/genome_group_categories", name="genome_group_categories")
+@redis_cache(key_prefix="genome_group_categories")
+async def get_genome_group_categories(
+    adaptor: MetaAdaptorDep,
+):
+    group_dict = data_genome_group_categories(adaptor)
+    logger.debug(f"group_dict: {group_dict}")
+    genome_group_categories = GenomeGroupCategoriesResponse(**group_dict)
     response_data = responses.JSONResponse(
-        genome_counts.model_dump(), status_code=200
+        genome_group_categories.model_dump(), status_code=200
     )
     return response_data
