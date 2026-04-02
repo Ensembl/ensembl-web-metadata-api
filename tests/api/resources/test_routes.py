@@ -1503,45 +1503,34 @@ def test_get_metadata_statistics(benchmark):
 
 
 def test_get_genome_group_categories():
-    response = client.get("/api/metadata/get_genome_group_categories")
+    response = client.get("/api/metadata/genome_group_categories")
     assert response.status_code == 200
     assert response.json() == {
         "group_categories": [
             {
                 "display_name": "External projects",
-                "type": "external_projects",
+                "type": "project",
                 "groups": [
                     {
-                        "group_id": 1,
-                        "title": "AQUA-FAANG",
-                        "description": "Short project description",
+                        "group_id": 12,
+                        "title": "Vertebrate Genomes Project (VGP)",
+                        "description": "The Vertebrate Genomes Project (VGP) is an international effort to generate near error-free, high-quality reference genome assemblies for all ~70,000 extant vertebrate species, advancing biology, conservation, and disease research.",
                         "rank": 1,
-                        "genomes_count": 15,
+                        "genomes_count": 399,
                     },
                     {
-                        "group_id": 2,
-                        "title": "Aquatic Symbiosis Genomics Project",
-                        "description": "Short project description",
+                        "group_id": 13,
+                        "title": "Biodiversity Genomics Europe (BGE)",
+                        "description": "The ERGA-BGE project accelerates genomic science across Europe by generating high-quality reference genomes for biodiversity, supporting conservation, monitoring, and research as part of the Biodiversity Genomics Europe and Earth BioGenome initiatives.",
                         "rank": 2,
-                        "genomes_count": 11,
-                    },
-                ],
-            },
-            {
-                "display_name": "Ensembl genome collections",
-                "type": "genome_collections",
-                "groups": [
-                    {
-                        "group_id": 3,
-                        "title": "Animal pathogens",
-                        "rank": 1,
-                        "genomes_count": 20,
+                        "genomes_count": 63,
                     },
                     {
-                        "group_id": 4,
-                        "title": "Apes",
-                        "rank": 2,
-                        "genomes_count": 412,
+                        "group_id": 14,
+                        "title": "Ancient Environmental Genomics Initiative for Sustainability (AEGIS)",
+                        "description": "AEGIS is a global research consortium using ancient environmental DNA and genomics to uncover past adaptations and genetic diversity, guiding development of climate-resilient crops and sustainable food systems under climate change.",
+                        "rank": 3,
+                        "genomes_count": 79,
                     },
                 ],
             },
