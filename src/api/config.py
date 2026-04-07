@@ -24,7 +24,7 @@ from starlette.datastructures import CommaSeparatedStrings
 
 from api.logconfig import InterceptHandler
 
-VERSION = "0.0.0"
+VERSION = "2.0.1"
 API_PREFIX = "/api"
 
 config = Config(".env")

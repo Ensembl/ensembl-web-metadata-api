@@ -34,10 +34,12 @@ class AssemblyInGenome(BaseModel):
     accession_id: str = Field(alias="accession")
     name: str = Field(alias="name")
     # TODO FIX: accession alias is defined twice?
-    url: str = Field(alias="accession", default=None)
+    url: Optional[str] = Field(alias="accession", default=None)
 
     @validator("url", always=True)
     def generate_url(cls, value):
+        if value is None:
+            return None
         if value.startswith("GCA"):
             return ASSEMBLY_URLS["GCA"] + value
         if value.startswith("GCF"):
@@ -75,7 +77,9 @@ class BaseGenomeDetails(BaseModel):
         ),
         default=None,
     )
-    common_name: str = Field(alias=AliasPath("organism", "common_name"), default=None)
+    common_name: Optional[str] = Field(
+        alias=AliasPath("organism", "common_name"), default=None
+    )
     scientific_name: str = Field(alias=AliasPath("organism", "scientific_name"))
     species_taxonomy_id: str = Field(alias=AliasPath("organism", "species_taxonomy_id"))
     type: Optional[Type] = None
@@ -84,8 +88,8 @@ class BaseGenomeDetails(BaseModel):
     )
     is_suppressed: bool = Field(alias=AliasPath( "is_suppressed"), default=False)
     suppression_details: Optional[str] = Field(alias=AliasPath( "suppression_details"), default=None)
-    assembly: AssemblyInGenome = None
-    release: Release = None
+    assembly: AssemblyInGenome
+    release: Release
 
     @model_validator(mode="before")
     @classmethod
@@ -134,16 +138,16 @@ class BriefGenomeDetails(BaseGenomeDetails):
 
 class GenomeDetails(BaseGenomeDetails):
     taxonomy_id: str = Field(alias=AliasPath("organism", "taxonomy_id"))
-    assembly_provider: AssemblyProvider = None
+    assembly_provider: Optional[AssemblyProvider] = None
     assembly_level: str = Field(alias=AliasPath("attributes_info", "assembly_level"))
-    assembly_date: str = Field(
+    assembly_date: Optional[str] = Field(
         alias=AliasPath("attributes_info", "assembly_date"), default=None
     )
-    annotation_provider: AnnotationProvider = None
-    annotation_method: str = Field(
+    annotation_provider: Optional[AnnotationProvider] = None
+    annotation_method: Optional[str] = Field(
         alias=AliasPath("attributes_info", "genebuild_method_display"), default=None
     )
-    annotation_version: str = Field(
+    annotation_version: Optional[str] = Field(
         # TODO: remove genebuildVersion after the metadata DB is updated
         alias=AliasChoices(
             AliasPath("attributes_info", "genebuild_provider_version"),
@@ -151,7 +155,7 @@ class GenomeDetails(BaseGenomeDetails):
         ),
         default=None,
     )
-    annotation_date: str = Field(
+    annotation_date: Optional[str] = Field(
         alias=AliasPath("attributes_info", "genebuild_last_geneset_update"),
         default=None,
     )
@@ -184,7 +188,7 @@ class GenomeDetails(BaseGenomeDetails):
 
 class DatasetAttribute(BaseModel):
     name: str = Field(alias="attribute_name")
-    value: str = Field(alias="attribute_value", default=None)
+    value: Optional[str] = Field(alias="attribute_value", default=None)
     version: str = Field(alias="dataset_version")
     uuid: str = Field(alias="dataset_uuid")
     type: str = Field(alias="dataset_type")
