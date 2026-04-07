@@ -88,8 +88,8 @@ class BaseGenomeDetails(BaseModel):
     )
     is_suppressed: bool = Field(alias=AliasPath( "is_suppressed"), default=False)
     suppression_details: Optional[str] = Field(alias=AliasPath( "suppression_details"), default=None)
-    assembly: Optional[AssemblyInGenome] = None
-    release: Optional[Release] = None
+    assembly: AssemblyInGenome
+    release: Release
 
     @model_validator(mode="before")
     @classmethod
