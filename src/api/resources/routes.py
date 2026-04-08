@@ -15,19 +15,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-# import enum
-import itertools
 import logging
 
 from api.logconfig import InterceptHandler
-import os
-
-# import pytest
-# import sqlalchemy
-# import time
-import timeit
-import uuid
-from datetime import datetime
 
 from typing import Annotated, Any
 
@@ -58,8 +48,6 @@ from api.schemas.vep import VepFilePaths
 from api.resources.redis import redis_cache
 from api.dependencies import Dependencies
 
-# get_genome_adaptor, get_vep_adaptor, get_release_adaptor
-
 from ensembl.production.metadata.api.adaptors import GenomeAdaptor, ReleaseAdaptor
 from ensembl.production.metadata.api.adaptors.vep import VepAdaptor
 from api.models.meta_adaptor import MetaAdaptor
@@ -81,30 +69,13 @@ logger.info("Starting up")
 from api.models.logic import (
     get_top_level_statistics_by_uuid,
     get_top_level_regions,
-    assembly_region_iterator,
-    create_assembly_region,
     get_organisms_group_count,
-    create_organisms_group_count,
     get_attributes_by_genome_uuid,
-    create_attributes_info,
     get_genome_by_uuid,
-    create_genome_with_attributes_and_count,
-    get_alternative_names,
-    create_genome,
-    create_assembly,
-    create_taxon,
-    create_organism,
-    create_release,
     get_ftp_links,
-    create_paths,
     get_brief_genome_details_by_uuid,
-    is_valid_uuid,
-    create_brief_genome_details,
     genome_assembly_sequence_region,
-    create_genome_assembly_sequence_region,
     get_dataset_attributes,
-    get_attributes_values_by_uuid,
-    create_attribute_value,
     get_genomes_by_specific_keyword_iterator,
     get_vep_paths_by_uuid,
     release_iterator,
@@ -154,20 +125,16 @@ async def get_genome_karyotype(
 @router.get("/popular_species", name="popular_species")
 @redis_cache(key_prefix="popular_species")  # TTL defaults is 5 minutes
 async def get_popular_species(adaptor: GenomeAdaptorDep, request: Request):
-    #    try:
-    popular_species_dict = get_organisms_group_count(adaptor, None)
-    #        logger.error(popular_species_dict)
-    logger.error(popular_species_dict["organisms_group_count"][23])
-    popular_species = popular_species_dict["organisms_group_count"]
-    popular_species_response = PopularSpeciesGroup(
-        _base_url=request.headers["host"], popular_species=popular_species
-    )
-    return responses.JSONResponse(popular_species_response.model_dump())
-
-
-#    except Exception as e:
-#        logging.error(e)
-#        return response_error_handler({"status": 500})
+    try:
+        popular_species_dict = get_organisms_group_count(adaptor, None)
+        popular_species = popular_species_dict["organisms_group_count"]
+        popular_species_response = PopularSpeciesGroup(
+            _base_url=request.headers["host"], popular_species=popular_species
+        )
+        return responses.JSONResponse(popular_species_response.model_dump())
+    except Exception as e:
+        logging.error(e)
+        return response_error_handler({"status": 500})
 
 
 @router.get("/validate_location", name="validate_location")
@@ -466,7 +433,7 @@ async def get_genome_groups(
             adaptor, group_type, release
         )
         logger.debug(f"genome_groups_dict: {genome_groups_dict}")
-        if len(genome_groups_dict.get("genome_groups", [])) == 0:
+        if not genome_groups_dict:
             return response_error_handler(
                 {"status": 404, "details": "No genome groups found matching criteria"}
             )
@@ -491,7 +458,7 @@ async def get_genomes_in_group(
     try:
         genomes_in_group_dict = data_get_genomes_in_group(adaptor, group_id, release)
         logger.debug(f"genomes_in_group_dict: {genomes_in_group_dict}")
-        if len(genomes_in_group_dict.get("genomes", [])) == 0:
+        if not genomes_in_group_dict:
             return response_error_handler(
                 {"status": 404, "details": "No genomes found in specified group"}
             )
