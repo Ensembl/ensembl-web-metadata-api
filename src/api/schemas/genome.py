@@ -203,7 +203,7 @@ class GenomeByKeyword(BaseModel):
     genome_tag: str = Field(alias=AliasPath("genome", "url_name"), default="")
 
 
-class GenomeGroup(BaseModel):
+class AlignmentViewerGenomeGroup(BaseModel):
     id: str = Field(alias="group_id")
     type: str = Field(alias="group_type")
     name: str | None = Field(alias="group_name", default=None)
@@ -211,7 +211,7 @@ class GenomeGroup(BaseModel):
 
 
 class GenomeGroupsResponse(BaseModel):
-    genome_groups: list[GenomeGroup] = Field(alias="genome_groups")
+    genome_groups: list[AlignmentViewerGenomeGroup] = Field(alias="genome_groups")
 
 
 class GenomesInGroupResponse(BaseModel):
@@ -228,7 +228,7 @@ class GenomeCountsResponse(BaseModel):
     counts: list[GenomeCountItem] = Field(default_factory=list)
 
 
-class GenomeGroupCategoryGroup(BaseModel):
+class GenomeGroup(BaseModel):
     group_id: int
     title: str
     description: str | None = None
@@ -239,7 +239,7 @@ class GenomeGroupCategoryGroup(BaseModel):
 class GenomeGroupCategory(BaseModel):
     display_name: str
     type: str
-    groups: list[GenomeGroupCategoryGroup] = Field(default_factory=list)
+    groups: list[GenomeGroup] = Field(default_factory=list)
 
 
 class GenomeGroupCategoriesResponse(BaseModel):
