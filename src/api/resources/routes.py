@@ -433,15 +433,13 @@ async def get_genome_groups(
             adaptor, group_type, release
         )
         logger.debug(f"genome_groups_dict: {genome_groups_dict}")
-        if not genome_groups_dict:
-            return response_error_handler(
-                {"status": 404, "details": "No genome groups found matching criteria"}
-            )
-
         genome_groups = GenomeGroupsResponse(**genome_groups_dict)
         response_dict = genome_groups.model_dump()
         return responses.JSONResponse(response_dict, status_code=200)
-    except Exception as ex:
+    except ValueError as ex:
+        logger.warning("Invalid request in get_genome_groups: %s", ex)
+        return response_error_handler({"status": 400, "details": str(ex)})
+    except Exception:
         logger.exception("Error in get_genome_groups")
         return response_error_handler({"status": 500})
 
@@ -479,10 +477,16 @@ async def get_genome_counts(
         None, description="Optional release label to filter counts, e.g. '2025-02'"
     ),
 ):
-    genome_counts_dict = data_get_genome_counts(adaptor, release)
-    genome_counts = GenomeCountsResponse(**genome_counts_dict)
-    response_data = responses.JSONResponse(genome_counts.model_dump(), status_code=200)
-    return response_data
+    try:
+        genome_counts_dict = data_get_genome_counts(adaptor, release)
+        genome_counts = GenomeCountsResponse(**genome_counts_dict)
+        response_data = responses.JSONResponse(
+            genome_counts.model_dump(), status_code=200
+        )
+        return response_data
+    except Exception:
+        logger.exception("Error in get_genome_counts (release=%r)", release)
+        return response_error_handler({"status": 500})
 
 
 @router.get("/genome_group_categories", name="genome_group_categories")
@@ -490,10 +494,14 @@ async def get_genome_counts(
 async def get_genome_group_categories(
     adaptor: MetaAdaptorDep,
 ):
-    group_dict = data_genome_group_categories(adaptor)
-    logger.debug(f"group_dict: {group_dict}")
-    genome_group_categories = GenomeGroupCategoriesResponse(**group_dict)
-    response_data = responses.JSONResponse(
-        genome_group_categories.model_dump(), status_code=200
-    )
-    return response_data
+    try:
+        group_dict = data_genome_group_categories(adaptor)
+        logger.debug(f"group_dict: {group_dict}")
+        genome_group_categories = GenomeGroupCategoriesResponse(**group_dict)
+        response_data = responses.JSONResponse(
+            genome_group_categories.model_dump(), status_code=200
+        )
+        return response_data
+    except Exception:
+        logger.exception("Error in get_genome_group_categories")
+        return response_error_handler({"status": 500})
