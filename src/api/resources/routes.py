@@ -15,19 +15,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-# import enum
-import itertools
 import logging
 
 from api.logconfig import InterceptHandler
-import os
-
-# import pytest
-# import sqlalchemy
-# import time
-import timeit
-import uuid
-from datetime import datetime
 
 from typing import Annotated, Any
 
@@ -47,6 +37,7 @@ from api.schemas.genome import (
     GenomeGroupsResponse,
     GenomesInGroupResponse,
     GenomeCountsResponse,
+    GenomeGroupCategoriesResponse,
 )
 from api.schemas.karyotype import Karyotype
 from api.schemas.popular_species import PopularSpeciesGroup
@@ -56,8 +47,6 @@ from api.schemas.vep import VepFilePaths
 
 from api.resources.redis import redis_cache
 from api.dependencies import Dependencies
-
-# get_genome_adaptor, get_vep_adaptor, get_release_adaptor
 
 from ensembl.production.metadata.api.adaptors import GenomeAdaptor, ReleaseAdaptor
 from ensembl.production.metadata.api.adaptors.vep import VepAdaptor
@@ -80,36 +69,20 @@ logger.info("Starting up")
 from api.models.logic import (
     get_top_level_statistics_by_uuid,
     get_top_level_regions,
-    assembly_region_iterator,
-    create_assembly_region,
     get_organisms_group_count,
-    create_organisms_group_count,
     get_attributes_by_genome_uuid,
-    create_attributes_info,
     get_genome_by_uuid,
-    create_genome_with_attributes_and_count,
-    get_alternative_names,
-    create_genome,
-    create_assembly,
-    create_taxon,
-    create_organism,
-    create_release,
     get_ftp_links,
-    create_paths,
     get_brief_genome_details_by_uuid,
-    is_valid_uuid,
-    create_brief_genome_details,
     genome_assembly_sequence_region,
-    create_genome_assembly_sequence_region,
     get_dataset_attributes,
-    get_attributes_values_by_uuid,
-    create_attribute_value,
     get_genomes_by_specific_keyword_iterator,
     get_vep_paths_by_uuid,
     release_iterator,
     get_genome_groups_by_reference,
     data_get_genomes_in_group,
     data_get_genome_counts,
+    data_genome_group_categories,
 )
 
 
@@ -391,7 +364,9 @@ async def get_vep_file_paths(
             )
 
         vep_file_paths_object = VepFilePaths(**vep_file_paths)
-        return responses.JSONResponse(vep_file_paths_object.model_dump(), status_code=200)
+        return responses.JSONResponse(
+            vep_file_paths_object.model_dump(), status_code=200
+        )
 
     except Exception as ex:
         logger.error(ex)
@@ -458,15 +433,13 @@ async def get_genome_groups(
             adaptor, group_type, release
         )
         logger.debug(f"genome_groups_dict: {genome_groups_dict}")
-        if len(genome_groups_dict.get("genome_groups", [])) == 0:
-            return response_error_handler(
-                {"status": 404, "details": "No genome groups found matching criteria"}
-            )
-
         genome_groups = GenomeGroupsResponse(**genome_groups_dict)
         response_dict = genome_groups.model_dump()
         return responses.JSONResponse(response_dict, status_code=200)
-    except Exception as ex:
+    except ValueError as ex:
+        logger.warning("Invalid request in get_genome_groups: %s", ex)
+        return response_error_handler({"status": 400, "details": str(ex)})
+    except Exception:
         logger.exception("Error in get_genome_groups")
         return response_error_handler({"status": 500})
 
@@ -483,7 +456,7 @@ async def get_genomes_in_group(
     try:
         genomes_in_group_dict = data_get_genomes_in_group(adaptor, group_id, release)
         logger.debug(f"genomes_in_group_dict: {genomes_in_group_dict}")
-        if len(genomes_in_group_dict.get("genomes", [])) == 0:
+        if not genomes_in_group_dict:
             return response_error_handler(
                 {"status": 404, "details": "No genomes found in specified group"}
             )
@@ -504,9 +477,31 @@ async def get_genome_counts(
         None, description="Optional release label to filter counts, e.g. '2025-02'"
     ),
 ):
-    genome_counts_dict = data_get_genome_counts(adaptor, release)
-    genome_counts = GenomeCountsResponse(**genome_counts_dict)
-    response_data = responses.JSONResponse(
-        genome_counts.model_dump(), status_code=200
-    )
-    return response_data
+    try:
+        genome_counts_dict = data_get_genome_counts(adaptor, release)
+        genome_counts = GenomeCountsResponse(**genome_counts_dict)
+        response_data = responses.JSONResponse(
+            genome_counts.model_dump(), status_code=200
+        )
+        return response_data
+    except Exception:
+        logger.exception("Error in get_genome_counts (release=%r)", release)
+        return response_error_handler({"status": 500})
+
+
+@router.get("/genome_group_categories", name="genome_group_categories")
+@redis_cache(key_prefix="genome_group_categories")
+async def get_genome_group_categories(
+    adaptor: MetaAdaptorDep,
+):
+    try:
+        group_dict = data_genome_group_categories(adaptor)
+        logger.debug(f"group_dict: {group_dict}")
+        genome_group_categories = GenomeGroupCategoriesResponse(**group_dict)
+        response_data = responses.JSONResponse(
+            genome_group_categories.model_dump(), status_code=200
+        )
+        return response_data
+    except Exception:
+        logger.exception("Error in get_genome_group_categories")
+        return response_error_handler({"status": 500})

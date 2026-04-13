@@ -79,6 +79,6 @@ from genome_taxonomy_counts where release_id = 0 order by ord;
 .print ''
 from genome_taxonomy_counts where release_id > 0 order by release_id,ord;
 
-#drop table taxonomy_counts;
+drop table taxonomy_counts;
 drop table tax_stop_levels;
 drop macro uptax;

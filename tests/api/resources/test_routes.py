@@ -58,36 +58,35 @@ def test_get_genome_counts():
     assert response.status_code == 200
     assert response.json() == (
         {
-            'counts': [
+            "counts": [
                 {
-                    'count': 4207,
-                    'label': 'Animals',
+                    "count": 4207,
+                    "label": "Animals",
                 },
                 {
-                    'count': 24,
-                    'label': 'Archaea',
+                    "count": 24,
+                    "label": "Archaea",
                 },
                 {
-                    'count': 85,
-                    'label': 'Bacteria',
+                    "count": 85,
+                    "label": "Bacteria",
                 },
                 {
-                    'count': 153,
-                    'label': 'Fungi',
+                    "count": 153,
+                    "label": "Fungi",
                 },
                 {
-                    'count': 465,
-                    'label': 'Green Plants',
+                    "count": 465,
+                    "label": "Green Plants",
                 },
                 {
-                    'count': 43,
-                    'label': 'Others',
+                    "count": 43,
+                    "label": "Others",
                 },
             ],
-            'total': 4977,
+            "total": 4977,
         }
     )
-
 
     response = client.get("/api/metadata/genome_counts?release=2023-10-18")
     assert response.status_code == 200
@@ -1077,7 +1076,9 @@ def test_example_objects(benchmark):
         {"type": "location", "id": "Chromosome:3140311-3140799"},
     ]
 
-    runnable = lambda: client.get("/api/metadata/genome/a7335667-93e7-11ec-a39d-005056b38ce3/example_objects")
+    runnable = lambda: client.get(
+        "/api/metadata/genome/a7335667-93e7-11ec-a39d-005056b38ce3/example_objects"
+    )
     benchmark(runnable)
 
 
@@ -1495,55 +1496,46 @@ def test_get_metadata_statistics(benchmark):
         }
     }
 
-    runnable = lambda: client.get("/api/metadata/genome/a7335667-93e7-11ec-a39d-005056b38ce3/stats")
+    runnable = lambda: client.get(
+        "/api/metadata/genome/a7335667-93e7-11ec-a39d-005056b38ce3/stats"
+    )
     benchmark(runnable)
 
-# TODO: uncomment this once it's actually implemented
-# def test_get_genome_group_categories():
-#     response = client.get("/api/metadata/get_genome_group_categories")
-#     assert response.status_code == 200
-#     assert response.json() == {
-#         "group_categories": [
-#             {
-#                 "display_name": "External projects",
-#                 "type": "external_projects",
-#                 "groups": [
-#                     {
-#                         "group_id": 1,
-#                         "title": "AQUA-FAANG",
-#                         "description": "Short project description",
-#                         "rank": 1,
-#                         "genomes_count": 15,
-#                     },
-#                     {
-#                         "group_id": 2,
-#                         "title": "Aquatic Symbiosis Genomics Project",
-#                         "description": "Short project description",
-#                         "rank": 2,
-#                         "genomes_count": 11,
-#                     },
-#                 ],
-#             },
-#             {
-#                 "display_name": "Ensembl genome collections",
-#                 "type": "genome_collections",
-#                 "groups": [
-#                     {
-#                         "group_id": 3,
-#                         "title": "Animal pathogens",
-#                         "rank": 1,
-#                         "genomes_count": 20,
-#                     },
-#                     {
-#                         "group_id": 4,
-#                         "title": "Apes",
-#                         "rank": 2,
-#                         "genomes_count": 412,
-#                     },
-#                 ],
-#             },
-#         ]
-#     }
+
+def test_get_genome_group_categories():
+    response = client.get("/api/metadata/genome_group_categories")
+    assert response.status_code == 200
+    assert response.json() == {
+        "group_categories": [
+            {
+                "display_name": "External projects",
+                "type": "project",
+                "groups": [
+                    {
+                        "group_id": 12,
+                        "title": "Vertebrate Genomes Project (VGP)",
+                        "description": "The Vertebrate Genomes Project (VGP) is an international effort to generate near error-free, high-quality reference genome assemblies for all ~70,000 extant vertebrate species, advancing biology, conservation, and disease research.",
+                        "rank": 1,
+                        "genomes_count": 399,
+                    },
+                    {
+                        "group_id": 13,
+                        "title": "Biodiversity Genomics Europe (BGE)",
+                        "description": "The ERGA-BGE project accelerates genomic science across Europe by generating high-quality reference genomes for biodiversity, supporting conservation, monitoring, and research as part of the Biodiversity Genomics Europe and Earth BioGenome initiatives.",
+                        "rank": 2,
+                        "genomes_count": 63,
+                    },
+                    {
+                        "group_id": 14,
+                        "title": "Ancient Environmental Genomics Initiative for Sustainability (AEGIS)",
+                        "description": "AEGIS is a global research consortium using ancient environmental DNA and genomics to uncover past adaptations and genetic diversity, guiding development of climate-resilient crops and sustainable food systems under climate change.",
+                        "rank": 3,
+                        "genomes_count": 79,
+                    },
+                ],
+            },
+        ]
+    }
 
 
 if __name__ == "__main__":
