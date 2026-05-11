@@ -53,7 +53,7 @@ class AssemblyProvider(BaseModel):
 
     @field_serializer("url")
     def serialize_url(self, url: Optional[str]):
-        if url in ("", None):
+        if not url:
             return None
         return url
 
@@ -64,7 +64,7 @@ class AnnotationProvider(BaseModel):
 
     @field_serializer("url")
     def serialize_url(self, url: Optional[str]):
-        if url in ("", None):
+        if not url:
             return None
         return url
 
