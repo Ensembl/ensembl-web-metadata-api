@@ -49,22 +49,22 @@ class AssemblyInGenome(BaseModel):
 
 class AssemblyProvider(BaseModel):
     name: str
-    url: str = Field(alias="url", default="")
+    url: Optional[str] = Field(alias="url", default=None)
 
     @field_serializer("url")
-    def serialize_url(self, url: str):
-        if url == "":
+    def serialize_url(self, url: Optional[str]):
+        if not url:
             return None
         return url
 
 
 class AnnotationProvider(BaseModel):
     name: str
-    url: str = Field(alias="url", default="")
+    url: Optional[str] = Field(alias="url", default=None)
 
     @field_serializer("url")
-    def serialize_url(self, url: str):
-        if url == "":
+    def serialize_url(self, url: Optional[str]):
+        if not url:
             return None
         return url
 
