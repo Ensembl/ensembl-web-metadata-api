@@ -440,48 +440,51 @@ def create_paths(data=None):
     return {"links": ftp_links_list}
 
 
-def get_brief_genome_details_by_uuid(db_conn, genome_uuid_or_tag, release_version):
+def get_brief_genome_details_by_uuid(db_conn, genome_id_or_accession, release_version):
     """
     Fetch brief genome details by UUID or tag and release version.
 
     Args:
         db_conn: Database connection object.
-        genome_uuid_or_tag: Genome UUID or tag.
+        genome_id_or_accession: Genome ID or assembly accession.
         release_version: Release version to fetch.
 
     Returns:
         A dictionary containing brief genome details.
     """
-    if not genome_uuid_or_tag:
-        logger.warning("Missing or Empty Genome UUID field.")
+    if not genome_id_or_accession:
+        logger.warning("Missing or Empty Genome ID or Accession field.")
         return None
 
-    # If genome_uuid_or_tag is not a valid UUID, assume it's a tag and fetch genome_uuid
-    if not is_valid_uuid(genome_uuid_or_tag):
+    # If genome_id_or_accession is not a valid UUID, assume it's a assembly accession and fetch genome_uuid
+    if not is_valid_uuid(genome_id_or_accession):
         logger.debug(
-            f"Invalid genome_uuid {genome_uuid_or_tag}, assuming it's a tag and using it to fetch genome_uuid"
+            f"Invalid genome_id '{genome_id_or_accession}', assuming it's a assembly accession and using it to fetch genome_uuid"
         )
-        # For tag (URL name), we only care about the latest integrated release.
+        # For assembly accession, we have an ordering of priority to determine which genome to return 
+        # if multiple genomes are found for the same assembly accession (see genome_id_or_accession())
         # For archives, we will need to keep in mind the combination of release and tag
         # that will take the user to the archived version of the genome.
-        genome_results = db_conn.fetch_genomes(
-            genome_tag=genome_uuid_or_tag,
-            # release_type="integrated", #  Add this once we have tags linked only to integrated releases
-            release_version=release_version,
+        genome_uuid = db_conn.get_genome_uuid_by_assembly_accession(
+            assembly_accession=genome_id_or_accession,
+            release=release_version,
         )
     else:
-        genome_uuid = genome_uuid_or_tag
-        genome_results = db_conn.fetch_genomes(
-            genome_uuid=genome_uuid, release_version=release_version
-        )
+        genome_uuid = genome_id_or_accession
+    
+    # Fetch the genome details using the selected genome UUID
+    genome_results = db_conn.fetch_genomes(
+        genome_uuid=genome_uuid,
+        release_version=release_version,
+    )
 
     if not genome_results:
-        logger.error(f"No Genome/Release found: {genome_uuid_or_tag}/{release_version}")
+        logger.error(f"No Genome/Release found: {genome_id_or_accession}/{release_version}")
         return None
 
     if len(genome_results) > 1:
         logger.warning(
-            f"Multiple results found for Genome UUID/Release version: {genome_uuid_or_tag}/{release_version}"
+            f"Multiple results found for Genome UUID/Release version: {genome_id_or_accession}/{release_version}"
         )
         # means that this genome is released in both a partial and integrated release
         # we get the integrated release specifically since it's the one we are interested in

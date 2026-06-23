@@ -224,14 +224,14 @@ async def get_genome_ftplinks(
         return response_error_handler({"status": 500})
 
 
-@router.get("/genome/{genome_id_or_slug}/explain", name="genome_explain")
-@redis_cache(key_prefix="explain", arg_keys=["genome_id_or_slug"])
+@router.get("/genome/{genome_id_or_accession}/explain", name="genome_explain")
+@redis_cache(key_prefix="explain", arg_keys=["genome_id_or_accession"])
 async def explain_genome(
-    adaptor: GenomeAdaptorDep, request: Request, genome_id_or_slug: str
+    adaptor: GenomeAdaptorDep, request: Request, genome_id_or_accession: str
 ):
     try:
         genome_details_dict = get_brief_genome_details_by_uuid(
-            adaptor, genome_id_or_slug, None
+            adaptor, genome_id_or_accession, None
         )
         if genome_details_dict:
             genome_details = BriefGenomeDetails(**genome_details_dict)
@@ -254,7 +254,7 @@ async def explain_genome(
             response_data = responses.JSONResponse(response_dict, status_code=200)
         else:
             return response_error_handler(
-                {"status": 404, "details": f"Could not explain {genome_id_or_slug}"}
+                {"status": 404, "details": f"Could not explain {genome_id_or_accession}"}
             )
     except Exception as ex:
         logger.error(ex)
