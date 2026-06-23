@@ -60,7 +60,7 @@ def test_get_genome_counts():
         {
             "counts": [
                 {
-                    "count": 4207,
+                    "count": 4458,
                     "label": "Animals",
                 },
                 {
@@ -72,19 +72,19 @@ def test_get_genome_counts():
                     "label": "Bacteria",
                 },
                 {
-                    "count": 153,
+                    "count": 155,
                     "label": "Fungi",
                 },
                 {
-                    "count": 465,
+                    "count": 548,
                     "label": "Green Plants",
                 },
                 {
-                    "count": 43,
+                    "count": 44,
                     "label": "Others",
                 },
             ],
-            "total": 4977,
+            "total": 5314,
         }
     )
 
@@ -111,7 +111,7 @@ def test_get_genomes_in_group():
         "genomes": [
             {
                 "genome_id": "a7335667-93e7-11ec-a39d-005056b38ce3",
-                "genome_tag": "grch38",
+                "genome_tag": "GCA_000001405.29",
                 "common_name": "Human",
                 "scientific_name": "Homo sapiens",
                 "species_taxonomy_id": "9606",
@@ -132,7 +132,7 @@ def test_get_genomes_in_group():
             },
             {
                 "genome_id": "4c07817b-c7c5-463f-8624-982286bc4355",
-                "genome_tag": "t2t-chm13",
+                "genome_tag": "GCA_009914755.4",
                 "common_name": "Human",
                 "scientific_name": "Homo sapiens",
                 "species_taxonomy_id": "9606",
@@ -303,7 +303,7 @@ def test_get_genome_groups():
                 "name": None,
                 "reference_genome": {
                     "genome_id": "a7335667-93e7-11ec-a39d-005056b38ce3",
-                    "genome_tag": "grch38",
+                    "genome_tag": "GCA_000001405.29",
                     "common_name": "Human",
                     "scientific_name": "Homo sapiens",
                     "species_taxonomy_id": "9606",
@@ -329,7 +329,7 @@ def test_get_genome_groups():
                 "name": None,
                 "reference_genome": {
                     "genome_id": "4c07817b-c7c5-463f-8624-982286bc4355",
-                    "genome_tag": "t2t-chm13",
+                    "genome_tag": "GCA_009914755.4",
                     "common_name": "Human",
                     "scientific_name": "Homo sapiens",
                     "species_taxonomy_id": "9606",
@@ -365,7 +365,7 @@ def test_get_releases(benchmark):
     assert response.status_code == 200
     assert response.json() == [
         {"name": "2025-02", "type": "integrated", "is_current": True},
-        {"name": "2026-02-20", "type": "partial", "is_current": True},
+        {"name": "2026-06-07", "type": "partial", "is_current": True},
     ]
 
     response = client.get("/api/metadata/releases?release_name=100000")
@@ -382,7 +382,7 @@ def test_get_releases(benchmark):
 
     response = client.get("/api/metadata/releases")
     assert response.status_code == 200
-    assert len(response.json()) == 21
+    assert len(response.json()) == 25
 
     runnable = lambda: client.get("/api/metadata/releases")
     benchmark(runnable)
@@ -407,7 +407,7 @@ def test_get_genome_by_keyword():
     assert response.json() == {
         "genome_uuid": "be73075e-0633-471d-b7c8-4f8ca7752a04",
         "release_version": 115.3,
-        "genome_tag": "",
+        "genome_tag": "GCA_000001405.29",
     }
 
 
@@ -949,7 +949,7 @@ def test_explain_genome():
     assert response.status_code == 200
     assert response.json() == {
         "genome_id": "a7335667-93e7-11ec-a39d-005056b38ce3",
-        "genome_tag": "grch38",
+        "genome_tag": "GCA_000001405.29",
         "common_name": "Human",
         "scientific_name": "Homo sapiens",
         "species_taxonomy_id": "9606",
@@ -981,11 +981,29 @@ def test_explain_genome():
                 "url": "https://identifiers.org/insdc.gca/GCA_000001405.29",
             },
             "release": {
-                "name": "2026-01-26",
+                "name": "2026-04-09",
                 "type": "partial",
                 "is_current": False
             },
         },
+    }
+
+
+def test_explain_genome_by_assembly_accession():
+    response = client.get(
+        "/api/metadata/genome/GCA_000001405.29/explain"
+    )
+    assert response.status_code == 200
+    assert response.json()["genome_id"] == "a7335667-93e7-11ec-a39d-005056b38ce3"
+    assert response.json()["genome_tag"] == "GCA_000001405.29"
+
+
+def test_explain_genome_by_url_slug_returns_404():
+    response = client.get("/api/metadata/genome/grch38/explain")
+    assert response.status_code == 404
+    assert response.json() == {
+        "status_code": 404,
+        "details": "Could not explain grch38",
     }
 
 
@@ -1008,7 +1026,7 @@ def test_get_genome_ftplinks():
             "url": "https://ftp.ebi.ac.uk/pub/ensemblorganisms/Homo_sapiens/GCA_000001405.29/ensembl/homology/2023_03",
         },
         {
-            "dataset": "variation",
+            "dataset": "short_variants",
             "url": "https://ftp.ebi.ac.uk/pub/ensemblorganisms/Homo_sapiens/GCA_000001405.29/ensembl/variation/2023_03",
         },
     ]
@@ -1021,7 +1039,7 @@ def test_get_genome_details():
     assert response.status_code == 200
     assert response.json() == {
         "genome_id": "a7335667-93e7-11ec-a39d-005056b38ce3",
-        "genome_tag": None,
+        "genome_tag": "GCA_000001405.29",
         "common_name": "Human",
         "scientific_name": "Homo sapiens",
         "species_taxonomy_id": "9606",
@@ -1137,7 +1155,7 @@ def test_get_popular_species():
                 "species_taxonomy_id": "4565",
                 "name": "Bread wheat",
                 "image": "//testserver/static/genome_images/4565.svg",
-                "genomes_count": 20,
+                "genomes_count": 22,
             },
             {
                 "species_taxonomy_id": "4530",
@@ -1147,7 +1165,7 @@ def test_get_popular_species():
             },
             {
                 "species_taxonomy_id": "3702",
-                "name": "Thale-cress",
+                "name": "Thale cress",
                 "image": "//testserver/static/genome_images/3702.svg",
                 "genomes_count": 1,
             },
@@ -1185,7 +1203,7 @@ def test_get_popular_species():
                 "species_taxonomy_id": "9612",
                 "name": "Dog",
                 "image": "//testserver/static/genome_images/9612.svg",
-                "genomes_count": 7,
+                "genomes_count": 9,
             },
             {
                 "species_taxonomy_id": "4513",
@@ -1203,7 +1221,7 @@ def test_get_popular_species():
                 "species_taxonomy_id": "8090",
                 "name": "Japanese medaka",
                 "image": "//testserver/static/genome_images/8090.svg",
-                "genomes_count": 15,
+                "genomes_count": 18,
             },
             {
                 "species_taxonomy_id": "9940",
@@ -1227,7 +1245,7 @@ def test_get_popular_species():
                 "species_taxonomy_id": "9796",
                 "name": "Horse",
                 "image": "//testserver/static/genome_images/9796.svg",
-                "genomes_count": 3,
+                "genomes_count": 4,
             },
             {
                 "species_taxonomy_id": "3708",
@@ -1255,7 +1273,7 @@ def test_get_popular_species():
             },
             {
                 "species_taxonomy_id": "6239",
-                "name": "Roundworm",
+                "name": "C. elegans",
                 "image": "//testserver/static/genome_images/6239.svg",
                 "genomes_count": 1,
             },
@@ -1299,7 +1317,7 @@ def test_get_popular_species():
                 "species_taxonomy_id": "9925",
                 "name": "Goat",
                 "image": "//testserver/static/genome_images/9925.svg",
-                "genomes_count": 4,
+                "genomes_count": 5,
             },
             {
                 "species_taxonomy_id": "3712",
@@ -1315,9 +1333,9 @@ def test_get_popular_species():
             },
             {
                 "species_taxonomy_id": "3847",
-                "name": "Soybeans",
+                "name": "Soybean",
                 "image": "//testserver/static/genome_images/3847.svg",
-                "genomes_count": 1,
+                "genomes_count": 2,
             },
             {
                 "species_taxonomy_id": "10029",
@@ -1353,7 +1371,7 @@ def test_get_popular_species():
                 "species_taxonomy_id": "37682",
                 "name": "Tausch's goatgrass",
                 "image": "//testserver/static/genome_images/37682.svg",
-                "genomes_count": 1,
+                "genomes_count": 3,
             },
             {
                 "species_taxonomy_id": "562",
@@ -1487,11 +1505,11 @@ def test_get_metadata_statistics(benchmark):
                 "reference_species_name": "Pan troglodytes",
             },
             "regulation_stats": {
-                "enhancers": 246403,
-                "promoters": 35983,
-                "ctcf_count": 90891,
-                "tfbs_count": 30873,
-                "open_chromatin_count": 7541,
+                "enhancers": None,
+                "promoters": None,
+                "ctcf_count": None,
+                "tfbs_count": None,
+                "open_chromatin_count": None,
             },
         }
     }
