@@ -73,7 +73,7 @@ class BaseGenomeDetails(BaseModel):
     genome_id: str = Field(alias="genome_uuid")
     genome_tag: Optional[str] = Field(
         alias=AliasChoices(
-            "url_name", AliasPath("organism", "tol_id")
+            AliasPath("assembly", "accession")
         ),
         default=None,
     )
@@ -204,7 +204,7 @@ class GenomeByKeyword(BaseModel):
     release_version: float = Field(
         alias=AliasPath("release", "release_version"), default=0
     )
-    genome_tag: str = Field(alias=AliasPath("genome", "url_name"), default="")
+    genome_tag: str = Field(alias=AliasPath("assembly", "accession"), default="")
 
 
 class AlignmentViewerGenomeGroup(BaseModel):
