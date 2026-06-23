@@ -134,7 +134,10 @@ def get_top_regions(
 
     for region in genome_top_regions:
         region.pop("rank", None)
-    return genome_top_regions
+
+    # Return only the first 100 after sorting so the location selector receives
+    # a bounded list of the most relevant top-level regions.
+    return genome_top_regions[:100]
 
 
 def assembly_region_iterator(db_conn, genome_uuid, chromosomal_only):
