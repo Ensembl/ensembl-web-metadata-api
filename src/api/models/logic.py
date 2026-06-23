@@ -86,6 +86,57 @@ def get_top_level_regions(adaptor: GenomeAdaptor, genome_uuid: str):
     return genome_top_level_regions
 
 
+def get_top_regions(
+    adaptor: GenomeAdaptor,
+    genome_uuid: str,
+    region_type: str | None = None,
+    min_length: int = 5000,
+):
+    top_level_regions = assembly_region_iterator(adaptor, genome_uuid, False)
+    genome_top_regions = []
+
+    for region in top_level_regions:
+        is_chromosome = bool(region.get("chromosomal"))
+        length = int(region.get("length", 0))
+
+        # The metadata schema stores many chromosomes with a sequence type such
+        # as "primary_assembly"; the public API should still expose these as
+        # chromosomes when the chromosomal flag is set.
+        public_region = {
+            "name": region["name"],
+            "type": "chromosome" if is_chromosome else region.get("sequence_type"),
+            "length": length,
+            "is_circular": bool(region.get("is_circular", False)),
+            "rank": region.get("rank"),
+        }
+
+        # By default the endpoint includes all chromosomes, regardless of
+        # length, plus any other top-level region that meets the length
+        # threshold. If a type is supplied, restrict the result to that public
+        # type before applying the same chromosome-or-length rule.
+        if region_type and public_region["type"] != region_type:
+            continue
+        if public_region["type"] == "chromosome" or length >= min_length:
+            genome_top_regions.append(public_region)
+
+    # Chromosomes lead the response in assembly rank order to match the
+    # karyotype endpoint. Other region types then follow from longest to
+    # shortest so the most useful location-selector targets are shown first.
+    genome_top_regions.sort(
+        key=lambda region: (
+            0 if region["type"] == "chromosome" else 1,
+            region.get("rank", float("inf"))
+            if region["type"] == "chromosome"
+            else -region["length"],
+            region["name"],
+        )
+    )
+
+    for region in genome_top_regions:
+        region.pop("rank", None)
+    return genome_top_regions
+
+
 def assembly_region_iterator(db_conn, genome_uuid, chromosomal_only):
     if not genome_uuid:
         logger.warning("Missing or Empty Genome UUID field.")
@@ -111,6 +162,8 @@ def create_assembly_region(data=None):
         "length": data.AssemblySequence.length,
         "sha512t24u": data.AssemblySequence.sha512t24u,
         "chromosomal": data.AssemblySequence.chromosomal,
+        "sequence_type": data.AssemblySequence.type,
+        "is_circular": data.AssemblySequence.is_circular,
     }
 
     return assembly_region

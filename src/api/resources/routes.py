@@ -69,6 +69,7 @@ logger.info("Starting up")
 from api.models.logic import (
     get_top_level_statistics_by_uuid,
     get_top_level_regions,
+    get_top_regions,
     get_organisms_group_count,
     get_attributes_by_genome_uuid,
     get_genome_by_uuid,
@@ -116,6 +117,34 @@ async def get_genome_karyotype(
         karyotype_response = Karyotype(top_level_regions=top_level_regions)
         return responses.JSONResponse(
             karyotype_response.model_dump()["top_level_regions"]
+        )
+    except Exception as e:
+        logger.error(e)
+        return response_error_handler({"status": 500})
+
+
+@router.get("/genome/{genome_uuid}/top-regions", name="top_regions")
+@redis_cache("top_regions", arg_keys=["genome_uuid", "type_", "length"])
+async def get_genome_top_regions(
+    adaptor: GenomeAdaptorDep,
+    request: Request,
+    genome_uuid: str,
+    type_: str | None = Query(
+        default=None,
+        alias="type",
+        description="Optional public region type to include, e.g. chromosome or scaffold",
+    ),
+    length: int = Query(
+        default=5000,
+        ge=0,
+        description="Minimum length in base pairs for non-chromosome regions",
+    ),
+):
+    try:
+        top_regions = get_top_regions(adaptor, genome_uuid, type_, length)
+        top_regions_response = Karyotype(top_level_regions=top_regions)
+        return responses.JSONResponse(
+            top_regions_response.model_dump()["top_level_regions"]
         )
     except Exception as e:
         logger.error(e)

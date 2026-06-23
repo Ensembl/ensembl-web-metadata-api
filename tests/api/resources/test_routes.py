@@ -1405,6 +1405,91 @@ def test_get_genome_karyotype():
     ]
 
 
+def test_get_genome_top_regions():
+    response = client.get(
+        "/api/metadata/genome/a7335667-93e7-11ec-a39d-005056b38ce3/top-regions"
+    )
+    assert response.status_code == 200
+
+    top_regions = response.json()
+    chromosomes = [region for region in top_regions if region["type"] == "chromosome"]
+    non_chromosomes = [
+        region for region in top_regions if region["type"] != "chromosome"
+    ]
+
+    assert len(top_regions) == 627
+    assert [region["name"] for region in chromosomes] == [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21",
+        "22",
+        "X",
+        "Y",
+        "MT",
+    ]
+    assert top_regions[25] == {
+        "name": "HG76_PATCH",
+        "type": "primary_assembly",
+        "length": 6367528,
+        "is_circular": False,
+    }
+    assert all(region["length"] >= 5000 for region in non_chromosomes)
+    assert [region["length"] for region in non_chromosomes] == sorted(
+        [region["length"] for region in non_chromosomes], reverse=True
+    )
+
+
+def test_get_genome_top_regions_with_type_and_length_filters():
+    response = client.get(
+        "/api/metadata/genome/a7335667-93e7-11ec-a39d-005056b38ce3/top-regions"
+        "?type=primary_assembly&length=200000"
+    )
+    assert response.status_code == 200
+
+    top_regions = response.json()
+    assert len(top_regions) == 244
+    assert all(region["type"] == "primary_assembly" for region in top_regions)
+    assert all(region["length"] >= 200000 for region in top_regions)
+    assert top_regions[:3] == [
+        {
+            "name": "HG76_PATCH",
+            "type": "primary_assembly",
+            "length": 6367528,
+            "is_circular": False,
+        },
+        {
+            "name": "HG2365_PATCH",
+            "type": "primary_assembly",
+            "length": 5500449,
+            "is_circular": False,
+        },
+        {
+            "name": "HSCHR15_4_CTG8",
+            "type": "primary_assembly",
+            "length": 5161414,
+            "is_circular": False,
+        },
+    ]
+
+
 def test_get_metadata_statistics(benchmark):
     response = client.get(
         "/api/metadata/genome/a7335667-93e7-11ec-a39d-005056b38ce3/stats"
