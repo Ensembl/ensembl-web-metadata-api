@@ -96,9 +96,9 @@ def get_top_regions(
         is_chromosome = bool(region.get("chromosomal"))
         length = int(region.get("length", 0))
 
-        # The metadata schema stores many chromosomes with a sequence type such
-        # as "primary_assembly"; the public API should still expose these as
-        # chromosomes when the chromosomal flag is set.
+        # In metadata, chromosome-level regions are identified by the chromosomal flag.
+        # Their stored sequence type may still be "primary_assembly", so the API maps
+        # chromosomal rows to response type "chromosome" to match the karyotype payload.
         return {
             "name": region["name"],
             "type": "chromosome" if is_chromosome else region.get("sequence_type"),
