@@ -482,8 +482,6 @@ def get_brief_genome_details_by_uuid(db_conn, genome_id_or_accession, release_ve
         logger.error(f"No Genome/Release found: {genome_id_or_accession}/{release_version}")
         return None
 
-    print(f"Genome results before filtering: {genome_results}")
-    print(f"Genome results length before filtering: {len(genome_results)}")
     if len(genome_results) > 1:
         logger.warning(
             f"Multiple results found for Genome UUID/Release version: {genome_id_or_accession}/{release_version}"
@@ -497,7 +495,6 @@ def get_brief_genome_details_by_uuid(db_conn, genome_id_or_accession, release_ve
             and res.EnsemblRelease.is_current
         ]
 
-    # Return the latest genome
     return create_brief_genome_details(genome_results[0])
 
 
@@ -510,20 +507,14 @@ def is_valid_uuid(value):
         return False
 
 
-def create_brief_genome_details(data=None, latest_genome=None):
+def create_brief_genome_details(data=None):
     if data is None:
         return None
 
-    # current genome
     assembly = create_assembly(data)
     taxon = create_taxon(data)
     organism = create_organism(data)
     release = create_release(data)
-
-    # add latest_genome details
-    latest_genome_data = None
-    if latest_genome and latest_genome.Genome.genome_uuid != data.Genome.genome_uuid:
-        latest_genome_data = create_brief_genome_details(latest_genome, None)
 
     brief_genome_details = {
         "genome_uuid": data.Genome.genome_uuid,
@@ -535,7 +526,6 @@ def create_brief_genome_details(data=None, latest_genome=None):
         "release": release,
         "is_suppressed": data.Genome.suppressed,
         "suppression_details": data.Genome.suppression_details,
-        "latest_genome": latest_genome_data,
     }
     return brief_genome_details
 

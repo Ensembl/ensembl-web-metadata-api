@@ -248,7 +248,6 @@ async def explain_genome(
                     "type": True,
                     "is_suppressed": True,
                     "suppression_details": True,
-                    "latest_genome": True,
                 }
             )
             response_data = responses.JSONResponse(response_dict, status_code=200)
@@ -330,16 +329,16 @@ async def get_genome_by_keyword(
             species_taxonomy_id=None,
             release_version=None,
         )
-        latest_genome_by_keyword_object = GenomeByKeyword()
+        best_genome_by_keyword_object = GenomeByKeyword()
         for arr in genome_response:
             genome_by_keyword_object = GenomeByKeyword(**arr)
             if (
                 genome_by_keyword_object.release_version
-                > latest_genome_by_keyword_object.release_version
+                > best_genome_by_keyword_object.release_version
             ):
-                latest_genome_by_keyword_object = genome_by_keyword_object
-        if latest_genome_by_keyword_object.genome_uuid:
-            return responses.JSONResponse(latest_genome_by_keyword_object.model_dump())
+                best_genome_by_keyword_object = genome_by_keyword_object
+        if best_genome_by_keyword_object.genome_uuid:
+            return responses.JSONResponse(best_genome_by_keyword_object.model_dump())
         else:
             logger.error(f"Assembly accession id {assembly_accession_id} not found")
             return response_error_handler({"status": 404})

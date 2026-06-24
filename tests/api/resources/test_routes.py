@@ -965,27 +965,6 @@ def test_explain_genome():
             "name": "2025-02",
             "type": "integrated"
         },
-        "latest_genome": {
-            "genome_id": "be73075e-0633-471d-b7c8-4f8ca7752a04",
-            "genome_tag": None,
-            "common_name": "Human",
-            "scientific_name": "Homo sapiens",
-            "species_taxonomy_id": "9606",
-            "type": None,
-            "is_reference": True,
-            "is_suppressed": False,
-            "suppression_details": None,
-            "assembly": {
-                "accession_id": "GCA_000001405.29",
-                "name": "GRCh38.p14",
-                "url": "https://identifiers.org/insdc.gca/GCA_000001405.29",
-            },
-            "release": {
-                "name": "2026-04-09",
-                "type": "partial",
-                "is_current": False
-            },
-        },
     }
 
 
