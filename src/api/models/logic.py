@@ -482,37 +482,23 @@ def get_brief_genome_details_by_uuid(db_conn, genome_id_or_accession, release_ve
         logger.error(f"No Genome/Release found: {genome_id_or_accession}/{release_version}")
         return None
 
+    print(f"Genome results before filtering: {genome_results}")
+    print(f"Genome results length before filtering: {len(genome_results)}")
     if len(genome_results) > 1:
         logger.warning(
             f"Multiple results found for Genome UUID/Release version: {genome_id_or_accession}/{release_version}"
         )
-        # means that this genome is released in both a partial and integrated release
-        # we get the integrated release specifically since it's the one we are interested in
+        # means that this genome is released in multiple releases, 
+        # in this case we care only about the latest integrated release
         genome_results = [
             res
             for res in genome_results
             if res.EnsemblRelease.release_type == "integrated"
+            and res.EnsemblRelease.is_current
         ]
 
-    # Get the current (requested) genome
-    current_genome = genome_results[0]
-    assembly_name = current_genome.Assembly.name
-    # Fetch all genomes with the same assembly name, sorted by release date
-    all_genomes_with_same_assembly = db_conn.fetch_genomes(assembly_name=assembly_name)
-
-    # Find the genome with the most recent release date
-    latest_genome = None
-    if all_genomes_with_same_assembly:
-        # First genome should be the latest due to ordering in fetch_genomes
-        if (
-            all_genomes_with_same_assembly[0].Genome.genome_uuid
-            != current_genome.Genome.genome_uuid
-        ):
-            latest_genome = all_genomes_with_same_assembly[0]
-            logger.debug(f"Found newer genome: {latest_genome.Genome.genome_uuid}")
-
-    # Return the requested genome together with the latest genome details (or None if current is latest)
-    return create_brief_genome_details(current_genome, latest_genome)
+    # Return the latest genome
+    return create_brief_genome_details(genome_results[0])
 
 
 def is_valid_uuid(value):
