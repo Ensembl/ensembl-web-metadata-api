@@ -469,6 +469,8 @@ def get_brief_genome_details_by_uuid(db_conn, genome_id_or_accession, release_ve
             assembly_accession=genome_id_or_accession,
             release=release_version,
         )
+        if genome_uuid is None:
+            return None
     else:
         genome_uuid = genome_id_or_accession
     

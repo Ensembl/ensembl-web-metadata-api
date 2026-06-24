@@ -28,20 +28,21 @@ adaptor = MetaAdaptor(meta_conn)
 def test_get_genome_counts():
     data = adaptor.fetch_genome_taxonomy_counts()
     assert data == [
-        {"ensembl_taxon_name": "Animals", "count": 4207},
+        {"ensembl_taxon_name": "Animals", "count": 4458},
         {"ensembl_taxon_name": "Archaea", "count": 24},
         {"ensembl_taxon_name": "Bacteria", "count": 85},
-        {"ensembl_taxon_name": "Fungi", "count": 153},
-        {"ensembl_taxon_name": "Green Plants", "count": 465},
-        {"ensembl_taxon_name": "Others", "count": 43},
+        {"ensembl_taxon_name": "Fungi", "count": 155},
+        {"ensembl_taxon_name": "Green Plants", "count": 548},
+        {"ensembl_taxon_name": "Others", "count": 44},
     ]
 
-    data = adaptor.fetch_genome_taxonomy_counts("2026-01-26")
+    data = adaptor.fetch_genome_taxonomy_counts("2023-10-18")
     assert data == [
-        {"ensembl_taxon_name": "Animals", "count": 71},
-        {"ensembl_taxon_name": "Fungi", "count": 4},
-        {"ensembl_taxon_name": "Green Plants", "count": 1},
-        {"ensembl_taxon_name": "Others", "count": 2},
+        {"ensembl_taxon_name": "Animals", "count": 185},
+        {"ensembl_taxon_name": "Bacteria", "count": 1},
+        {"ensembl_taxon_name": "Fungi", "count": 1},
+        {"ensembl_taxon_name": "Green Plants", "count": 37},
+        {"ensembl_taxon_name": "Others", "count": 1},
     ]
 
 
