@@ -92,18 +92,14 @@ def get_top_regions(
     region_type: str | None = None,
     min_length: int = 5000,
 ):
-    top_level_regions = assembly_region_iterator(adaptor, genome_uuid, False)
-    chromosome_regions = []
-    non_chromosome_regions = []
-
-    for region in top_level_regions:
+    def create_response_region(region):
         is_chromosome = bool(region.get("chromosomal"))
         length = int(region.get("length", 0))
 
         # The metadata schema stores many chromosomes with a sequence type such
         # as "primary_assembly"; the public API should still expose these as
         # chromosomes when the chromosomal flag is set.
-        public_region = {
+        return {
             "name": region["name"],
             "type": "chromosome" if is_chromosome else region.get("sequence_type"),
             "length": length,
@@ -111,36 +107,45 @@ def get_top_regions(
             "rank": region.get("rank"),
         }
 
-        # If a type is supplied, restrict the result to that public type before
-        # applying the chromosome-first selection rules below.
-        if region_type and public_region["type"] != region_type:
-            continue
-        if public_region["type"] == "chromosome":
-            chromosome_regions.append(public_region)
-        elif length >= min_length:
-            non_chromosome_regions.append(public_region)
+    chromosome_regions = [
+        create_response_region(region)
+        for region in assembly_region_iterator(adaptor, genome_uuid, True)
+    ]
 
-    # When chromosome-level regions exist, return all of them in assembly rank
-    # order and suppress non-chromosomal regions. This matches the location
-    # selector's preferred path for chromosomal assemblies, even when the
-    # chromosome count is greater than the non-chromosome threshold.
-    chromosome_regions.sort(
-        key=lambda region: (
-            region.get("rank", float("inf")),
-            region["name"],
-        )
-    )
+    # When chromosome-level regions exist, return all of them and suppress
+    # non-chromosomal regions. This path deliberately does not use the top
+    # regions adaptor limit, because chromosome counts may exceed the
+    # non-chromosome threshold.
     if chromosome_regions:
+        chromosome_regions.sort(
+            key=lambda region: (
+                region.get("rank", float("inf")),
+                region["name"],
+            )
+        )
         for region in chromosome_regions:
             region.pop("rank", None)
-        return chromosome_regions
+        if region_type in (None, "chromosome"):
+            return chromosome_regions
+        return []
+    if region_type == "chromosome":
+        return []
 
-    # For assemblies without chromosomes, return the 30 longest top-level
-    # regions after filtering so the response stays bounded for large genomes.
-    non_chromosome_regions.sort(key=lambda region: (-region["length"], region["name"]))
+    # For assemblies without chromosomes, ask the adaptor for the ordered and
+    # bounded result set so large non-chromosomal assemblies are not loaded into
+    # Python before slicing.
+    top_region_rows = adaptor.fetch_top_regions_by_genome_uuid(
+        genome_uuid=genome_uuid, region_type=region_type, limit=30
+    )
+    non_chromosome_regions = []
+    for row in top_region_rows:
+        public_region = create_response_region(create_assembly_region(row))
+        if public_region["type"] != "chromosome" and public_region["length"] >= min_length:
+            non_chromosome_regions.append(public_region)
+
     for region in non_chromosome_regions:
         region.pop("rank", None)
-    return non_chromosome_regions[:30]
+    return non_chromosome_regions
 
 
 def assembly_region_iterator(db_conn, genome_uuid, chromosomal_only):

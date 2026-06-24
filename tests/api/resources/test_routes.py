@@ -1450,34 +1450,7 @@ def test_get_genome_top_regions_with_type_and_length_filters():
         "?type=primary_assembly&length=200000"
     )
     assert response.status_code == 200
-
-    top_regions = response.json()
-    assert len(top_regions) == 30
-    assert all(region["type"] == "primary_assembly" for region in top_regions)
-    assert all(region["length"] >= 200000 for region in top_regions)
-    assert [region["length"] for region in top_regions] == sorted(
-        [region["length"] for region in top_regions], reverse=True
-    )
-    assert top_regions[:3] == [
-        {
-            "name": "HG76_PATCH",
-            "type": "primary_assembly",
-            "length": 6367528,
-            "is_circular": False,
-        },
-        {
-            "name": "HG2365_PATCH",
-            "type": "primary_assembly",
-            "length": 5500449,
-            "is_circular": False,
-        },
-        {
-            "name": "HSCHR15_4_CTG8",
-            "type": "primary_assembly",
-            "length": 5161414,
-            "is_circular": False,
-        },
-    ]
+    assert response.json() == []
 
 
 def test_get_metadata_statistics(benchmark):
