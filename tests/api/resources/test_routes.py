@@ -1413,11 +1413,8 @@ def test_get_genome_top_regions():
 
     top_regions = response.json()
     chromosomes = [region for region in top_regions if region["type"] == "chromosome"]
-    non_chromosomes = [
-        region for region in top_regions if region["type"] != "chromosome"
-    ]
 
-    assert len(top_regions) == 100
+    assert top_regions == chromosomes
     assert [region["name"] for region in chromosomes] == [
         "1",
         "2",
@@ -1445,22 +1442,6 @@ def test_get_genome_top_regions():
         "Y",
         "MT",
     ]
-    assert top_regions[25] == {
-        "name": "HG76_PATCH",
-        "type": "primary_assembly",
-        "length": 6367528,
-        "is_circular": False,
-    }
-    assert top_regions[-1] == {
-        "name": "HG545_PATCH",
-        "type": "primary_assembly",
-        "length": 454963,
-        "is_circular": False,
-    }
-    assert all(region["length"] >= 5000 for region in non_chromosomes)
-    assert [region["length"] for region in non_chromosomes] == sorted(
-        [region["length"] for region in non_chromosomes], reverse=True
-    )
 
 
 def test_get_genome_top_regions_with_type_and_length_filters():
@@ -1471,9 +1452,12 @@ def test_get_genome_top_regions_with_type_and_length_filters():
     assert response.status_code == 200
 
     top_regions = response.json()
-    assert len(top_regions) == 100
+    assert len(top_regions) == 30
     assert all(region["type"] == "primary_assembly" for region in top_regions)
     assert all(region["length"] >= 200000 for region in top_regions)
+    assert [region["length"] for region in top_regions] == sorted(
+        [region["length"] for region in top_regions], reverse=True
+    )
     assert top_regions[:3] == [
         {
             "name": "HG76_PATCH",

@@ -93,7 +93,8 @@ def get_top_regions(
     min_length: int = 5000,
 ):
     top_level_regions = assembly_region_iterator(adaptor, genome_uuid, False)
-    genome_top_regions = []
+    chromosome_regions = []
+    non_chromosome_regions = []
 
     for region in top_level_regions:
         is_chromosome = bool(region.get("chromosomal"))
@@ -110,34 +111,36 @@ def get_top_regions(
             "rank": region.get("rank"),
         }
 
-        # By default the endpoint includes all chromosomes, regardless of
-        # length, plus any other top-level region that meets the length
-        # threshold. If a type is supplied, restrict the result to that public
-        # type before applying the same chromosome-or-length rule.
+        # If a type is supplied, restrict the result to that public type before
+        # applying the chromosome-first selection rules below.
         if region_type and public_region["type"] != region_type:
             continue
-        if public_region["type"] == "chromosome" or length >= min_length:
-            genome_top_regions.append(public_region)
+        if public_region["type"] == "chromosome":
+            chromosome_regions.append(public_region)
+        elif length >= min_length:
+            non_chromosome_regions.append(public_region)
 
-    # Chromosomes lead the response in assembly rank order to match the
-    # karyotype endpoint. Other region types then follow from longest to
-    # shortest so the most useful location-selector targets are shown first.
-    genome_top_regions.sort(
+    # When chromosome-level regions exist, return all of them in assembly rank
+    # order and suppress non-chromosomal regions. This matches the location
+    # selector's preferred path for chromosomal assemblies, even when the
+    # chromosome count is greater than the non-chromosome threshold.
+    chromosome_regions.sort(
         key=lambda region: (
-            0 if region["type"] == "chromosome" else 1,
-            region.get("rank", float("inf"))
-            if region["type"] == "chromosome"
-            else -region["length"],
+            region.get("rank", float("inf")),
             region["name"],
         )
     )
+    if chromosome_regions:
+        for region in chromosome_regions:
+            region.pop("rank", None)
+        return chromosome_regions
 
-    for region in genome_top_regions:
+    # For assemblies without chromosomes, return the 30 longest top-level
+    # regions after filtering so the response stays bounded for large genomes.
+    non_chromosome_regions.sort(key=lambda region: (-region["length"], region["name"]))
+    for region in non_chromosome_regions:
         region.pop("rank", None)
-
-    # Return only the first 100 after sorting so the location selector receives
-    # a bounded list of the most relevant top-level regions.
-    return genome_top_regions[:100]
+    return non_chromosome_regions[:30]
 
 
 def assembly_region_iterator(db_conn, genome_uuid, chromosomal_only):

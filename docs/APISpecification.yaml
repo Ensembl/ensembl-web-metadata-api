@@ -142,7 +142,7 @@ paths:
           $ref: '#/components/responses/500InternalServerError'
   /api/metadata/genome/{genome_id}/top-regions:
     get:
-      summary: Returns a filtered and ordered list of top-level regions for the specified genome
+      summary: Returns chromosome-level regions, or the first 30 filtered and ordered non-chromosome regions
       parameters:
       - name: genome_id
         in: path
