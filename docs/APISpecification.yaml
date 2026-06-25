@@ -140,6 +140,25 @@ paths:
                 $ref: '#/components/schemas/Karyotype'
         '500':
           $ref: '#/components/responses/500InternalServerError'
+  /api/metadata/genome/{genome_id}/top-regions:
+    get:
+      summary: Returns all chromosome-level regions, or the first 30 filtered and ordered non-chromosome regions
+      parameters:
+      - name: genome_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: 3704ceb1-948d-11ec-a39d-005056b38ce3
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Karyotype'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
   /api/metadata/genome/{genome_id}/ftplinks:
     get:
       summary: Returns a list of FTP download links for the specified genome

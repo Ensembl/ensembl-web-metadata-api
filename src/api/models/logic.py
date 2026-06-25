@@ -86,6 +86,63 @@ def get_top_level_regions(adaptor: GenomeAdaptor, genome_uuid: str):
     return genome_top_level_regions
 
 
+def get_top_regions(
+    adaptor: GenomeAdaptor,
+    genome_uuid: str,
+    min_length: int = 5000,
+):
+    def create_response_region(region):
+        is_chromosome = bool(region.get("chromosomal"))
+        length = int(region.get("length", 0))
+
+        # In metadata, chromosome-level regions are identified by the chromosomal flag.
+        # Their stored sequence type may still be "primary_assembly", so the API maps
+        # chromosomal rows to response type "chromosome" to match the karyotype payload.
+        return {
+            "name": region["name"],
+            "type": "chromosome" if is_chromosome else region.get("sequence_type"),
+            "length": length,
+            "is_circular": bool(region.get("is_circular", False)),
+            "rank": region.get("rank"),
+        }
+
+    chromosome_regions = [
+        create_response_region(region)
+        for region in assembly_region_iterator(adaptor, genome_uuid, True)
+    ]
+
+    # When chromosome-level regions exist, return all of them and suppress
+    # non-chromosomal regions. This path deliberately does not use the top
+    # regions adaptor limit, because chromosome counts may exceed the
+    # non-chromosome threshold.
+    if chromosome_regions:
+        chromosome_regions.sort(
+            key=lambda region: (
+                region.get("rank", float("inf")),
+                region["name"],
+            )
+        )
+        for region in chromosome_regions:
+            region.pop("rank", None)
+        return chromosome_regions
+
+    # For assemblies without chromosomes, ask the adaptor for the ordered and
+    # bounded result set so large non-chromosomal assemblies are not loaded into
+    # Python before slicing.
+    top_region_rows = adaptor.fetch_top_regions_by_genome_uuid(
+        genome_uuid=genome_uuid, region_type=None, limit=30
+    )
+    non_chromosome_regions = []
+    for row in top_region_rows:
+        public_region = create_response_region(create_assembly_region(row))
+        if public_region["type"] != "chromosome" and public_region["length"] >= min_length:
+            non_chromosome_regions.append(public_region)
+
+    for region in non_chromosome_regions:
+        region.pop("rank", None)
+    return non_chromosome_regions
+
+
 def assembly_region_iterator(db_conn, genome_uuid, chromosomal_only):
     if not genome_uuid:
         logger.warning("Missing or Empty Genome UUID field.")
@@ -111,6 +168,8 @@ def create_assembly_region(data=None):
         "length": data.AssemblySequence.length,
         "sha512t24u": data.AssemblySequence.sha512t24u,
         "chromosomal": data.AssemblySequence.chromosomal,
+        "sequence_type": data.AssemblySequence.type,
+        "is_circular": data.AssemblySequence.is_circular,
     }
 
     return assembly_region
