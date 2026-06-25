@@ -281,7 +281,7 @@ wheels = [
 [[package]]
 name = "ensembl-metadata-api"
 version = "3.0.0"
-source = { git = "https://github.com/Ensembl/ensembl-metadata-api?branch=fetch-top-regions#3bcb664ebc8f5ccab505ad0d9a1a8338d0daec83" }
+source = { git = "https://github.com/Ensembl/ensembl-metadata-api?branch=main#44d497837b9f1e303bdf5945971e28340ecd61c7" }
 dependencies = [
     { name = "duckdb" },
     { name = "duckdb-engine" },
@@ -362,7 +362,7 @@ requires-dist = [
     { name = "annotated-types", specifier = ">=0.7.0" },
     { name = "duckdb", specifier = ">=1.5.0" },
     { name = "duckdb-engine", specifier = ">=0.17.0" },
-    { name = "ensembl-metadata-api", git = "https://github.com/Ensembl/ensembl-metadata-api?branch=fetch-top-regions" },
+    { name = "ensembl-metadata-api", git = "https://github.com/Ensembl/ensembl-metadata-api?branch=main" },
     { name = "ensembl-py", git = "https://github.com/Ensembl/ensembl-py" },
     { name = "exceptiongroup", specifier = ">=1.3.1" },
     { name = "fastapi", specifier = ">=0.135.1" },
