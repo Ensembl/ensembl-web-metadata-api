@@ -485,6 +485,11 @@ components:
           type: string
           example: GCA_000001405.29
           nullable: true
+          description: >
+            Assembly accession used as a stable genome tag when the genome is in
+            the latest integrated release, or when it is in the latest partial
+            release and the assembly has not yet appeared in an integrated
+            release. Otherwise null.
         common_name:
           type: string
           example: Human

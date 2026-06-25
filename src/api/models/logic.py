@@ -516,15 +516,18 @@ def get_brief_genome_details_by_uuid(db_conn, genome_id_or_accession, release_ve
     #  * it's in the latest and intergated
     #  * it's in the latest and partial and doesn't belong to an intergated (yet)
 
-    # Work with the genome row selected above. If a UUID is attached to both
-    # partial and integrated releases, this will already be the current
-    # integrated row when one exists.
+    # Use the selected genome row. When the same genome is returned for both
+    # partial and integrated releases, the block above prefers the current
+    # integrated release before we reach this point.
     current_genome = genome_results[0]
     current_release = current_genome.EnsemblRelease
 
     # A genome can only expose its assembly accession as a genome_tag when its
-    # release is marked as the latest/current one for its release track.
-    current_release_is_latest = current_release and current_release.is_current
+    # release is marked as the latest/current one.
+    current_release_is_latest = current_release and (
+        current_release.is_current  # for integrated releases
+        or current_genome.GenomeRelease.is_current  # /!\ for partial releases
+    )
     current_release_type = current_release.release_type if current_release else None
 
     # If any genome with this assembly accession already belongs to an

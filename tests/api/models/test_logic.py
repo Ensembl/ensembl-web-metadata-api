@@ -21,7 +21,15 @@ class FakeGenomeAdaptor:
         return []
 
 
-def make_genome(release_type, is_current, accession=ASSEMBLY_ACCESSION):
+def make_genome(
+    release_type,
+    is_current,
+    accession=ASSEMBLY_ACCESSION,
+    genome_release_is_current=None,
+):
+    if genome_release_is_current is None:
+        genome_release_is_current = is_current
+
     return SimpleNamespace(
         Genome=SimpleNamespace(
             genome_uuid=GENOME_UUID,
@@ -57,6 +65,9 @@ def make_genome(release_type, is_current, accession=ASSEMBLY_ACCESSION):
             release_type=release_type,
             is_current=is_current,
         ),
+        GenomeRelease=SimpleNamespace(
+            is_current=genome_release_is_current,
+        ),
         EnsemblSite=SimpleNamespace(
             name="ensembl",
             label="Ensembl",
@@ -75,7 +86,7 @@ def test_brief_genome_details_assigns_tag_for_latest_integrated_genome():
 
 
 def test_brief_genome_details_assigns_tag_for_latest_partial_without_integrated_genome():
-    genome = make_genome("partial", True)
+    genome = make_genome("partial", False, genome_release_is_current=True)
     adaptor = FakeGenomeAdaptor([genome], [genome])
 
     result = get_brief_genome_details_by_uuid(adaptor, GENOME_UUID, None)
