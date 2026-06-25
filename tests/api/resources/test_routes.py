@@ -1444,15 +1444,6 @@ def test_get_genome_top_regions():
     ]
 
 
-def test_get_genome_top_regions_with_type_and_length_filters():
-    response = client.get(
-        "/api/metadata/genome/a7335667-93e7-11ec-a39d-005056b38ce3/top-regions"
-        "?type=primary_assembly&length=200000"
-    )
-    assert response.status_code == 200
-    assert response.json() == []
-
-
 def test_get_metadata_statistics(benchmark):
     response = client.get(
         "/api/metadata/genome/a7335667-93e7-11ec-a39d-005056b38ce3/stats"

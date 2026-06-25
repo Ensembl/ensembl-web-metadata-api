@@ -89,7 +89,6 @@ def get_top_level_regions(adaptor: GenomeAdaptor, genome_uuid: str):
 def get_top_regions(
     adaptor: GenomeAdaptor,
     genome_uuid: str,
-    region_type: str | None = None,
     min_length: int = 5000,
 ):
     def create_response_region(region):
@@ -125,17 +124,13 @@ def get_top_regions(
         )
         for region in chromosome_regions:
             region.pop("rank", None)
-        if region_type in (None, "chromosome"):
-            return chromosome_regions
-        return []
-    if region_type == "chromosome":
-        return []
+        return chromosome_regions
 
     # For assemblies without chromosomes, ask the adaptor for the ordered and
     # bounded result set so large non-chromosomal assemblies are not loaded into
     # Python before slicing.
     top_region_rows = adaptor.fetch_top_regions_by_genome_uuid(
-        genome_uuid=genome_uuid, region_type=region_type, limit=30
+        genome_uuid=genome_uuid, region_type=None, limit=30
     )
     non_chromosome_regions = []
     for row in top_region_rows:

@@ -124,24 +124,14 @@ async def get_genome_karyotype(
 
 
 @router.get("/genome/{genome_uuid}/top-regions", name="top_regions")
-@redis_cache("top_regions", arg_keys=["genome_uuid", "type_", "length"])
+@redis_cache("top_regions", arg_keys=["genome_uuid"])
 async def get_genome_top_regions(
     adaptor: GenomeAdaptorDep,
     request: Request,
     genome_uuid: str,
-    type_: str | None = Query(
-        default=None,
-        alias="type",
-        description="Optional public region type to include, e.g. chromosome or scaffold",
-    ),
-    length: int = Query(
-        default=5000,
-        ge=0,
-        description="Minimum length in base pairs for non-chromosome regions",
-    ),
 ):
     try:
-        top_regions = get_top_regions(adaptor, genome_uuid, type_, length)
+        top_regions = get_top_regions(adaptor, genome_uuid)
         top_regions_response = Karyotype(top_level_regions=top_regions)
         return responses.JSONResponse(
             top_regions_response.model_dump()["top_level_regions"]
