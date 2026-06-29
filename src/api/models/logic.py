@@ -40,7 +40,6 @@ def get_top_level_statistics_by_uuid(db_conn, genome_uuid):
     )
 
     statistics = []
-    # FIXME stats_results can contain multiple entries
     if len(stats_results) > 0:
         for result in stats_results:
             for dataset in result.datasets:
