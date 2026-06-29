@@ -42,17 +42,17 @@ def get_top_level_statistics_by_uuid(db_conn, genome_uuid):
     statistics = []
     # FIXME stats_results can contain multiple entries
     if len(stats_results) > 0:
-
-        for dataset in stats_results[0].datasets:
-            for attribute in dataset.attributes:
-                statistics.append(
-                    {
-                        "name": attribute.name,
-                        "label": attribute.label,
-                        "statistic_type": attribute.type,
-                        "statistic_value": attribute.value,
-                    }
-                )
+        for result in stats_results:
+            for dataset in result.datasets:
+                for attribute in dataset.attributes:
+                    statistics.append(
+                        {
+                            "name": attribute.name,
+                            "label": attribute.label,
+                            "statistic_type": attribute.type,
+                            "statistic_value": attribute.value,
+                        }
+                    )
 
         statistics.sort(key=lambda x: x["name"])
 
