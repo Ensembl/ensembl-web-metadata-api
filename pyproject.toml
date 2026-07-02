@@ -44,7 +44,7 @@ module-root = "src"
 module-name = ["api"]
 
 [tool.uv.sources]
-ensembl-metadata-api = { git = "https://github.com/Ensembl/ensembl-metadata-api", branch = "feature/assembly_in_urls" }
+ensembl-metadata-api = { git = "https://github.com/Ensembl/ensembl-metadata-api", branch = "main" }
 ensembl-py = { git = "https://github.com/Ensembl/ensembl-py" }
 
 [tool.pytest]
