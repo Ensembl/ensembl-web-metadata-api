@@ -1402,6 +1402,45 @@ def test_get_genome_karyotype():
     ]
 
 
+def test_get_genome_top_regions():
+    response = client.get(
+        "/api/metadata/genome/a7335667-93e7-11ec-a39d-005056b38ce3/top-regions"
+    )
+    assert response.status_code == 200
+
+    top_regions = response.json()
+    chromosomes = [region for region in top_regions if region["type"] == "chromosome"]
+
+    assert top_regions == chromosomes
+    assert [region["name"] for region in chromosomes] == [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21",
+        "22",
+        "X",
+        "Y",
+        "MT",
+    ]
+
+
 def test_get_metadata_statistics(benchmark):
     response = client.get(
         "/api/metadata/genome/a7335667-93e7-11ec-a39d-005056b38ce3/stats"
