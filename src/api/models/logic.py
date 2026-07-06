@@ -556,14 +556,7 @@ def get_brief_genome_details_by_uuid(db_conn, genome_id_or_accession, release_ve
         )
         # means that this genome is released in multiple releases,
         # in this case we care only about the latest integrated release
-        current_integrated_genomes = [
-            res
-            for res in genome_results
-            if res.EnsemblRelease.release_type == "integrated"
-            and res.EnsemblRelease.is_current
-        ]
-        if current_integrated_genomes:
-            genome_results = current_integrated_genomes
+        genome_results = prefer_current_integrated_genomes(genome_results)
 
     # Now that we have all genomes assosiated with the assembly accession sorted by priority
     # we need to know whether to assign a value to the genome_tag or not based on rules we discussed before
@@ -600,7 +593,7 @@ def get_brief_genome_details_by_uuid(db_conn, genome_id_or_accession, release_ve
                 release_version=release_version,
             )
             if latest_genome_results:
-                # again, we might have the same genome released in partial 
+                # again, we might have the same genome released in partial
                 # then intergrated => we prefer the integrated if it exists
                 latest_genome_results = prefer_current_integrated_genomes(
                     latest_genome_results
