@@ -134,6 +134,10 @@ class BriefGenomeDetails(BaseGenomeDetails):
     We're planning to extend the BriefGenomeDetails class later
     """
 
+    latest_genome: Optional[BaseGenomeDetails] = Field(
+        alias="latest_genome", default=None
+    )
+
 
 class GenomeDetails(BaseGenomeDetails):
     taxonomy_id: str = Field(alias=AliasPath("organism", "taxonomy_id"))

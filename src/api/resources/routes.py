@@ -267,8 +267,11 @@ async def explain_genome(
                     "type": True,
                     "is_suppressed": True,
                     "suppression_details": True,
+                    "latest_genome": True,
                 }
             )
+            if response_dict.get("latest_genome") is None:
+                response_dict.pop("latest_genome", None)
             response_data = responses.JSONResponse(response_dict, status_code=200)
         else:
             return response_error_handler(

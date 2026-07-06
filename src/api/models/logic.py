@@ -515,8 +515,10 @@ def get_brief_genome_details_by_uuid(db_conn, genome_id_or_accession, release_ve
         logger.warning("Missing or Empty Genome ID or Accession field.")
         return None
 
+    input_is_genome_uuid = is_valid_uuid(genome_id_or_accession)
+
     # If genome_id_or_accession is not a valid UUID, assume it's a assembly accession and fetch genome_uuid
-    if not is_valid_uuid(genome_id_or_accession):
+    if not input_is_genome_uuid:
         logger.debug(
             f"Invalid genome_id '{genome_id_or_accession}', assuming it's a assembly accession and using it to fetch genome_uuid"
         )
@@ -579,6 +581,85 @@ def get_brief_genome_details_by_uuid(db_conn, genome_id_or_accession, release_ve
     # partial and integrated releases, the block above prefers the current
     # integrated release before we reach this point.
     current_genome = genome_results[0]
+    genome_tag = get_genome_tag(
+        current_genome, all_genomes_with_same_assembly, assembly_accession
+    )
+
+    latest_genome = None
+    if input_is_genome_uuid:
+        latest_genome_uuid = db_conn.get_genome_uuid_by_assembly_accession(
+            assembly_accession=assembly_accession,
+            release=release_version,
+        )
+        if (
+            latest_genome_uuid
+            and latest_genome_uuid != current_genome.Genome.genome_uuid
+        ):
+            latest_genome_results = db_conn.fetch_genomes(
+                genome_uuid=latest_genome_uuid,
+                release_version=release_version,
+            )
+            if latest_genome_results:
+                # again, we might have the same genome released in partial 
+                # then intergrated => we prefer the integrated if it exists
+                latest_genome_results = prefer_current_integrated_genomes(
+                    latest_genome_results
+                )
+                latest_genome_result = latest_genome_results[0]
+                latest_genome_tag = get_genome_tag(
+                    latest_genome_result,
+                    all_genomes_with_same_assembly,
+                    assembly_accession,
+                )
+                latest_genome = create_brief_genome_details(
+                    latest_genome_result, genome_tag=latest_genome_tag
+                )
+
+    # Return the requested genome and the assosiated genome_tag (if any)
+    return create_brief_genome_details(
+        current_genome, genome_tag=genome_tag, latest_genome=latest_genome
+    )
+
+
+def prefer_current_integrated_genomes(genome_results):
+    """Prefer the current integrated release row when a genome is released in both integrated and partial.
+
+    Args:
+        genome_results: Iterable of genome result rows returned by the genome
+            adaptor. Each row is expected to expose an ``EnsemblRelease`` object.
+
+    Returns:
+        A list containing the current integrated release rows when any exist;
+        otherwise the original ``genome_results`` value.
+    """
+    current_integrated_genomes = [
+        res
+        for res in genome_results
+        if res.EnsemblRelease.release_type == "integrated"
+        and res.EnsemblRelease.is_current
+    ]
+    return current_integrated_genomes or genome_results
+
+
+def get_genome_tag(current_genome, all_genomes_with_same_assembly, assembly_accession):
+    """Determine whether a genome can expose its assembly accession as a tag.
+
+    A genome gets the shared assembly accession tag only when it represents the
+    latest usable release for that assembly. Current integrated releases can use
+    the tag. Current partial releases can use it only until an integrated
+    release exists for the same assembly accession.
+
+    Args:
+        current_genome: Genome result row being serialized.
+        all_genomes_with_same_assembly: Genome result rows sharing the same
+            assembly accession.
+        assembly_accession: Assembly accession to expose as the genome tag when
+            the release rules allow it.
+
+    Returns:
+        The assembly accession when it can be used as ``genome_tag``; otherwise
+        ``None``.
+    """
     current_release = current_genome.EnsemblRelease
 
     # A genome can only expose its assembly accession as a genome_tag when its
@@ -603,10 +684,7 @@ def get_brief_genome_details_by_uuid(db_conn, genome_id_or_accession, release_ve
         current_release_type == "integrated"
         or (current_release_type == "partial" and not assembly_has_integrated_release)
     )
-    genome_tag = assembly_accession if has_genome_tag else None
-
-    # Return the requested genome and the assosiated genome_tag (if any)
-    return create_brief_genome_details(current_genome, genome_tag=genome_tag)
+    return assembly_accession if has_genome_tag else None
 
 
 def is_valid_uuid(value):
@@ -618,7 +696,7 @@ def is_valid_uuid(value):
         return False
 
 
-def create_brief_genome_details(data=None, genome_tag=None):
+def create_brief_genome_details(data=None, genome_tag=None, latest_genome=None):
     if data is None:
         return None
 
@@ -638,6 +716,7 @@ def create_brief_genome_details(data=None, genome_tag=None):
         "release": release,
         "is_suppressed": data.Genome.suppressed,
         "suppression_details": data.Genome.suppression_details,
+        "latest_genome": latest_genome,
     }
     return brief_genome_details
 

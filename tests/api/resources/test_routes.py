@@ -957,24 +957,54 @@ def test_explain_genome():
         "is_reference": True,
         "is_suppressed": False,
         "suppression_details": None,
-        "assembly": {
-            "accession_id": "GCA_000001405.29",
-            "name": "GRCh38.p14"
-        },
-        "release": {
-            "name": "2025-02",
-            "type": "integrated"
+        "assembly": {"accession_id": "GCA_000001405.29", "name": "GRCh38.p14"},
+        "release": {"name": "2025-02", "type": "integrated"},
+    }
+
+
+def test_explain_old_genome_uuid_includes_latest_genome():
+    response = client.get(
+        "/api/metadata/genome/be73075e-0633-471d-b7c8-4f8ca7752a04/explain"
+    )
+    assert response.status_code == 200
+    assert response.json() == {
+        "genome_id": "be73075e-0633-471d-b7c8-4f8ca7752a04",
+        "genome_tag": None,
+        "common_name": "Human",
+        "scientific_name": "Homo sapiens",
+        "species_taxonomy_id": "9606",
+        "type": None,
+        "is_reference": True,
+        "is_suppressed": False,
+        "suppression_details": None,
+        "assembly": {"accession_id": "GCA_000001405.29", "name": "GRCh38.p14"},
+        "release": {"name": "2026-04-09", "type": "partial"},
+        "latest_genome": {
+            "genome_id": "a7335667-93e7-11ec-a39d-005056b38ce3",
+            "genome_tag": "GCA_000001405.29",
+            "common_name": "Human",
+            "scientific_name": "Homo sapiens",
+            "species_taxonomy_id": "9606",
+            "type": None,
+            "is_reference": True,
+            "is_suppressed": False,
+            "suppression_details": None,
+            "assembly": {
+                "accession_id": "GCA_000001405.29",
+                "name": "GRCh38.p14",
+                "url": "https://identifiers.org/insdc.gca/GCA_000001405.29",
+            },
+            "release": {"name": "2025-02", "type": "integrated", "is_current": True},
         },
     }
 
 
 def test_explain_genome_by_assembly_accession():
-    response = client.get(
-        "/api/metadata/genome/GCA_000001405.29/explain"
-    )
+    response = client.get("/api/metadata/genome/GCA_000001405.29/explain")
     assert response.status_code == 200
     assert response.json()["genome_id"] == "a7335667-93e7-11ec-a39d-005056b38ce3"
     assert response.json()["genome_tag"] == "GCA_000001405.29"
+    assert "latest_genome" not in response.json()
 
 
 def test_explain_genome_by_url_slug_returns_404():
