@@ -134,35 +134,10 @@ class MetaAdaptor:
         Example usage:
             genome_groups = fetch_genome_groups()
         """
-        # SELECT gg.type, gg.genome_group_id, gg.name, gg.label, gg.description, count(distinct gm.genome_id) as genome_count
-        # FROM genome_group gg
-        # inner join genome_group_member gm on gm.genome_group_id = gg.genome_group_id
-        # where gm.is_current = 1 and gg.genome_group_id = 12
-        # and ( gm.genome_id IN (
-        #     SELECT DISTINCT gr.genome_id
-        #     FROM genome_release gr
-        #     JOIN ensembl_release er
-        #     ON er.release_id = gr.release_id
-        #     WHERE er.status = 'Released' and gr.is_current = 1
-        #     )
-        # )
-        # group by all;
 
         with self.db_conn.session_scope() as session:
             genome_group_category = self._genome_group_category_mock()
 
-            released_genomes = (
-                db.select(db.distinct(GenomeRelease.genome_id))
-                .join(
-                    EnsemblRelease,
-                    EnsemblRelease.release_id == GenomeRelease.release_id,
-                )
-                .where(
-                    EnsemblRelease.status == "Released",
-                    GenomeRelease.is_current == 1,
-                )
-            )
-            
             sql = (
                 db.select(
                     GenomeGroup.type,
@@ -171,16 +146,38 @@ class MetaAdaptor:
                     GenomeGroup.label,
                     GenomeGroup.description,
                     genome_group_category.c.display_name,
-                    func.count(db.distinct(GenomeGroupMember.genome_id)).label("genome_count"),
+                    func.count(db.distinct(GenomeGroupMember.genome_id)).label(
+                        "genome_count"
+                    ),
                 )
                 .join(
                     GenomeGroupMember,
                     GenomeGroupMember.genome_group_id == GenomeGroup.genome_group_id,
                 )
-                .join(genome_group_category, genome_group_category.c.type == GenomeGroup.type)
+                .join(
+                    GenomeRelease,
+                    GenomeRelease.genome_id == GenomeGroupMember.genome_id,
+                )
+                .join(
+                    EnsemblRelease,
+                    EnsemblRelease.release_id == GenomeRelease.release_id,
+                )
+                .join(
+                    genome_group_category,
+                    genome_group_category.c.type == GenomeGroup.type,
+                )
                 .where(
                     GenomeGroupMember.is_current == 1,
-                    GenomeGroupMember.genome_id.in_(released_genomes),
+                    db.or_(
+                        db.and_(
+                            EnsemblRelease.is_current == 1,
+                            EnsemblRelease.release_type == "integrated",
+                        ),
+                        db.and_(
+                            GenomeRelease.is_current == 1,
+                            EnsemblRelease.release_type == "partial",
+                        ),
+                    ),
                 )
                 .group_by(
                     GenomeGroup.type,
