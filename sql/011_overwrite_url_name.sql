@@ -13,4 +13,4 @@ JOIN ensembl_release er ON gr.release_id = er.release_id
 WHERE er.release_type = 'integrated' and er.is_current = 1 and g.suppressed = 0)
 UPDATE genome SET url_name = accession_map.accession
 FROM accession_map
-where genome.genome_id = accession_map.genome_id;
+WHERE genome.genome_id = accession_map.genome_id;
