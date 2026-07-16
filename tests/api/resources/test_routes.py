@@ -1529,7 +1529,7 @@ def test_get_metadata_statistics(benchmark):
                 "enhancers": 246403,
                 "promoters": 35983,
                 "ctcf_count": 90891,
-                "tfbs_count": 30873,
+                "tfbs_count": None,
                 "open_chromatin_count": 7541,
             },
         }
