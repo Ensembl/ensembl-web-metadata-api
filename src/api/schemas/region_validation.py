@@ -13,6 +13,7 @@
 """
 
 import logging
+import re
 from pydantic import BaseModel, model_serializer, Field, root_validator
 from typing import Any, Optional
 
@@ -26,15 +27,15 @@ logger = logging.getLogger()
 
 class RegionValidation(BaseModel):
     location_input: str
-    genome_uuid: str = None
-    name: str = Field(alias="name", default="")
-    start: str = Field(alias="start", default="1")
+    genome_uuid: str
+    name: Optional[str] = Field(alias="name", default=None)
+    start: Optional[str] = Field(alias="start", default=None)
     end: Optional[str] = Field(alias="end", default=None)
-    _region_code: str = None
+    _region_code: Optional[str] = None
     _is_valid: list[bool] = [False, False, False]
-    _region_name_error: str = None
-    _start_error: str = None
-    _end_error: str = None
+    _region_name_error: Optional[str] = None
+    _start_error: Optional[str] = None
+    _end_error: Optional[str] = None
 
     @root_validator(pre=True)
     def set_region_parameters(cls, values):
@@ -42,20 +43,17 @@ class RegionValidation(BaseModel):
         values["name"], values["start"], values["end"] = parsed_region
         return values
 
+
     @staticmethod
     def parse_location_input(region_input):
-        region, start, end = "", "1", None
-        try:
-            region_coordinates = region_input.split(":")
-            region = region_coordinates[0]
-            start, end = region_coordinates[1].split("-")
-            start = start.replace(",", "")
-            end = end.replace(",", "")
-        except IndexError:
-            pass
-        except Exception as ex:
-            logging.error(ex)
+        region, start, end = None, None, None
+        location_input_match = re.match(r"^([a-zA-Z0-9_.]+)(?::(\d+)-(\d+))?$", region_input)
+
+        if location_input_match:
+            region, start, end = location_input_match.groups()
+
         return region, start, end
+
 
     def get_region(self, genome_uuid: str, region_name: str, db_conn: GenomeAdaptor):
         genome_seq_region = self.genome_assembly_sequence_region(
@@ -108,6 +106,9 @@ class RegionValidation(BaseModel):
         return genome_assembly_sequence_region
 
     def _validate_region_name(self, db_conn):
+        if self.name is None and self.start is None and self.end is None:
+            return
+
         if self.name:
             try:
                 genome_region = self.get_region(self.genome_uuid, self.name, db_conn)
@@ -116,60 +117,62 @@ class RegionValidation(BaseModel):
                     self._region_name_error = "Could not find region {} for {}".format(
                         self.name, self.genome_uuid
                     )
-                    return False
-
-                if self.end is None:
-                    self.end = genome_region.get("length")
-                self._is_valid[0] = True
+                    return
+                
                 if genome_region.get("chromosomal"):
                     self._region_code = "chromosome"
                 else:
                     self._region_code = "non-chormosome"
+                
+                try:
+                    region_length = int(genome_region.get("length"))
+                except (TypeError, ValueError):
+                    self._region_name_error = "Invalid region length for {}".format(
+                        self.name
+                    )
+                    return
+                self._is_valid[0] = True
+
+                start_value = int(self.start) if self.start is not None else None
+                end_value = int(self.end) if self.end is not None else None
+
+                if start_value is None and end_value is None:
+                    start_value = 1
+                    end_value = region_length
+
+                if start_value is not None and end_value is not None:
+                    error = False
+
+                    if start_value < 1 or start_value > region_length:
+                        self._start_error = "start should be between 1 and {}".format(region_length)
+                        error = True
+
+                    if end_value < 1 or end_value > region_length or end_value <= start_value:
+                        self._end_error = "end should be between 1 and {} and end ({}) > start ({})".format(
+                            region_length, end_value, start_value
+                        )
+                        error = True
+
+                    if error:
+                        return
+                
+                self._is_valid[1] = True
+                self._is_valid[2] = True
+                self.start = str(start_value)
+                self.end = str(end_value)
+                
             except Exception as ex:
                 logging.error(ex)
-                return False
-
-            try:
-                start_value = int(self.start)
-                if (start_value > 0) and (start_value < genome_region.get("length")):
-                    self._is_valid[1] = True
-                else:
-                    self._is_valid[1] = False
-                    self._start_error = "start should be between 1 and {}".format(
-                        genome_region.get("length")
-                    )
-            except ValueError as ve:
-                self._is_valid[1] = False
-                self._start_error = "start {} is invalid".format(self.start)
-
-            try:
-                end_value = int(self.end)
-                if self._is_valid[1]:
-                    if (end_value <= genome_region.get("length")) and (
-                        end_value > start_value
-                    ):
-                        self._is_valid[2] = True
-                    else:
-                        self._is_valid[2] = False
-                        self._end_error = "end should be between 1 and {} and end ({}) > start ({})".format(
-                            genome_region.get("length"), self.end, self.start
-                        )
-            except ValueError as ve:
-                self._is_valid[2] = False
-                self._end_error = "end {} is invalid".format(self.end)
+                self._location_input_error = "Error validating region: {}".format(str(ex))
+                return
         else:
-            self._is_valid[0] = False
-            self._region_name_error = "Invalid region".format(self.location_input)
+            self._region_name_error = "Invalid region"
+            return
 
-        return all(self._is_valid)
 
     def validate_region(self, db_conn):
         if self.genome_uuid:
-            if self._validate_region_name(db_conn):
-                return True
-            else:
-                return False
-        return False
+            self._validate_region_name(db_conn)
 
     @model_serializer
     def region_validation_serliaiser(self) -> dict[str, Any]:
