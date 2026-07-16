@@ -18,12 +18,21 @@ limitations under the License.
 import itertools
 from loguru import logger
 
+import sqlalchemy as db
 import uuid
 from datetime import datetime
 
 from typing import Any
 
-from ensembl.production.metadata.api.models import Genome
+from ensembl.production.metadata.api.models import (
+    Assembly,
+    EnsemblRelease,
+    EnsemblSite,
+    Genome,
+    GenomeRelease,
+    Organism,
+    ReleaseStatus,
+)
 
 from ensembl.production.metadata.api.adaptors import GenomeAdaptor, ReleaseAdaptor
 from ensembl.production.metadata.api.adaptors.vep import VepAdaptor
@@ -522,38 +531,40 @@ def get_brief_genome_details_by_uuid(db_conn, genome_id_or_accession, release_ve
 
     input_is_genome_uuid = is_valid_uuid(genome_id_or_accession)
 
-    # If genome_id_or_accession is not a valid UUID, assume it's a assembly accession and fetch genome_uuid
+    # If genome_id_or_accession is not a valid UUID, treat it as the public
+    # genome tag. Accession ownership is curated during metadata generation and
+    # stored in genome.url_name, so /explain must not re-rank genomes by
+    # assembly accession/provider/default flags here. This keeps the endpoint in
+    # sync with species search and the post-release accession map patch.
     if not input_is_genome_uuid:
         logger.debug(
-            f"Invalid genome_id '{genome_id_or_accession}', assuming it's a assembly accession and using it to fetch genome_uuid"
+            f"Invalid genome_id '{genome_id_or_accession}', assuming it's a genome tag and resolving by genome.url_name"
         )
-        # For assembly accession, we have an ordering of priority to determine which genome to return
-        # if multiple genomes are found for the same assembly accession (see genome_id_or_accession())
-        # For archives, we will need to keep in mind the combination of release and tag
-        # that will take the user to the archived version of the genome.
-        assembly_accession = genome_id_or_accession
-        genome_uuid = db_conn.get_genome_uuid_by_assembly_accession(
-            assembly_accession=assembly_accession,
-            release=release_version,
+        genome_results = fetch_genomes_by_url_name(
+            db_conn, genome_id_or_accession, release_version
         )
-        if genome_uuid is None:
+        if not genome_results:
             return None
+
+        if len(genome_results) > 1:
+            logger.warning(
+                f"Multiple results found for Genome url_name/Release version: {genome_id_or_accession}/{release_version}"
+            )
+            genome_results = prefer_current_integrated_genomes(genome_results)
     else:
         genome_uuid = genome_id_or_accession
 
-    # Fetch genome details using the selected genome UUID
-    genome_results = db_conn.fetch_genomes(
-        genome_uuid=genome_uuid,
-        release_version=release_version,
-    )
-
-    if genome_results:
-        assembly_accession = genome_results[0].Assembly.accession
-    else:
-        logger.error(
-            f"No Genome/Release found: {genome_id_or_accession}/{release_version}"
+        # Fetch genome details using the selected genome UUID
+        genome_results = db_conn.fetch_genomes(
+            genome_uuid=genome_uuid,
+            release_version=release_version,
         )
-        return None
+
+        if not genome_results:
+            logger.error(
+                f"No Genome/Release found: {genome_id_or_accession}/{release_version}"
+            )
+            return None
 
     if len(genome_results) > 1:
         logger.warning(
@@ -563,55 +574,23 @@ def get_brief_genome_details_by_uuid(db_conn, genome_id_or_accession, release_ve
         # in this case we care only about the latest integrated release
         genome_results = prefer_current_integrated_genomes(genome_results)
 
-    # Now that we have all genomes assosiated with the assembly accession sorted by priority
-    # we need to know whether to assign a value to the genome_tag or not based on rules we discussed before
-
-    # Fetch all genomes with the same assembly name, sorted by release date
-    all_genomes_with_same_assembly = db_conn.fetch_genomes(
-        assembly_accession=assembly_accession
-    )
-    # Rules for assigning genome_tag:
-    # The genome will have a genome_tag only if
-    #  * it's in the latest and intergated
-    #  * it's in the latest and partial and doesn't belong to an intergated (yet)
-
     # Use the selected genome row. When the same genome is returned for both
     # partial and integrated releases, the block above prefers the current
     # integrated release before we reach this point.
     current_genome = genome_results[0]
-    genome_tag = get_genome_tag(
-        current_genome, all_genomes_with_same_assembly, assembly_accession
-    )
+    assembly_accession = current_genome.Assembly.accession
+    genome_tag = get_genome_tag(current_genome)
 
     latest_genome = None
     if input_is_genome_uuid:
-        latest_genome_uuid = db_conn.get_genome_uuid_by_assembly_accession(
-            assembly_accession=assembly_accession,
-            release=release_version,
+        latest_genome_result = find_latest_genome_in_same_release_type(
+            db_conn, current_genome, assembly_accession, release_version
         )
-        if (
-            latest_genome_uuid
-            and latest_genome_uuid != current_genome.Genome.genome_uuid
-        ):
-            latest_genome_results = db_conn.fetch_genomes(
-                genome_uuid=latest_genome_uuid,
-                release_version=release_version,
+        if latest_genome_result:
+            latest_genome_tag = get_genome_tag(latest_genome_result)
+            latest_genome = create_brief_genome_details(
+                latest_genome_result, genome_tag=latest_genome_tag
             )
-            if latest_genome_results:
-                # again, we might have the same genome released in partial
-                # then intergrated => we prefer the integrated if it exists
-                latest_genome_results = prefer_current_integrated_genomes(
-                    latest_genome_results
-                )
-                latest_genome_result = latest_genome_results[0]
-                latest_genome_tag = get_genome_tag(
-                    latest_genome_result,
-                    all_genomes_with_same_assembly,
-                    assembly_accession,
-                )
-                latest_genome = create_brief_genome_details(
-                    latest_genome_result, genome_tag=latest_genome_tag
-                )
 
     # Return the requested genome and the assosiated genome_tag (if any)
     return create_brief_genome_details(
@@ -639,50 +618,113 @@ def prefer_current_integrated_genomes(genome_results):
     return current_integrated_genomes or genome_results
 
 
-def get_genome_tag(current_genome, all_genomes_with_same_assembly, assembly_accession):
-    """Determine whether a genome can expose its assembly accession as a tag.
+def fetch_genomes_by_url_name(db_conn, url_name, release_version):
+    """Fetch released genomes that own a public genome tag.
 
-    A genome gets the shared assembly accession tag only when it represents the
-    latest usable release for that assembly. Current integrated releases can use
-    the tag. Current partial releases can use it only until an integrated
-    release exists for the same assembly accession.
-
-    Args:
-        current_genome: Genome result row being serialized.
-        all_genomes_with_same_assembly: Genome result rows sharing the same
-            assembly accession.
-        assembly_accession: Assembly accession to expose as the genome tag when
-            the release rules allow it.
-
-    Returns:
-        The assembly accession when it can be used as ``genome_tag``; otherwise
-        ``None``.
+    The accession selection rules are applied before this API runs: metadata
+    generation and the post-release accession-map patch assign the chosen
+    assembly accession to genome.url_name. Therefore /explain resolves
+    accession/tag requests through url_name and does not independently choose
+    between integrated, partial, Ensembl, community, or default genomes.
     """
-    current_release = current_genome.EnsemblRelease
+    if not url_name:
+        return []
 
-    # A genome can only expose its assembly accession as a genome_tag when its
-    # release is marked as the latest/current one.
-    current_release_is_latest = current_release and (
-        current_release.is_current  # for integrated releases
-        or current_genome.GenomeRelease.is_current  # /!\ for partial releases
-    )
-    current_release_type = current_release.release_type if current_release else None
+    if hasattr(db_conn, "fetch_genomes_by_url_name"):
+        return db_conn.fetch_genomes_by_url_name(url_name, release_version)
 
-    # If any genome with this assembly accession already belongs to an
-    # integrated release, the partial release must not claim the shared tag.
-    assembly_has_integrated_release = any(
-        genome.EnsemblRelease and genome.EnsemblRelease.release_type == "integrated"
-        for genome in all_genomes_with_same_assembly
+    if not hasattr(db_conn, "metadata_db"):
+        logger.error("Genome adaptor does not support url_name lookup")
+        return []
+
+    genome_select = (
+        db.select(Genome, Organism, Assembly)
+        .select_from(Genome)
+        .join(Organism, Organism.organism_id == Genome.organism_id)
+        .join(Assembly, Assembly.assembly_id == Genome.assembly_id)
+        .where(Genome.url_name == url_name)
+        .add_columns(GenomeRelease, EnsemblRelease, EnsemblSite)
+        .join(GenomeRelease)
+        .join(EnsemblRelease)
+        .join(EnsemblSite)
+        .where(EnsemblRelease.status == ReleaseStatus.RELEASED)
     )
 
-    # Integrated releases can use the tag when current. Partial releases can use
-    # it only while they are current and have not yet been superseded by an
-    # integrated release for the same assembly accession.
-    has_genome_tag = current_release_is_latest and (
-        current_release_type == "integrated"
-        or (current_release_type == "partial" and not assembly_has_integrated_release)
+    if release_version is not None:
+        genome_select = genome_select.where(EnsemblRelease.version <= release_version)
+
+    with db_conn.metadata_db.session_scope() as session:
+        session.expire_on_commit = False
+        return session.execute(
+            genome_select.order_by(
+                Genome.production_name, EnsemblRelease.release_date.desc()
+            )
+        ).all()
+
+
+def find_latest_genome_in_same_release_type(
+    db_conn, current_genome, assembly_accession, release_version
+):
+    """Find the newer genome, if any, in the same release line.
+
+    For UUID lookups, ``latest_genome`` is about deprecating a saved genome, not
+    about which genome currently owns the accession tag. Partial genomes are
+    superseded only by newer partial genomes for the same assembly accession;
+    integrated genomes are superseded only by newer integrated genomes. This
+    keeps the PDF scenarios where an integrated release and a later partial
+    release do not automatically replace each other.
+    """
+    release_type = current_genome.EnsemblRelease.release_type
+    assembly_genomes = db_conn.fetch_genomes(
+        assembly_accession=assembly_accession,
+        release_version=release_version,
     )
-    return assembly_accession if has_genome_tag else None
+    candidates = [
+        genome
+        for genome in assembly_genomes
+        if genome.EnsemblRelease.release_type == release_type
+        and genome.Genome.genome_uuid != current_genome.Genome.genome_uuid
+        and release_is_newer(genome.EnsemblRelease, current_genome.EnsemblRelease)
+    ]
+    if not candidates:
+        return None
+
+    return sorted(candidates, key=lambda genome: release_sort_key(genome.EnsemblRelease))[
+        -1
+    ]
+
+
+def release_is_newer(candidate_release, current_release):
+    return release_sort_key(candidate_release) > release_sort_key(current_release)
+
+
+def release_sort_key(release):
+    release_date = getattr(release, "release_date", None)
+    if release_date is not None:
+        return str(release_date)
+
+    label = getattr(release, "label", None)
+    if label is not None:
+        return str(label)
+
+    name = getattr(release, "name", None)
+    if name is not None:
+        return str(name)
+
+    version = getattr(release, "version", None)
+    return str(version) if version is not None else ""
+
+
+def get_genome_tag(current_genome):
+    """Return the accession tag only for the genome curated to own it.
+
+    genome.url_name is the source of truth. If it equals the assembly accession,
+    this genome currently owns the accession and can expose it as genome_tag.
+    Otherwise the genome is reachable only by UUID and genome_tag must be null.
+    """
+    url_name = current_genome.Genome.url_name
+    assembly_accession = current_genome.Assembly.accession
+    return url_name if url_name == assembly_accession else None
 
 
 def is_valid_uuid(value):

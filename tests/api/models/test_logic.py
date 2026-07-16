@@ -8,13 +8,11 @@ ASSEMBLY_ACCESSION = "GCA_000001405.29"
 
 
 class FakeGenomeAdaptor:
-    def __init__(
-        self, selected_genomes, assembly_genomes, best_genome_uuid=GENOME_UUID
-    ):
+    def __init__(self, selected_genomes, assembly_genomes):
         self.selected_genomes = selected_genomes
         self.assembly_genomes = assembly_genomes
-        self.best_genome_uuid = best_genome_uuid
         self.genomes_by_uuid = {}
+        self.genomes_by_url_name = {}
         for genome in selected_genomes:
             self.genomes_by_uuid.setdefault(genome.Genome.genome_uuid, []).append(
                 genome
@@ -22,6 +20,10 @@ class FakeGenomeAdaptor:
         for genome in assembly_genomes:
             if genome.Genome.genome_uuid not in self.genomes_by_uuid:
                 self.genomes_by_uuid[genome.Genome.genome_uuid] = [genome]
+            if genome.Genome.url_name:
+                self.genomes_by_url_name.setdefault(genome.Genome.url_name, []).append(
+                    genome
+                )
 
     def fetch_genomes(
         self, genome_uuid=None, release_version=None, assembly_accession=None
@@ -32,8 +34,8 @@ class FakeGenomeAdaptor:
             return self.genomes_by_uuid.get(genome_uuid, self.selected_genomes)
         return []
 
-    def get_genome_uuid_by_assembly_accession(self, assembly_accession, release):
-        return self.best_genome_uuid
+    def fetch_genomes_by_url_name(self, url_name, release_version):
+        return self.genomes_by_url_name.get(url_name, [])
 
 
 def make_genome(
@@ -42,6 +44,9 @@ def make_genome(
     accession=ASSEMBLY_ACCESSION,
     genome_release_is_current=None,
     genome_uuid=GENOME_UUID,
+    url_name=ASSEMBLY_ACCESSION,
+    release_label="2026-01",
+    release_date=None,
 ):
     if genome_release_is_current is None:
         genome_release_is_current = is_current
@@ -50,7 +55,7 @@ def make_genome(
         Genome=SimpleNamespace(
             genome_uuid=genome_uuid,
             created="2026-01-01",
-            url_name="example_species",
+            url_name=url_name,
             suppressed=False,
             suppression_details=None,
         ),
@@ -76,8 +81,8 @@ def make_genome(
         ),
         EnsemblRelease=SimpleNamespace(
             version=1,
-            release_date=None,
-            label="2026-01",
+            release_date=release_date,
+            label=release_label,
             release_type=release_type,
             is_current=is_current,
         ),
@@ -113,7 +118,7 @@ def test_brief_genome_details_assigns_tag_for_latest_partial_without_integrated_
 
 
 def test_brief_genome_details_omits_tag_for_latest_partial_with_integrated_genome():
-    partial_genome = make_genome("partial", True)
+    partial_genome = make_genome("partial", True, url_name=None)
     integrated_genome = make_genome("integrated", True)
     adaptor = FakeGenomeAdaptor([partial_genome], [partial_genome, integrated_genome])
 
@@ -123,13 +128,20 @@ def test_brief_genome_details_omits_tag_for_latest_partial_with_integrated_genom
 
 
 def test_brief_genome_details_adds_latest_genome_for_old_uuid():
-    old_genome = make_genome("integrated", False, genome_uuid=GENOME_UUID)
-    latest_genome = make_genome("integrated", True, genome_uuid=LATEST_GENOME_UUID)
-    adaptor = FakeGenomeAdaptor(
-        [old_genome],
-        [old_genome, latest_genome],
-        best_genome_uuid=LATEST_GENOME_UUID,
+    old_genome = make_genome(
+        "integrated",
+        False,
+        genome_uuid=GENOME_UUID,
+        url_name=None,
+        release_label="2025-02",
     )
+    latest_genome = make_genome(
+        "integrated",
+        True,
+        genome_uuid=LATEST_GENOME_UUID,
+        release_label="2025-11",
+    )
+    adaptor = FakeGenomeAdaptor([old_genome], [old_genome, latest_genome])
 
     result = get_brief_genome_details_by_uuid(adaptor, GENOME_UUID, None)
 
@@ -138,14 +150,87 @@ def test_brief_genome_details_adds_latest_genome_for_old_uuid():
     assert result["latest_genome"]["genome_tag"] == ASSEMBLY_ACCESSION
 
 
-def test_brief_genome_details_omits_latest_genome_for_accession():
-    old_genome = make_genome("integrated", False, genome_uuid=GENOME_UUID)
-    latest_genome = make_genome("integrated", True, genome_uuid=LATEST_GENOME_UUID)
-    adaptor = FakeGenomeAdaptor(
-        [latest_genome],
-        [old_genome, latest_genome],
-        best_genome_uuid=LATEST_GENOME_UUID,
+def test_brief_genome_details_adds_latest_partial_for_old_partial_uuid():
+    old_partial = make_genome(
+        "partial",
+        False,
+        genome_uuid=GENOME_UUID,
+        url_name=None,
+        release_label="2025-02-24",
     )
+    latest_partial = make_genome(
+        "partial",
+        True,
+        genome_uuid=LATEST_GENOME_UUID,
+        url_name=None,
+        release_label="2025-10-16",
+    )
+    adaptor = FakeGenomeAdaptor([old_partial], [old_partial, latest_partial])
+
+    result = get_brief_genome_details_by_uuid(adaptor, GENOME_UUID, None)
+
+    assert result["genome_uuid"] == GENOME_UUID
+    assert result["latest_genome"]["genome_uuid"] == LATEST_GENOME_UUID
+
+
+def test_brief_genome_details_omits_latest_for_partial_with_newer_integrated_only():
+    partial_genome = make_genome(
+        "partial",
+        False,
+        genome_uuid=GENOME_UUID,
+        url_name=None,
+        release_label="2025-02-24",
+    )
+    integrated_genome = make_genome(
+        "integrated",
+        True,
+        genome_uuid=LATEST_GENOME_UUID,
+        release_label="2025-11",
+    )
+    adaptor = FakeGenomeAdaptor([partial_genome], [partial_genome, integrated_genome])
+
+    result = get_brief_genome_details_by_uuid(adaptor, GENOME_UUID, None)
+
+    assert result["latest_genome"] is None
+
+
+def test_brief_genome_details_omits_latest_for_integrated_with_newer_partial_only():
+    integrated_genome = make_genome(
+        "integrated",
+        False,
+        genome_uuid=GENOME_UUID,
+        url_name=ASSEMBLY_ACCESSION,
+        release_label="2025-02",
+    )
+    partial_genome = make_genome(
+        "partial",
+        True,
+        genome_uuid=LATEST_GENOME_UUID,
+        url_name=None,
+        release_label="2025-02-24",
+    )
+    adaptor = FakeGenomeAdaptor([integrated_genome], [integrated_genome, partial_genome])
+
+    result = get_brief_genome_details_by_uuid(adaptor, GENOME_UUID, None)
+
+    assert result["latest_genome"] is None
+
+
+def test_brief_genome_details_omits_latest_genome_for_accession():
+    old_genome = make_genome(
+        "integrated",
+        False,
+        genome_uuid=GENOME_UUID,
+        url_name=None,
+        release_label="2025-02",
+    )
+    latest_genome = make_genome(
+        "integrated",
+        True,
+        genome_uuid=LATEST_GENOME_UUID,
+        release_label="2025-11",
+    )
+    adaptor = FakeGenomeAdaptor([latest_genome], [old_genome, latest_genome])
 
     result = get_brief_genome_details_by_uuid(adaptor, ASSEMBLY_ACCESSION, None)
 

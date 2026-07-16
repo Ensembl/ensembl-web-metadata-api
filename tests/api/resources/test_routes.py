@@ -980,8 +980,8 @@ def test_explain_old_genome_uuid_includes_latest_genome():
         "assembly": {"accession_id": "GCA_000001405.29", "name": "GRCh38.p14"},
         "release": {"name": "2026-04-09", "type": "partial"},
         "latest_genome": {
-            "genome_id": "a7335667-93e7-11ec-a39d-005056b38ce3",
-            "genome_tag": "GCA_000001405.29",
+            "genome_id": "59871324-7803-4234-856e-2a2bd96d7b3c",
+            "genome_tag": None,
             "common_name": "Human",
             "scientific_name": "Homo sapiens",
             "species_taxonomy_id": "9606",
@@ -994,7 +994,7 @@ def test_explain_old_genome_uuid_includes_latest_genome():
                 "name": "GRCh38.p14",
                 "url": "https://identifiers.org/insdc.gca/GCA_000001405.29",
             },
-            "release": {"name": "2025-02", "type": "integrated", "is_current": True},
+            "release": {"name": "2026-07-13", "type": "partial", "is_current": True},
         },
     }
 
