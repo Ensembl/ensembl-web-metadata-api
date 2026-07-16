@@ -267,7 +267,19 @@ async def explain_genome(
                     "type": True,
                     "is_suppressed": True,
                     "suppression_details": True,
-                    "latest_genome": True,
+                    "latest_genome": {
+                        "genome_id": True,
+                        "genome_tag": True,
+                        "scientific_name": True,
+                        "species_taxonomy_id": True,
+                        "common_name": True,
+                        "is_reference": True,
+                        "assembly": {"name", "accession_id"},
+                        "release": {"name", "type"},
+                        "type": True,
+                        "is_suppressed": True,
+                        "suppression_details": True,
+                    },
                 }
             )
             if response_dict.get("latest_genome") is None:

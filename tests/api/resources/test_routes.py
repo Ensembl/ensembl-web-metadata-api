@@ -992,9 +992,8 @@ def test_explain_old_genome_uuid_includes_latest_genome():
             "assembly": {
                 "accession_id": "GCA_000001405.29",
                 "name": "GRCh38.p14",
-                "url": "https://identifiers.org/insdc.gca/GCA_000001405.29",
             },
-            "release": {"name": "2026-07-13", "type": "partial", "is_current": True},
+            "release": {"name": "2026-07-13", "type": "partial"},
         },
     }
 
