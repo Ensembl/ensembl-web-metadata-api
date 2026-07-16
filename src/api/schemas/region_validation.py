@@ -163,7 +163,6 @@ class RegionValidation(BaseModel):
                 
             except Exception as ex:
                 logging.error(ex)
-                self._location_input_error = "Error validating region: {}".format(str(ex))
                 return
         else:
             self._region_name_error = "Invalid region"
@@ -171,8 +170,8 @@ class RegionValidation(BaseModel):
 
 
     def validate_region(self, db_conn):
-        if self.genome_uuid:
-            self._validate_region_name(db_conn)
+        self._validate_region_name(db_conn)
+    
 
     @model_serializer
     def region_validation_serliaiser(self) -> dict[str, Any]:
