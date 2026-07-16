@@ -1553,11 +1553,11 @@ def test_get_metadata_statistics(benchmark):
                 "reference_species_name": "Pan troglodytes",
             },
             "regulation_stats": {
-                "enhancers": None,
-                "promoters": None,
-                "ctcf_count": None,
+                "enhancers": 246403,
+                "promoters": 35983,
+                "ctcf_count": 90891,
                 "tfbs_count": None,
-                "open_chromatin_count": None,
+                "open_chromatin_count": 7541,
             },
         }
     }

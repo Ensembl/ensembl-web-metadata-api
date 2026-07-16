@@ -39,22 +39,23 @@ def get_top_level_statistics_by_uuid(db_conn, genome_uuid):
         genome_uuid=genome_uuid, dataset_type_name="all"
     )
 
-    statistics = []
+    statistics_by_name = {}
     # FIXME stats_results can contain multiple entries
     if len(stats_results) > 0:
 
-        for dataset in stats_results[0].datasets:
-            for attribute in dataset.attributes:
-                statistics.append(
-                    {
+        # fetch_genome_datasets returns newer release groups first; process oldest
+        # first so duplicate statistic names are intentionally overwritten by newer values.
+        for result in reversed(stats_results):
+            for dataset in result.datasets:
+                for attribute in dataset.attributes:
+                    statistics_by_name[attribute.name] = {
                         "name": attribute.name,
                         "label": attribute.label,
                         "statistic_type": attribute.type,
                         "statistic_value": attribute.value,
                     }
-                )
 
-        statistics.sort(key=lambda x: x["name"])
+        statistics = sorted(statistics_by_name.values(), key=lambda x: x["name"])
 
         # logger.debug(f"Response data: \n{statistics}")
         return statistics
@@ -218,8 +219,11 @@ def get_attributes_by_genome_uuid(db_conn, genome_uuid, release_version):
     else:
         if len(attrib_data_results) > 0:
             attribs = []
-            for dataset in attrib_data_results[0].datasets:
-                attribs.extend(dataset.attributes)
+            # fetch_genome_datasets returns newer release groups first; process oldest
+            # first so duplicate attribute names are intentionally overwritten by newer values.
+            for dataset_group in reversed(attrib_data_results):
+                for dataset in dataset_group.datasets:
+                    attribs.extend(dataset.attributes)
 
             attributes_info = create_attributes_info(attribs)
             return {"genome_uuid": genome_uuid, "attributes_info": attributes_info}
@@ -299,33 +303,34 @@ def get_genome_by_uuid(db_conn, genome_uuid, release_version):
 
 
 def create_genome_with_attributes_and_count(db_conn, genome, release_version):
-    attrib_data_results = db_conn.fetch_genome_datasets(
-        genome_uuid=genome.Genome.genome_uuid,
-        dataset_type_name="all",
-        release_version=release_version,
-    )
+    attrib_data_results = db_conn.fetch_genome_datasets(genome_uuid=genome.Genome.genome_uuid,
+                                                        dataset_type_name="all",
+                                                        release_version=release_version)
 
     logger.debug(f"Genome Datasets Retrieved: {attrib_data_results}")
     attribs = []
+    datasets = []
     if len(attrib_data_results) > 0:
-        for dataset in attrib_data_results[0].datasets:
-            attribs.extend(dataset.attributes)
+        for dataset_group in attrib_data_results:
+            datasets.extend(dataset_group.datasets)
+
+        # fetch_genome_datasets returns newer release groups first; process oldest
+        # first so duplicate attribute names are intentionally overwritten by newer values.
+        for dataset_group in reversed(attrib_data_results):
+            for dataset in dataset_group.datasets:
+                attribs.extend(dataset.attributes)
 
     # fetch related assemblies count
-    related_assemblies_count = db_conn.fetch_assemblies_count(
-        genome.Organism.species_taxonomy_id
-    )
+    related_assemblies_count = db_conn.fetch_assemblies_count(genome.Organism.species_taxonomy_id)
 
-    alternative_names = get_alternative_names(
-        db_conn, genome.Organism.species_taxonomy_id
-    )
+    alternative_names = get_alternative_names(db_conn, genome.Organism.species_taxonomy_id)
 
     return create_genome(
         data=genome,
         attributes=attribs,
         count=related_assemblies_count,
         alternative_names=alternative_names,
-        datasets=attrib_data_results[0].datasets,
+        datasets=datasets
     )
 
 
