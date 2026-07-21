@@ -573,6 +573,7 @@ def get_brief_genome_details_by_uuid(db_conn, genome_id_or_accession, release_ve
         # means that this genome is released in multiple releases,
         # in this case we care only about the latest integrated release
         genome_results = prefer_current_integrated_genomes(genome_results)
+        logger.debug(f"Selected genome uuids: {[(g.Genome.genome_uuid, g.EnsemblRelease.release_type, g.EnsemblRelease.version) for g in genome_results]} ({len(genome_results)} results)")
 
     # Use the selected genome row. When the same genome is returned for both
     # partial and integrated releases, the block above prefers the current
@@ -586,6 +587,7 @@ def get_brief_genome_details_by_uuid(db_conn, genome_id_or_accession, release_ve
         latest_genome_result = find_latest_genome_in_same_release_type(
             db_conn, current_genome, assembly_accession, release_version
         )
+        logger.debug(f"latest genome UUID: {latest_genome_result.Genome.genome_uuid if latest_genome_result else None}")
         if latest_genome_result:
             latest_genome_tag = get_genome_tag(latest_genome_result)
             latest_genome = create_brief_genome_details(
@@ -674,11 +676,14 @@ def find_latest_genome_in_same_release_type(
     keeps the PDF scenarios where an integrated release and a later partial
     release do not automatically replace each other.
     """
+    logger.debug(f"Current genome: {[current_genome.Genome.genome_uuid, current_genome.EnsemblRelease.release_type, current_genome.EnsemblRelease.version]}")
+    logger.debug(f"assembly accession: {assembly_accession}")
     release_type = current_genome.EnsemblRelease.release_type
     assembly_genomes = db_conn.fetch_genomes(
         assembly_accession=assembly_accession,
         release_version=release_version,
     )
+    logger.debug(f"Genomes in the same assembly: {[(g.Genome.genome_uuid, g.EnsemblRelease.release_type, g.EnsemblRelease.version) for g in assembly_genomes]}")
     candidates = [
         genome
         for genome in assembly_genomes
