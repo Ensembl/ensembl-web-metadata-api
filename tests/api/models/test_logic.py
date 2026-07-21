@@ -150,6 +150,31 @@ def test_brief_genome_details_adds_latest_genome_for_old_uuid():
     assert result["latest_genome"]["genome_tag"] == ASSEMBLY_ACCESSION
 
 
+def test_brief_genome_details_adds_latest_integrated_for_archived_uuid():
+    archived_genome = make_genome(
+        "archive",
+        False,
+        genome_uuid=GENOME_UUID,
+        url_name=None,
+        release_label="2025-02",
+    )
+    latest_integrated = make_genome(
+        "integrated",
+        True,
+        genome_uuid=LATEST_GENOME_UUID,
+        release_label="2026-07",
+    )
+    adaptor = FakeGenomeAdaptor(
+        [archived_genome], [archived_genome, latest_integrated]
+    )
+
+    result = get_brief_genome_details_by_uuid(adaptor, GENOME_UUID, None)
+
+    assert result["genome_uuid"] == GENOME_UUID
+    assert result["latest_genome"]["genome_uuid"] == LATEST_GENOME_UUID
+    assert result["latest_genome"]["release"]["release_type"] == "integrated"
+
+
 def test_brief_genome_details_adds_latest_partial_for_old_partial_uuid():
     old_partial = make_genome(
         "partial",

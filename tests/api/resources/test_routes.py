@@ -949,7 +949,7 @@ def test_explain_genome():
     assert response.status_code == 200
     assert response.json() == {
         "genome_id": "a7335667-93e7-11ec-a39d-005056b38ce3",
-        "genome_tag": "GCA_000001405.29",
+        "genome_tag": None,
         "common_name": "Human",
         "scientific_name": "Homo sapiens",
         "species_taxonomy_id": "9606",
@@ -958,7 +958,23 @@ def test_explain_genome():
         "is_suppressed": False,
         "suppression_details": None,
         "assembly": {"accession_id": "GCA_000001405.29", "name": "GRCh38.p14"},
-        "release": {"name": "2025-02", "type": "integrated"},
+        "release": {"name": "2025-02", "type": "archive"},
+        "latest_genome": {
+            "genome_id": "59871324-7803-4234-856e-2a2bd96d7b3c",
+            "genome_tag": "GCA_000001405.29",
+            "common_name": "Human",
+            "scientific_name": "Homo sapiens",
+            "species_taxonomy_id": "9606",
+            "type": None,
+            "is_reference": True,
+            "is_suppressed": False,
+            "suppression_details": None,
+            "assembly": {
+                "accession_id": "GCA_000001405.29",
+                "name": "GRCh38.p14",
+            },
+            "release": {"name": "2026-07", "type": "integrated"},
+        },
     }
 
 
@@ -981,7 +997,7 @@ def test_explain_old_genome_uuid_includes_latest_genome():
         "release": {"name": "2026-04-09", "type": "partial"},
         "latest_genome": {
             "genome_id": "59871324-7803-4234-856e-2a2bd96d7b3c",
-            "genome_tag": None,
+            "genome_tag": "GCA_000001405.29",
             "common_name": "Human",
             "scientific_name": "Homo sapiens",
             "species_taxonomy_id": "9606",
@@ -1001,7 +1017,7 @@ def test_explain_old_genome_uuid_includes_latest_genome():
 def test_explain_genome_by_assembly_accession():
     response = client.get("/api/metadata/genome/GCA_000001405.29/explain")
     assert response.status_code == 200
-    assert response.json()["genome_id"] == "a7335667-93e7-11ec-a39d-005056b38ce3"
+    assert response.json()["genome_id"] == "59871324-7803-4234-856e-2a2bd96d7b3c"
     assert response.json()["genome_tag"] == "GCA_000001405.29"
     assert "latest_genome" not in response.json()
 
