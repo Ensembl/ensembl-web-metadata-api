@@ -35,7 +35,10 @@ class FakeGenomeAdaptor:
         return []
 
     def fetch_genomes_by_url_name(self, url_name, release_version):
-        return self.genomes_by_url_name.get(url_name, [])
+        for genome_url_name, genomes in self.genomes_by_url_name.items():
+            if genome_url_name.lower() == url_name.lower():
+                return genomes
+        return []
 
 
 def make_genome(

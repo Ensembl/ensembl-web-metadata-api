@@ -552,7 +552,10 @@ def get_brief_genome_details_by_uuid(db_conn, genome_id_or_accession, release_ve
             )
             genome_results = prefer_current_integrated_genomes(genome_results)
     else:
-        genome_uuid = genome_id_or_accession
+        # UUIDs are case-insensitive. Normalize to the canonical lowercase
+        # string before passing it to the adaptor, because database values are
+        # stored in canonical UUID form.
+        genome_uuid = str(uuid.UUID(genome_id_or_accession))
 
         # Fetch genome details using the selected genome UUID
         genome_results = db_conn.fetch_genomes(
@@ -630,19 +633,22 @@ def fetch_genomes_by_url_name(db_conn, url_name, release_version):
     if not url_name:
         return []
 
-    if hasattr(db_conn, "fetch_genomes_by_url_name"):
-        return db_conn.fetch_genomes_by_url_name(url_name, release_version)
-
     if not hasattr(db_conn, "metadata_db"):
+        if hasattr(db_conn, "fetch_genomes_by_url_name"):
+            return db_conn.fetch_genomes_by_url_name(url_name, release_version)
         logger.error("Genome adaptor does not support url_name lookup")
         return []
 
+    # Public genome tags are stored as canonical accessions, e.g.
+    # GCA_000001405.29, but users may type them in any case. Match
+    # case-insensitively while returning the canonical genome_tag from the row.
+    url_name_lower = url_name.lower()
     genome_select = (
         db.select(Genome, Organism, Assembly)
         .select_from(Genome)
         .join(Organism, Organism.organism_id == Genome.organism_id)
         .join(Assembly, Assembly.assembly_id == Genome.assembly_id)
-        .where(Genome.url_name == url_name)
+        .where(db.func.lower(Genome.url_name) == url_name_lower)
         .add_columns(GenomeRelease, EnsemblRelease, EnsemblSite)
         .join(GenomeRelease)
         .join(EnsemblRelease)

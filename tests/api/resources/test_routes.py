@@ -1022,6 +1022,22 @@ def test_explain_genome_by_assembly_accession():
     assert "latest_genome" not in response.json()
 
 
+def test_explain_genome_by_assembly_accession_is_case_insensitive():
+    response = client.get("/api/metadata/genome/gca_000001405.29/explain")
+    assert response.status_code == 200
+    assert response.json()["genome_id"] == "59871324-7803-4234-856e-2a2bd96d7b3c"
+    assert response.json()["genome_tag"] == "GCA_000001405.29"
+    assert "latest_genome" not in response.json()
+
+
+def test_explain_genome_by_uuid_is_case_insensitive():
+    response = client.get(
+        "/api/metadata/genome/A7335667-93E7-11EC-A39D-005056B38CE3/explain"
+    )
+    assert response.status_code == 200
+    assert response.json()["genome_id"] == "a7335667-93e7-11ec-a39d-005056b38ce3"
+
+
 def test_explain_genome_by_url_slug_returns_404():
     response = client.get("/api/metadata/genome/grch38/explain")
     assert response.status_code == 404
