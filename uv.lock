@@ -281,7 +281,7 @@ wheels = [
 [[package]]
 name = "ensembl-metadata-api"
 version = "3.0.0"
-source = { git = "https://github.com/Ensembl/ensembl-metadata-api?branch=main#fccf954fc9252e7d8db6bd993fc838495856f5da" }
+source = { git = "https://github.com/Ensembl/ensembl-metadata-api?branch=main#9370e0935a15ab7dea8acb5dd81ccca1938d50c6" }
 dependencies = [
     { name = "duckdb" },
     { name = "duckdb-engine" },

@@ -1,0 +1,38 @@
+name: Update Git dependencies
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 8 * * 1-5"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "0.8.5"
+
+      - name: Update Git dependencies
+        run: uv lock --upgrade-package ensembl-metadata-api --upgrade-package ensembl-py
+
+      - name: Create update pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: automated/update-git-dependencies
+          delete-branch: true
+          commit-message: "chore: update Git dependencies"
+          title: "chore: update Git dependencies"
+          body: |
+            Updates the locked commits for ensembl-metadata-api and ensembl-py
+            from their configured Git branches.
+          labels: dependencies
