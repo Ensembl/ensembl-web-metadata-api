@@ -19,6 +19,8 @@ from fastapi.testclient import TestClient
 from api.main import app
 
 import api.config as config
+import api.resources.redis as redis_resource
+import api.resources.routes as routes_resource
 
 client = TestClient(app)
 
@@ -386,6 +388,39 @@ def test_get_releases(benchmark):
 
     runnable = lambda: client.get("/api/metadata/releases")
     benchmark(runnable)
+
+
+def test_get_releases_cache_varies_by_current_only(monkeypatch):
+    cache = {}
+
+    async def get_cached_value(key):
+        return cache.get(key)
+
+    async def set_cached_value(key, ttl, value):
+        cache[key] = value
+
+    def release_iterator(adaptor, site_name, release_label, current_only):
+        yield {
+            "release_label": "current" if current_only else "all",
+            "release_type": "integrated",
+            "is_current": current_only,
+        }
+
+    monkeypatch.setattr(redis_resource, "ENABLE_REDIS_CACHE", True)
+    monkeypatch.setattr(redis_resource.redis_client, "get", get_cached_value)
+    monkeypatch.setattr(redis_resource.redis_client, "setex", set_cached_value)
+    monkeypatch.setattr(routes_resource, "release_iterator", release_iterator)
+
+    all_releases = client.get("/api/metadata/releases?current_only=false")
+    current_releases = client.get("/api/metadata/releases?current_only=true")
+
+    assert all_releases.json() == [
+        {"name": "all", "type": "integrated", "is_current": False}
+    ]
+    assert current_releases.json() == [
+        {"name": "current", "type": "integrated", "is_current": True}
+    ]
+    assert len(cache) == 2
 
 
 def test_get_vep_file_paths():
