@@ -407,7 +407,7 @@ async def get_vep_file_paths(
 
 
 @router.get("/releases", name="get_releases")
-@redis_cache("releases")
+@redis_cache("releases", arg_keys=["release_name", "current_only"])
 async def get_releases(
     adaptor: ReleaseAdaptorDep,
     request: Request,
