@@ -1,0 +1,37 @@
+name: Update ensembl-metadata-api dependency
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 8 * * 1-5"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "0.8.5"
+
+      - name: Update ensembl-metadata-api
+        run: uv lock --upgrade-package ensembl-metadata-api
+
+      - name: Create update pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: automated/update-ensembl-metadata-api
+          delete-branch: true
+          commit-message: "chore: update ensembl-metadata-api"
+          title: "chore: update ensembl-metadata-api"
+          body: |
+            Updates the locked ensembl-metadata-api commit from its main branch.
+          labels: dependencies
