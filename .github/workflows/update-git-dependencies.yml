@@ -1,4 +1,4 @@
-name: Update ensembl-metadata-api dependency
+name: Update Git dependencies
 
 on:
   workflow_dispatch:
@@ -22,16 +22,17 @@ jobs:
         with:
           version: "0.8.5"
 
-      - name: Update ensembl-metadata-api
-        run: uv lock --upgrade-package ensembl-metadata-api
+      - name: Update Git dependencies
+        run: uv lock --upgrade-package ensembl-metadata-api --upgrade-package ensembl-py
 
       - name: Create update pull request
         uses: peter-evans/create-pull-request@v7
         with:
-          branch: automated/update-ensembl-metadata-api
+          branch: automated/update-git-dependencies
           delete-branch: true
-          commit-message: "chore: update ensembl-metadata-api"
-          title: "chore: update ensembl-metadata-api"
+          commit-message: "chore: update Git dependencies"
+          title: "chore: update Git dependencies"
           body: |
-            Updates the locked ensembl-metadata-api commit from its main branch.
+            Updates the locked commits for ensembl-metadata-api and ensembl-py
+            from their configured Git branches.
           labels: dependencies
