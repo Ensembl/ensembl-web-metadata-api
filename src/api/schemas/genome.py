@@ -72,9 +72,7 @@ class AnnotationProvider(BaseModel):
 class BaseGenomeDetails(BaseModel):
     genome_id: str = Field(alias="genome_uuid")
     genome_tag: Optional[str] = Field(
-        alias=AliasChoices(
-            "url_name", AliasPath("organism", "tol_id")
-        ),
+        alias=AliasChoices("genome_tag", AliasPath("assembly", "accession")),
         default=None,
     )
     common_name: Optional[str] = Field(
@@ -86,8 +84,10 @@ class BaseGenomeDetails(BaseModel):
     is_reference: bool = Field(
         alias=AliasPath("assembly", "is_reference"), default=False
     )
-    is_suppressed: bool = Field(alias=AliasPath( "is_suppressed"), default=False)
-    suppression_details: Optional[str] = Field(alias=AliasPath( "suppression_details"), default=None)
+    is_suppressed: bool = Field(alias=AliasPath("is_suppressed"), default=False)
+    suppression_details: Optional[str] = Field(
+        alias=AliasPath("suppression_details"), default=None
+    )
     assembly: AssemblyInGenome
     release: Release
 
@@ -104,6 +104,7 @@ class BaseGenomeDetails(BaseModel):
         org = data.get("organism") or {}
         strain_type = org.get("strain_type")
         strain = org.get("strain")
+        release = data.get("release") or {}
 
         # only inject if we actually have both strain_type and strain
         if strain_type is not None and strain is not None and "type" not in data:
@@ -113,16 +114,18 @@ class BaseGenomeDetails(BaseModel):
                 "value": strain,
             }
 
+        # Most endpoints derive genome_tag from the assembly accession. Keep the
+        # historic partial-release behaviour unless a caller provides a computed
+        # genome_tag explicitly.
+        if "genome_tag" not in data and release.get("release_type") == "partial":
+            data = dict(data)
+            data["genome_tag"] = None
+
         return data
 
     @validator("species_taxonomy_id", pre=True)
     def convert_int_to_str(cls, value):
         return str(value)
-
-    def model_post_init(self, __context):
-        """Set genome_tag to None if the release type is 'partial'."""
-        if self.release and self.release.type == "partial":
-            self.genome_tag = None
 
 
 class BriefGenomeDetails(BaseGenomeDetails):
@@ -204,7 +207,7 @@ class GenomeByKeyword(BaseModel):
     release_version: float = Field(
         alias=AliasPath("release", "release_version"), default=0
     )
-    genome_tag: str = Field(alias=AliasPath("genome", "url_name"), default="")
+    genome_tag: str = Field(alias=AliasPath("assembly", "accession"), default="")
 
 
 class AlignmentViewerGenomeGroup(BaseModel):

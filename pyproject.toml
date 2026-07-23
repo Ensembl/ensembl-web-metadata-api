@@ -1,7 +1,7 @@
 [project]
 name = "ensembl_web_metadata_api"
 description = "REST API for web metadata"
-version = "0.1.0"
+version = "2.0.1"
 readme = "README.md"
 authors = [
     { name = "Ensembl web team", email = "ensembl-webteam@ebi.ac.uk" },
@@ -44,7 +44,7 @@ module-root = "src"
 module-name = ["api"]
 
 [tool.uv.sources]
-ensembl-metadata-api = { git = "https://github.com/Ensembl/ensembl-metadata-api", branch="main" }
+ensembl-metadata-api = { git = "https://github.com/Ensembl/ensembl-metadata-api", branch = "main" }
 ensembl-py = { git = "https://github.com/Ensembl/ensembl-py" }
 
 [tool.pytest]

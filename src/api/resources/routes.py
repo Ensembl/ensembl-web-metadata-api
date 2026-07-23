@@ -243,14 +243,14 @@ async def get_genome_ftplinks(
         return response_error_handler({"status": 500})
 
 
-@router.get("/genome/{genome_id_or_slug}/explain", name="genome_explain")
-@redis_cache(key_prefix="explain", arg_keys=["genome_id_or_slug"])
+@router.get("/genome/{genome_id_or_accession}/explain", name="genome_explain")
+@redis_cache(key_prefix="explain", arg_keys=["genome_id_or_accession"])
 async def explain_genome(
-    adaptor: GenomeAdaptorDep, request: Request, genome_id_or_slug: str
+    adaptor: GenomeAdaptorDep, request: Request, genome_id_or_accession: str
 ):
     try:
         genome_details_dict = get_brief_genome_details_by_uuid(
-            adaptor, genome_id_or_slug, None
+            adaptor, genome_id_or_accession, None
         )
         if genome_details_dict:
             genome_details = BriefGenomeDetails(**genome_details_dict)
@@ -267,13 +267,27 @@ async def explain_genome(
                     "type": True,
                     "is_suppressed": True,
                     "suppression_details": True,
-                    "latest_genome": True,
+                    "latest_genome": {
+                        "genome_id": True,
+                        "genome_tag": True,
+                        "scientific_name": True,
+                        "species_taxonomy_id": True,
+                        "common_name": True,
+                        "is_reference": True,
+                        "assembly": {"name", "accession_id"},
+                        "release": {"name", "type"},
+                        "type": True,
+                        "is_suppressed": True,
+                        "suppression_details": True,
+                    },
                 }
             )
+            if response_dict.get("latest_genome") is None:
+                response_dict.pop("latest_genome", None)
             response_data = responses.JSONResponse(response_dict, status_code=200)
         else:
             return response_error_handler(
-                {"status": 404, "details": f"Could not explain {genome_id_or_slug}"}
+                {"status": 404, "details": f"Could not explain {genome_id_or_accession}"}
             )
     except Exception as ex:
         logger.error(ex)
@@ -349,16 +363,16 @@ async def get_genome_by_keyword(
             species_taxonomy_id=None,
             release_version=None,
         )
-        latest_genome_by_keyword_object = GenomeByKeyword()
+        best_genome_by_keyword_object = GenomeByKeyword()
         for arr in genome_response:
             genome_by_keyword_object = GenomeByKeyword(**arr)
             if (
                 genome_by_keyword_object.release_version
-                > latest_genome_by_keyword_object.release_version
+                > best_genome_by_keyword_object.release_version
             ):
-                latest_genome_by_keyword_object = genome_by_keyword_object
-        if latest_genome_by_keyword_object.genome_uuid:
-            return responses.JSONResponse(latest_genome_by_keyword_object.model_dump())
+                best_genome_by_keyword_object = genome_by_keyword_object
+        if best_genome_by_keyword_object.genome_uuid:
+            return responses.JSONResponse(best_genome_by_keyword_object.model_dump())
         else:
             logger.error(f"Assembly accession id {assembly_accession_id} not found")
             return response_error_handler({"status": 404})

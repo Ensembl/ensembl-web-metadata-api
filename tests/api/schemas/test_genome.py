@@ -1,4 +1,4 @@
-from api.schemas.genome import GenomeDetails
+from api.schemas.genome import BriefGenomeDetails, GenomeDetails
 
 
 def minimal_genome_details_data():
@@ -41,3 +41,22 @@ def test_genome_details_accepts_null_provider_urls():
         "name": "Annotation Provider",
         "url": None,
     }
+
+
+def test_brief_genome_details_accepts_explicit_genome_tag_for_partial_release():
+    data = minimal_genome_details_data()
+    data["release"]["release_type"] = "partial"
+    data["genome_tag"] = "GCA_000001405.29"
+
+    genome_details = BriefGenomeDetails(**data)
+
+    assert genome_details.genome_tag == "GCA_000001405.29"
+
+
+def test_brief_genome_details_omits_implicit_genome_tag_for_partial_release():
+    data = minimal_genome_details_data()
+    data["release"]["release_type"] = "partial"
+
+    genome_details = BriefGenomeDetails(**data)
+
+    assert genome_details.genome_tag is None
