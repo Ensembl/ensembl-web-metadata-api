@@ -16,25 +16,26 @@ limitations under the License.
 """
 
 import logging
-from types import FrameType
-from typing import cast
+import sys
 
-from loguru import logger
+import ecs_logging
 
 
-class InterceptHandler(logging.Handler):
-    def emit(self, record: logging.LogRecord) -> None:  # pragma: no cover
-        try:
-            level = logger.level(record.levelname).name
-        except ValueError:
-            level = str(record.levelno)
-
-        frame, depth = logging.currentframe(), 2
-        while frame.f_code.co_filename == logging.__file__:  # noqa: WPS609
-            frame = cast(FrameType, frame.f_back)
-            depth += 1
-
-        logger.opt(depth=depth, exception=record.exc_info).log(
-            level,
-            record.getMessage(),
+def configure_logging(level: int, service_name: str) -> None:
+    handler = logging.StreamHandler(sys.stderr)
+    handler.setFormatter(
+        ecs_logging.StdlibFormatter(
+            extra={"service": {"name": service_name}},
+            exclude_fields=["log.original", "color_message"],
         )
+    )
+
+    root_logger = logging.getLogger()
+    root_logger.handlers = [handler]
+    root_logger.setLevel(level)
+
+    for logger_name in ("uvicorn", "uvicorn.error", "uvicorn.access"):
+        uvicorn_logger = logging.getLogger(logger_name)
+        uvicorn_logger.handlers = [handler]
+        uvicorn_logger.setLevel(level)
+        uvicorn_logger.propagate = False

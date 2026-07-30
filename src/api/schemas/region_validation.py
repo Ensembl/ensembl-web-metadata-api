@@ -17,12 +17,9 @@ import re
 from pydantic import BaseModel, model_serializer, Field, root_validator
 from typing import Any, Optional
 
-from api.logconfig import InterceptHandler
-
 from ensembl.production.metadata.api.adaptors import GenomeAdaptor
 
-logging.getLogger().handlers = [InterceptHandler()]
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 class RegionValidation(BaseModel):

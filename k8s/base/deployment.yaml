@@ -23,11 +23,15 @@ spec:
           envFrom:
             - configMapRef:
                 name: metadata-api-configmap
-          command: ["uvicorn"]
-          args: [
-            "--host",
-            "0.0.0.0",
-            "--port",
-            "8014",
-            "main:app"
-          ]
+          env:
+            # Aggregate HTTP metrics across workers; process CPU/memory metrics are unavailable.
+            - name: PROMETHEUS_MULTIPROC_DIR
+              value: /tmp/prometheus-metrics
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              mkdir -p /tmp/prometheus-metrics
+              rm -f /tmp/prometheus-metrics/*.db
+              exec uvicorn main:app \
+                --host 0.0.0.0 \
+                --port 8014
