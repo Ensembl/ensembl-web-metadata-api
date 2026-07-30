@@ -1,3 +1,5 @@
+# FYI: This deployment is not the one we're using in production.
+# The production deployment is in ensembl-k8s-manifests/ensembl-web-metadata-api/deployment.yaml repo
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -32,6 +34,6 @@ spec:
             - |
               mkdir -p /tmp/prometheus-metrics
               rm -f /tmp/prometheus-metrics/*.db
-              exec uvicorn main:app \
+              exec uvicorn api.main:app \
                 --host 0.0.0.0 \
                 --port 8014
