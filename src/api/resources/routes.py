@@ -17,8 +17,6 @@ limitations under the License.
 
 import logging
 
-from api.logconfig import InterceptHandler
-
 from typing import Annotated, Any
 
 from fastapi import Request, responses, Query, Path, Depends
@@ -63,7 +61,6 @@ from fastapi import APIRouter
 router = APIRouter(tags=["metadata"], prefix="/metadata")
 
 logger = logging.getLogger("routes")
-logger.handlers = [InterceptHandler()]
 logger.info("Starting up")
 
 from api.models.logic import (

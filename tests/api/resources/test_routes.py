@@ -25,6 +25,14 @@ import api.resources.routes as routes_resource
 client = TestClient(app)
 
 
+def test_metrics():
+    client.get("/")
+    response = client.get("/metrics")
+
+    assert response.status_code == 200
+    assert "http_requests_total" in response.text
+
+
 class APIMetadataTestCase(unittest.TestCase):
 
     def setUp(self):

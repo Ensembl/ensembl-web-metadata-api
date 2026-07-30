@@ -9,9 +9,6 @@ from pydantic import (
     model_validator,
     AliasChoices,
 )
-from api.logconfig import InterceptHandler
-
-logging.getLogger().handlers = [InterceptHandler()]
 
 
 class Homology(BaseModel):
@@ -498,10 +495,12 @@ class GenomeStatistics(BaseModel):
                         "statistic_value", None
                     )
                 except KeyError as ke:
-                    logging.error(ke)
-                    logging.error(stats_item["name"], ke)
+                    logging.error(
+                        "Statistic is missing a required field: %s",
+                        ke,
+                    )
         except Exception as ex:
-            logging.error("Error : ", ex)
+            logging.error("Failed to compile statistics: %s", ex)
         data["assembly_stats"] = data["_compiled_data"]
         data["coding_stats"] = data["_compiled_data"]
         data["variation_stats"] = data["_compiled_data"]
@@ -569,5 +568,8 @@ class ExampleObjectList(BaseModel):
                 extracted_example_objects.append(example_alignment_location)
 
         except Exception as ex:
-            logging.error(ex)
+            logging.error(
+                "Failed to extract example objects: %s",
+                ex,
+            )
         return extracted_example_objects

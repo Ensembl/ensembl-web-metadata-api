@@ -16,7 +16,7 @@ limitations under the License.
 """
 
 import itertools
-from loguru import logger
+import logging
 
 import sqlalchemy as db
 import uuid
@@ -37,6 +37,8 @@ from ensembl.production.metadata.api.models import (
 from ensembl.production.metadata.api.adaptors import GenomeAdaptor, ReleaseAdaptor
 from ensembl.production.metadata.api.adaptors.vep import VepAdaptor
 from api.models.meta_adaptor import MetaAdaptor
+
+logger = logging.getLogger(__name__)
 
 
 def get_top_level_statistics_by_uuid(db_conn, genome_uuid):

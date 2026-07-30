@@ -20,6 +20,7 @@ import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from prometheus_fastapi_instrumentator import Instrumentator
 from starlette.middleware.cors import CORSMiddleware
 
 from api.resources.redis import close_redis_pool
@@ -56,6 +57,11 @@ def get_application() -> FastAPI:
     )
 
     application.include_router(router, prefix=API_PREFIX)
+
+    Instrumentator(excluded_handlers=["/metrics"]).instrument(application).expose(
+        application,
+        include_in_schema=False,
+    )
 
     return application
 

@@ -16,15 +16,14 @@ limitations under the License.
 """
 
 import logging
-import sys
 
-from loguru import logger
 from starlette.config import Config
 from starlette.datastructures import CommaSeparatedStrings
 
-from api.logconfig import InterceptHandler
+from api.logconfig import configure_logging
 
 VERSION = "2.0.1"
+SERVICE_NAME = "ensembl-web-metadata-api"
 API_PREFIX = "/api"
 
 config = Config(".env")
@@ -61,15 +60,5 @@ FTP_BASE_URL: str = config(
 )
 
 # logging configuration
-logging.basicConfig(level=logging.DEBUG)
 LOGGING_LEVEL = logging.DEBUG if DEBUG else logging.INFO
-LOGGERS = ("uvicorn.asgi", "uvicorn.access")
-
-log = logging.getLogger("gunicorn.access")
-
-logging.getLogger().handlers = [InterceptHandler()]
-for logger_name in LOGGERS:
-    logging_logger = logging.getLogger(logger_name)
-    logging_logger.handlers = [InterceptHandler(level=LOGGING_LEVEL)]
-
-logger.configure(handlers=[{"sink": sys.stderr, "level": LOGGING_LEVEL}])
+configure_logging(LOGGING_LEVEL, SERVICE_NAME)
