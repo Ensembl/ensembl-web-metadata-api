@@ -58,10 +58,26 @@ def get_application() -> FastAPI:
 
     application.include_router(router, prefix=API_PREFIX)
 
-    Instrumentator(excluded_handlers=["/metrics"]).instrument(application).expose(
+    Instrumentator(excluded_handlers=["/metrics"]).instrument(
         application,
-        include_in_schema=False,
-    )
+        latency_lowr_buckets=(
+            0.01,
+            0.025,
+            0.05,
+            0.1,
+            0.25,
+            0.5,
+            1,
+            1.25,
+            1.5,
+            1.75,
+            2,
+            2.5,
+            5,
+            10,
+            30,
+        ),
+    ).expose(application, include_in_schema=False)
 
     return application
 
