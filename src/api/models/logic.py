@@ -83,13 +83,14 @@ def get_top_level_regions(adaptor: GenomeAdaptor, genome_uuid: str):
         genome_top_level_regions.append(tlr)
 
     # Sort the list of regions by two criteria:
-    # 1. By "rank" if present, regions without a rank are considered to have the highest possible rank (so they go last)
+    # 1. By "rank" if present. Missing and null ranks are considered to have
+    #    the highest possible rank (so they go last).
     # 2. Then by "length", which is stored as a string, so we convert it to an integer for proper numeric sorting
     genome_top_level_regions.sort(
         key=lambda region: (
-            # Use the value of "rank" if it exists, otherwise use infinity
-            # This ensures regions without a rank are placed at the end of the list
-            region.get("rank", float("inf")),
+            # A present rank can still be null in metadata; normalize it so
+            # Python never compares an integer with None.
+            region["rank"] if region.get("rank") is not None else float("inf"),
             # Convert the "length" from string to integer so numeric comparison works correctly
             # If "length" is missing, treat it as 0
             int(region.get("length", 0)),
@@ -130,7 +131,7 @@ def get_top_regions(
     if chromosome_regions:
         chromosome_regions.sort(
             key=lambda region: (
-                region.get("rank", float("inf")),
+                region["rank"] if region.get("rank") is not None else float("inf"),
                 region["name"],
             )
         )

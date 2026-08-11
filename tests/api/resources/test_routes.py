@@ -19,6 +19,7 @@ from fastapi.testclient import TestClient
 from api.main import app
 
 import api.config as config
+import api.models.logic as logic
 import api.resources.redis as redis_resource
 import api.resources.routes as routes_resource
 
@@ -1543,6 +1544,21 @@ def test_get_genome_top_regions():
         "Y",
         "MT",
     ]
+
+
+def test_get_top_regions_sorts_null_chromosome_ranks_last(monkeypatch):
+    monkeypatch.setattr(
+        logic,
+        "assembly_region_iterator",
+        lambda *_: iter([
+            {"name": "unranked", "chromosomal": 1, "length": "100", "rank": None},
+            {"name": "1", "chromosomal": 1, "length": "100", "rank": 1},
+        ]),
+    )
+
+    regions = logic.get_top_regions(adaptor=None, genome_uuid="test-genome")
+
+    assert [region["name"] for region in regions] == ["1", "unranked"]
 
 
 def test_get_metadata_statistics(benchmark):
