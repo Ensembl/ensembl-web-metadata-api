@@ -300,6 +300,8 @@ async def get_region_checksum(
         region_checksum_dict = genome_assembly_sequence_region(
             db_conn=adaptor, genome_uuid=genome_uuid, sequence_region_name=region_name
         )
+        if region_checksum_dict is None:
+            return response_error_handler({"status": 404})
         region_checksum = Checksum(**region_checksum_dict)
         return responses.PlainTextResponse(region_checksum.md5)
     except ValidationError as e:

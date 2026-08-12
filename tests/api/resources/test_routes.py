@@ -986,6 +986,13 @@ def test_get_region_checksum():
     assert response.content.decode("utf-8") == "2648ae1bacce4ec4b6cf337dcae37816"
 
 
+def test_get_region_checksum_returns_404_when_region_is_not_found():
+    response = client.get(
+        "/api/metadata/genome/a7335667-93e7-11ec-a39d-005056b38ce3/checksum/not-a-region"
+    )
+    assert response.status_code == 404
+
+
 def test_explain_genome():
     response = client.get(
         "/api/metadata/genome/a7335667-93e7-11ec-a39d-005056b38ce3/explain"
