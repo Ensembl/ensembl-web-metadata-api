@@ -443,6 +443,13 @@ def test_get_vep_file_paths():
     }
 
 
+def test_get_vep_file_paths_returns_404_when_genome_is_not_found():
+    response = client.get(
+        "/api/metadata/genome/47b8c945-5ffc-4aa0-a299-28ff6238c1fb-foo/vep/file_paths"
+    )
+    assert response.status_code == 404
+
+
 def test_get_genome_by_keyword():
     response = client.get(
         "/api/metadata/genomeid?assembly_accession_id=GCA_000001405.29"
@@ -1089,6 +1096,13 @@ def test_explain_genome_by_uuid_is_case_insensitive():
     assert response.json()["genome_id"] == "a7335667-93e7-11ec-a39d-005056b38ce3"
 
 
+def test_get_genome_dataset_attributes_returns_404_when_genome_is_not_found():
+    response = client.get(
+        "/api/metadata/genome/47b8c945-5ffc-4aa0-a299-28ff6238c1fb-foo/dataset/bar/attributes"
+    )
+    assert response.status_code == 404
+
+
 def test_explain_genome_by_url_slug_returns_404():
     response = client.get("/api/metadata/genome/grch38/explain")
     assert response.status_code == 404
@@ -1121,6 +1135,13 @@ def test_get_genome_ftplinks():
             "url": "https://ftp.ebi.ac.uk/pub/ensemblorganisms/Homo_sapiens/GCA_000001405.29/ensembl/variation/2023_03",
         },
     ]
+
+
+def test_get_genome_ftplinks_returns_404_when_genome_is_not_found():
+    response = client.get(
+        "/api/metadata/genome/47b8c945-5ffc-4aa0-a299-28ff6238c1fb-foo/ftplinks"
+    )
+    assert response.status_code == 404
 
 
 def test_get_genome_details():

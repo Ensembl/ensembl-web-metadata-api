@@ -223,6 +223,8 @@ async def get_genome_ftplinks(
 ):
     try:
         ftplinks_dict = get_ftp_links(adaptor, genome_uuid, "all", None)
+        if ftplinks_dict is None:
+            return response_error_handler({"status": 404})
 
         # This is temporary solution to hide regulation ftp links
         # It should be removed once the ftp links for regulation is fixed
@@ -327,7 +329,7 @@ async def get_genome_dataset_attributes(
         dataset_attributes = get_dataset_attributes(
             adaptor, genome_uuid, dataset_type, attribute_names
         )
-        if len(dataset_attributes.get("attributes", [])) == 0:
+        if not dataset_attributes or len(dataset_attributes.get("attributes", [])) == 0:
             return responses.JSONResponse(
                 {
                     "message": f"Could not find details for genome {genome_uuid} and dataset {dataset_type}."
@@ -389,7 +391,7 @@ async def get_vep_file_paths(
 ):
     try:
         vep_file_paths = get_vep_paths_by_uuid(adaptor, genome_uuid)
-        if len(vep_file_paths) == 0:
+        if not vep_file_paths:
             return responses.JSONResponse(
                 {"message": f"Could not find VEP file paths for genome {genome_uuid}."},
                 status_code=404,
