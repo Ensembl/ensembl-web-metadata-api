@@ -290,7 +290,7 @@ wheels = [
 [[package]]
 name = "ensembl-metadata-api"
 version = "3.0.0"
-source = { git = "https://github.com/Ensembl/ensembl-metadata-api?branch=main#19e344cab24c45ee60d2c5bea67abe7be7781fef" }
+source = { git = "https://github.com/Ensembl/ensembl-metadata-api?branch=main#bb1065eaf529f1ceb4fb634813e2302678eb196f" }
 dependencies = [
     { name = "duckdb" },
     { name = "duckdb-engine" },
@@ -309,7 +309,7 @@ dependencies = [
 [[package]]
 name = "ensembl-py"
 version = "3.1.0"
-source = { git = "https://github.com/Ensembl/ensembl-py#0d67a889fa0ab7a8b8db19603c236e2506051b72" }
+source = { git = "https://github.com/Ensembl/ensembl-py#470c48944c3328fdb4abd51c879e8b1b322d0533" }
 dependencies = [
     { name = "sqlalchemy" },
 ]
