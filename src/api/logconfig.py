@@ -21,8 +21,36 @@ import sys
 import ecs_logging
 
 
+class _UvicornAccessFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        # Add searchable HTTP fields to Uvicorn access logs.
+        if record.name != "uvicorn.access":
+            return True
+
+        if not isinstance(record.args, tuple):
+            return True
+
+        try:
+            _, method, _, http_version, status_code = record.args
+        except ValueError:
+            return True
+
+        if not isinstance(status_code, int):
+            return True
+
+        record.__dict__.update(
+            {
+                "http.request.method": method,
+                "http.response.status_code": status_code,
+                "http.version": http_version,
+            }
+        )
+        return True
+
+
 def configure_logging(level: int, service_name: str) -> None:
     handler = logging.StreamHandler(sys.stderr)
+    handler.addFilter(_UvicornAccessFilter())
     handler.setFormatter(
         ecs_logging.StdlibFormatter(
             extra={"service": {"name": service_name}},

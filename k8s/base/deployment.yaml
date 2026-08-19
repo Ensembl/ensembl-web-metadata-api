@@ -11,6 +11,8 @@ spec:
       app: metadata-api-server
   template:
     metadata:
+      annotations:
+        fluentbit.io/parser_stderr: json
       labels:
         app: metadata-api-server
     spec:
