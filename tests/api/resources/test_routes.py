@@ -1240,6 +1240,34 @@ def test_validate_region():
     }
 
 
+def test_validate_region_with_comma_separated_coordinates():
+    response = client.get(
+        "/api/metadata/validate_location?genome_id=a7335667-93e7-11ec-a39d-005056b38ce3&location=8:26,291,508-26,372,680"
+    )
+    assert response.status_code == 200
+    assert response.json() == {
+        "region": {
+            "error_code": None,
+            "error_message": None,
+            "region_name": "8",
+            "is_valid": True,
+        },
+        "start": {
+            "error_code": None,
+            "error_message": None,
+            "value": 26291508,
+            "is_valid": True,
+        },
+        "end": {
+            "error_code": None,
+            "error_message": None,
+            "value": 26372680,
+            "is_valid": True,
+        },
+        "location": "8:26291508-26372680",
+    }
+
+
 def test_get_popular_species():
     response = client.get("/api/metadata/popular_species")
     assert response.status_code == 200

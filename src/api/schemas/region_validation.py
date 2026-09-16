@@ -44,10 +44,16 @@ class RegionValidation(BaseModel):
     @staticmethod
     def parse_location_input(region_input):
         region, start, end = None, None, None
-        location_input_match = re.match(r"^([a-zA-Z0-9_.]+)(?::(\d+)-(\d+))?$", region_input)
+        coordinate_pattern = r"(?:\d+|\d{1,3}(?:,\d{3})+)"
+        location_input_match = re.match(
+            rf"^([a-zA-Z0-9_.]+)(?::({coordinate_pattern})-({coordinate_pattern}))?$",
+            region_input,
+        )
 
         if location_input_match:
             region, start, end = location_input_match.groups()
+            start = start.replace(",", "") if start is not None else None
+            end = end.replace(",", "") if end is not None else None
 
         return region, start, end
 
