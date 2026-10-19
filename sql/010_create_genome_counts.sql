@@ -67,6 +67,15 @@ create table genome_taxonomy_counts as select tc.release_id, label, tsl.taxon_id
     order by tc.release_id, ord asc;
 update genome_taxonomy_counts set label = '' where label is null;
 
+# View DDLs for convenience
+create view suppressed_genomes as select g.genome_uuid, og.name as 'organism_group', g.production_name, g.genebuild_date, g.suppression_details from genome g 
+    join organism o using(organism_id) 
+    join organism_group_member ogm using(organism_id)
+    join organism_group og using(organism_group_id)
+  where suppressed = 1; 
+
+create view genome_by_release as select g.genome_uuid, g.production_name, a.accession, g.genebuild_date, gr.is_current, er.name as 'ensembl_release', er.release_type from genome g 
+    join genome_release gr using(genome_id) join ensembl_release er using(release_id) join assembly a using(assembly_id);
 
 # View result
 .print ''
