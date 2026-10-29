@@ -1,16 +1,27 @@
-# Stages for the CI/CD job
+# include template to setup review app
+include:
+  - project: 'ensembl-web/ensembl-gitlab-ci-templates'
+    ref: 'main'
+    file:
+      - 'branch-rules/.branch-rules-template.yaml'
+      - 'deploy/.deploy-main-template.yaml'
+      - 'deploy/.deploy-review-template.yaml'
+      - 'review/.setup-BE-review-template.yaml'
+
 stages:
   - setup
   - build
-  - deploy
+  - deploy-review
+  - deploy-test
+  - deploy-stage
+  - deploy-prod
 
 variables:
   DOCKER_TLS_CERTDIR: ""
   DOCKER_IMAGE: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHORT_SHA}
-  BASE: k8s/base
 
-# Template to build docker image
-.build:
+#Build docker image
+Docker:
   stage: build
   image: docker
   services:
@@ -20,129 +31,89 @@ variables:
   script:
     - docker build -t ${DOCKER_IMAGE} --no-cache -f Dockerfile .
     - docker push ${DOCKER_IMAGE}
-    # remove local image from shared runner
     - docker rmi ${DOCKER_IMAGE}
     - docker logout $CI_REGISTRY
 
-  rules:
-    - if: '$CI_DEPLOY_FREEZE == null'
-      when: always
+# Jobs extended from templates to setup and deploy review environment, dev, staging, prod and fallback environments
+# Create a review deployment (runs once per new branch)
+Setup Review:
+  extends: .setup-review-newk8s
+  stage: setup
+  environment:
+    name: development
+  variables:
+    GIT_STRATEGY: none
+    AGENT: ${DEV_AGENT}
+    DEV_NS: ${DEV_NS}
+    REVIEW_NS: ${CI_COMMIT_REF_SLUG}
+    BE_INGRESS: ""
 
-.deploy:
-  stage: deploy
-  image: dockerhub.ebi.ac.uk/ensembl-web/deploy-tools:latest
-  before_script:
-    - kubectl config use-context ${AGENT}
-    - kubectl config set-context --current --namespace=${NS}  
-  script:
-    - git clone https://gitlab.ebi.ac.uk/ensembl-web/ensembl-k8s-manifests.git
-    - git -C ensembl-k8s-manifests/ checkout k8s123-migration
-    - cd ensembl-k8s-manifests/ensembl-web-metadata-api
-    - kustomize edit set image DOCKER_IMAGE=${DOCKER_IMAGE}
-    - kubectl apply -k ./
+# Deploy review environment
+Deploy Review:
+  extends: .deploy-review
+  stage: deploy-review
+  variables:
+    AGENT: ${DEV_AGENT}
+    REVIEW_NS: ${CI_COMMIT_REF_SLUG}
+  environment:
+    name: development
+    url: https://${REVIEW_NS}.review.ensembl.org
+    on_stop: Stop Review
 
-  
-.deploy_rules:
+Stop Review:
+  extends: .stop-review
+  stage: deploy-review
+  variables:
+    # Must match deploy-review; its job variables are not inherited here.
+    AGENT: ${DEV_AGENT}
+    REVIEW_NS: ${CI_COMMIT_REF_SLUG}
+    GIT_STRATEGY: none
   rules:
-    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "main"'
-      when: on_success
-
-.deploy_manual_rules:
-  rules:
-    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "main"'
+    - if: $CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != "main" && $CI_COMMIT_BRANCH != "dev"
       when: manual
-
-# Build docker image for all branches
-build:
-  extends: .build
-
-# Prod:WP40:HL:
-Prod:
-  extends:
-    - .deploy
-    - .deploy_manual_rules
+      allow_failure: true
   environment:
-    name: production
-  variables:
-    AGENT: ${PROD_AGENT}
-    NS: ${PROD_NS}
+    name: development
+    action: stop
 
-# Deploy jobs for new k8s cluster
-#Staging:WP40:HL:
-Staging:
-  extends: 
-    - .deploy
-    - .deploy_manual_rules
-  environment:
-    name: staging
-  variables:
-    AGENT: ${STAGING_AGENT}
-    NS: ${STAGING_NS}
-
-##Internal:WP40:HL:
-#Internal:
-#  extends:
-#    - .deploy
-#    - .deploy_rules
-#  environment:
-#    name: internal
-#  variables:
-#    AGENT: ${INTERNAL_AGENT}
-#    NS: ${INTERNAL_NS}
-
-# Deployment for dev-2020.ensembl.org
-#Dev:WP51:HL:
+#Deploy to k8s
+# Deploy Dev
 Dev:
-  extends: 
-    - .deploy
-    - .deploy_manual_rules
+  stage: deploy-test
+  extends: .deploy-main
   environment:
     name: development
   variables:
     AGENT: ${DEV_AGENT}
     NS: ${DEV_NS}
 
-# Setup Review app in its own namespace named by branch name (CI_COMMIT_REF_SLUG)
-Setup:Review:
-  stage: setup
-  image: dockerhub.ebi.ac.uk/ensembl-web/deploy-tools:latest
+# Deploy Stage
+Staging:
+  stage: deploy-stage
+  extends: .deploy-main
   environment:
-    name: development
-  before_script:
-    - kubectl config use-context ${AGENT}
-    - kubectl config set-context --current --namespace=${NS}
+    name: staging
   variables:
-    AGENT: ${REVIEW_AGENT}
-    NS: ${CI_COMMIT_REF_SLUG}
-  script:
-    - kubectl create configmap metadata-api-configmap --from-env-file=.env.sample --dry-run=client -o yaml | kubectl apply -f -
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "push" && 
-          $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000" && 
-          $CI_COMMIT_REF_NAME !~  "/^nodeploy\/.*$/"
-      when: always
+    AGENT: ${STAGING_AGENT}
+    NS: ${STAGING_NS}
 
-#Review:WP51:HL:
-Review:
-  extends: .deploy
+#Deploy prod & fallback environment
+Prod:
+  stage: deploy-prod
+  extends: .deploy-main
   environment:
-    name: development
-  rules:
-    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH != "dev"  && $CI_COMMIT_BRANCH != "main"'
-      when: on_success
+    name: production
+  when: manual
   variables:
-    AGENT: ${REVIEW_AGENT}
-    NS: ${CI_COMMIT_REF_SLUG}
+    AGENT: ${PROD_AGENT}
+    NS: ${PROD_NS}
 
-#Prod:WP41:HX:
 Fallback:
-  extends: 
-    - .deploy
-    - .deploy_manual_rules
+  stage: deploy-prod
+  extends: .deploy-main
   environment:
     name: fallback
+  when: manual
   variables:
     AGENT: ${FALLBACK_AGENT}
     NS: ${FALLBACK_NS}
-
-
