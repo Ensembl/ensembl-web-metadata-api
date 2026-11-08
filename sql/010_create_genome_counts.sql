@@ -102,7 +102,7 @@ SELECT
     g.production_name,
     er.name AS ens_release_name,
     last_part.name AS partial_release_name,
-    last_part.version AS partial_release_version
+    last_part.version AS partial_release_version,
     dd.name AS dataset_name,
     ds.location AS db_host,
     ds.name AS core_db_name,
