@@ -335,31 +335,12 @@ def create_genome_with_attributes_and_count(db_conn, genome, release_version):
     # fetch related assemblies count
     related_assemblies_count = db_conn.fetch_assemblies_count(genome.Organism.species_taxonomy_id)
 
-    alternative_names = get_alternative_names(db_conn, genome.Organism.species_taxonomy_id)
-
     return create_genome(
         data=genome,
         attributes=attribs,
         count=related_assemblies_count,
-        alternative_names=alternative_names,
         datasets=datasets
     )
-
-
-def get_alternative_names(db_conn, taxon_id):
-    """Get alternative names for a given taxon ID"""
-    taxon_ifo = db_conn.fetch_taxonomy_names(taxon_id)
-    alternative_names = taxon_ifo[taxon_id].get("synonym")
-    genbank_common_name = taxon_ifo[taxon_id].get("genbank_common_name")
-
-    if genbank_common_name is not None:
-        alternative_names.append(genbank_common_name)
-
-    # remove duplicates
-    unique_alternative_names = list(set(alternative_names))
-    # sort before returning (otherwise the test breaks)
-    sorted_unique_alternative_names = sorted(unique_alternative_names)
-    return sorted_unique_alternative_names
 
 
 def create_genome(
