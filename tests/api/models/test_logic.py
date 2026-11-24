@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from api.models.logic import get_brief_genome_details_by_uuid
+from api.models.logic import get_brief_genome_details_by_uuid, get_genome_by_uuid
 
 GENOME_UUID = "4273b9f0-c927-4215-87bf-828ef65de980"
 LATEST_GENOME_UUID = "be73075e-0633-471d-b7c8-4f8ca7752a04"
@@ -98,6 +98,20 @@ def make_genome(
             uri="https://www.ensembl.org",
         ),
     )
+
+
+def test_genome_details_do_not_require_taxonomy_names():
+    genome = make_genome("integrated", True)
+    adaptor = SimpleNamespace(
+        fetch_genomes=lambda **kwargs: [genome],
+        fetch_genome_datasets=lambda **kwargs: [],
+        fetch_assemblies_count=lambda species_taxonomy_id: 1,
+    )
+
+    result = get_genome_by_uuid(adaptor, GENOME_UUID, None)
+
+    assert result["genome_uuid"] == GENOME_UUID
+    assert result["related_assemblies_count"] == 1
 
 
 def test_brief_genome_details_assigns_tag_for_latest_integrated_genome():
